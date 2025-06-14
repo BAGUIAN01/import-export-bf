@@ -1,6 +1,5 @@
-// components/Layout/Footer.tsx
-import React from 'react'
-import Link from 'next/link'
+"use client";
+import React, { useState } from 'react';
 import { 
   Globe, 
   Phone, 
@@ -14,135 +13,192 @@ import {
   ArrowRight,
   Shield,
   Award,
-  Truck
-} from 'lucide-react'
-import { Button } from '@/src/components/ui/button'
+  Package,
+  Heart,
+  Truck,
+  Calendar,
+  Star,
+  CheckCircle,
+  Send
+} from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
-const services = [
-  { name: 'Transport Maritime', href: '/services/maritime' },
-  { name: 'Transport Aérien', href: '/services/aerien' },
-  { name: 'Transport Routier', href: '/services/routier' },
-  { name: 'Dédouanement', href: '/services/dedouanement' },
-  { name: 'Entreposage', href: '/services/entreposage' },
-  { name: 'Assurance Transport', href: '/services/assurance' }
-]
+export  function Footer() {
+  const [email, setEmail] = useState('');
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
-const quickLinks = [
-  { name: 'À propos', href: '/about' },
-  { name: 'Témoignages', href: '/testimonials' },
-  { name: 'Partenaires', href: '/partners' },
-  { name: 'Contact', href: '/contact' },
-  { name: 'Carrières', href: '/careers' },
-  { name: 'Actualités', href: '/news' }
-]
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    // Simulate subscription
+    setIsSubscribed(true);
+    setTimeout(() => {
+      setIsSubscribed(false);
+      setEmail('');
+    }, 3000);
+  };
 
-const legalLinks = [
-  { name: 'Mentions légales', href: '/legal' },
-  { name: 'Politique de confidentialité', href: '/privacy' },
-  { name: 'Conditions générales', href: '/terms' },
-  { name: 'Cookies', href: '/cookies' },
-  { name: 'Plan du site', href: '/sitemap' }
-]
+  const services = [
+    { name: 'Envoi de Colis', href: '/services/colis', price: '100€' },
+    { name: 'Envoi Barrique', href: '/services/barrique', price: '100€' },
+    { name: 'Ramassage Domicile', href: '/services/ramassage', price: '20€' },
+    { name: 'Suivi en Ligne', href: '/services/suivi', price: 'Gratuit' },
+    { name: 'Assurance Colis', href: '/services/assurance', price: 'Incluse' }
+  ];
 
-const socialLinks = [
-  { name: 'Facebook', href: '#', icon: Facebook },
-  { name: 'LinkedIn', href: '#', icon: Linkedin },
-  { name: 'Twitter', href: '#', icon: Twitter },
-  { name: 'Instagram', href: '#', icon: Instagram }
-]
+  const quickLinks = [
+    { name: 'À propos', href: '/about' },
+    { name: 'Témoignages', href: '/testimonials' },
+    { name: 'Tarifs', href: '/pricing' },
+    { name: 'Contact', href: '/contact' },
+    { name: 'FAQ', href: '/faq' },
+    { name: 'Suivi Colis', href: '/tracking' }
+  ];
 
-const certifications = [
-  { name: 'ISO 9001', description: 'Qualité' },
-  { name: 'ISO 14001', description: 'Environnement' },
-  { name: 'IATA', description: 'Transport Aérien' },
-  { name: 'OEA', description: 'Opérateur Agréé' }
-]
+  const legalLinks = [
+    { name: 'Mentions légales', href: '/legal' },
+    { name: 'Politique de confidentialité', href: '/privacy' },
+    { name: 'Conditions générales', href: '/terms' },
+    { name: 'Cookies', href: '/cookies' }
+  ];
 
-export function Footer() {
+  const socialLinks = [
+    { name: 'Facebook', href: '#', icon: Facebook },
+    { name: 'WhatsApp', href: '#', icon: Phone },
+    { name: 'Instagram', href: '#', icon: Instagram }
+  ];
+
+  const stats = [
+    { number: '2500+', label: 'Colis envoyés', icon: Package },
+    { number: '850+', label: 'Clients satisfaits', icon: Heart },
+    { number: '99%', label: 'Livraisons réussies', icon: CheckCircle },
+    { number: '8', label: 'Années d\'expérience', icon: Award }
+  ];
+
   return (
-    <footer className="bg-primary text-primary-foreground relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
+    <footer className="bg-gradient-to-br from-[#010066] via-[#010088] to-[#010066] text-white relative overflow-hidden">
+      
+      {/* Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-400/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="container mx-auto px-4 relative">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Newsletter Section */}
-        <div className="py-12 border-b border-primary-foreground/10">
+        <div className="py-12 lg:py-16 border-b border-white/10">
           <div className="max-w-4xl mx-auto text-center">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4">
-              Restez informé de nos actualités logistiques
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-black mb-4">
+              Restez informé de nos prochains chargements
             </h3>
-            <p className="text-primary-foreground/80 mb-6 text-lg">
-              Recevez nos conseils d'experts, les tendances du marché et nos dernières innovations
+            <p className="text-blue-200 mb-6 lg:mb-8 text-lg">
+              Recevez les dates de chargement, promotions spéciales et conseils d'envoi vers le Burkina Faso
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Votre adresse email"
-                className="flex-1 px-4 py-3 rounded-lg text-foreground bg-white border-0 focus:ring-2 focus:ring-secondary outline-none"
-              />
-              <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105">
-                S'abonner
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
+            
+            {!isSubscribed ? (
+              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Votre adresse email"
+                  className="flex-1 px-4 py-3 rounded-2xl text-gray-800 bg-white border-0 focus:ring-2 focus:ring-orange-500 outline-none font-medium"
+                />
+                <button 
+                  onClick={handleNewsletterSubmit}
+                  className="bg-orange-500 hover:bg-orange-400 text-white px-6 py-3 rounded-2xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Send className="w-4 h-4" />
+                  S'abonner
+                </button>
+              </div>
+            ) : (
+              <div className="max-w-md mx-auto bg-green-500/20 border border-green-400/30 rounded-2xl p-4">
+                <div className="flex items-center justify-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <span className="text-green-300 font-semibold">Merci ! Vous êtes inscrit.</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        <div className="py-12 lg:py-16 border-b border-white/10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center group">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20 group-hover:bg-orange-500/20 transition-all duration-300">
+                  <stat.icon className="w-8 h-8 lg:w-10 lg:h-10 text-orange-400" />
+                </div>
+                <div className="text-2xl lg:text-3xl font-black text-white mb-1">
+                  {stat.number}
+                </div>
+                <div className="text-blue-200 text-sm lg:text-base font-medium">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Main Footer Content */}
-        <div className="py-16">
+        <div className="py-12 lg:py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             
             {/* Company Info */}
             <div className="lg:col-span-1 space-y-6">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center shadow-lg">
-                  <Globe className="h-7 w-7 text-white" />
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                  {/* <Package className="h-7 w-7 text-white" /> */}
+                  <Image
+                    src="/logo.png"
+                    alt="IE Global Logo"
+                    width={40}
+                    height={40}
+                    // className="absolute inset-0 object-cover rounded-full"
+                    />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold font-heading">Import Export</div>
-                  <div className="text-sm text-primary-foreground/80 font-medium">
-                    Solutions Logistiques
+                  <div className="text-2xl font-black">Import Export</div>
+                  <div className="text-sm text-blue-200 font-medium">
+                    France ↔ Burkina Faso
                   </div>
                 </div>
               </div>
               
-              <p className="text-primary-foreground/80 leading-relaxed">
-                Depuis plus de 20 ans, nous sommes votre partenaire de confiance pour tous vos besoins 
-                en commerce international, logistique et transport. Nous connectons votre entreprise au monde entier.
+              <p className="text-blue-200 leading-relaxed">
+                Depuis 8 ans, nous sommes le pont entre la France et le Burkina Faso. 
+                Chaque colis que nous transportons porte l'amour et l'espoir des familles.
               </p>
 
-              {/* Key Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-primary-foreground/5 rounded-lg">
-                  <div className="text-2xl font-bold text-secondary">500+</div>
-                  <div className="text-xs text-primary-foreground/80">Clients satisfaits</div>
+              {/* Prochains chargements */}
+              <div className="bg-orange-500/20 border border-orange-400/30 rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="w-4 h-4 text-orange-400" />
+                  <span className="font-bold text-orange-300">Prochain chargement</span>
                 </div>
-                <div className="text-center p-3 bg-primary-foreground/5 rounded-lg">
-                  <div className="text-2xl font-bold text-secondary">50+</div>
-                  <div className="text-xs text-primary-foreground/80">Pays desservis</div>
-                </div>
+                <div className="text-white font-black text-lg">18 Juin 2025</div>
+                <div className="text-orange-200 text-sm">Réservez votre place maintenant</div>
               </div>
 
               {/* Social Links */}
               <div className="space-y-3">
-                <h4 className="font-semibold">Suivez-nous</h4>
+                <h4 className="font-bold text-white">Suivez-nous</h4>
                 <div className="flex space-x-3">
                   {socialLinks.map((social) => {
-                    const Icon = social.icon
+                    const Icon = social.icon;
                     return (
-                      <Link
+                      <a
                         key={social.name}
                         href={social.href}
-                        className="w-10 h-10 bg-primary-foreground/10 hover:bg-secondary rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 group"
+                        className="w-10 h-10 bg-white/10 hover:bg-orange-500 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 group backdrop-blur-sm border border-white/20"
                         aria-label={social.name}
                       >
                         <Icon className="h-5 w-5 group-hover:text-white transition-colors" />
-                      </Link>
-                    )
+                      </a>
+                    );
                   })}
                 </div>
               </div>
@@ -150,138 +206,154 @@ export function Footer() {
 
             {/* Services */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold font-heading flex items-center">
-                <Truck className="mr-3 h-5 w-5 text-secondary" />
+              <h3 className="text-xl font-black flex items-center">
+                <Truck className="mr-3 h-5 w-5 text-orange-400" />
                 Nos Services
               </h3>
               <ul className="space-y-3">
                 {services.map((service) => (
                   <li key={service.name}>
-                    <Link 
+                    <a 
                       href={service.href} 
-                      className="text-primary-foreground/80 hover:text-secondary transition-colors duration-200 flex items-center group"
+                      className="text-blue-200 hover:text-orange-400 transition-colors duration-200 flex items-center justify-between group"
                     >
-                      <ArrowRight className="mr-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-2 group-hover:translate-x-0" />
-                      <span className="group-hover:translate-x-1 transition-transform duration-200">
-                        {service.name}
+                      <div className="flex items-center">
+                        <ArrowRight className="mr-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-2 group-hover:translate-x-0" />
+                        <span className="group-hover:translate-x-1 transition-transform duration-200">
+                          {service.name}
+                        </span>
+                      </div>
+                      <span className="text-orange-400 font-bold text-sm">
+                        {service.price}
                       </span>
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
               
               {/* Certifications */}
-              <div className="pt-4">
-                <h4 className="font-semibold mb-3 flex items-center">
-                  <Award className="mr-2 h-4 w-4 text-secondary" />
-                  Certifications
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <h4 className="font-bold mb-3 flex items-center text-white">
+                  <Shield className="mr-2 h-4 w-4 text-orange-400" />
+                  Garanties
                 </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {certifications.map((cert) => (
-                    <div key={cert.name} className="bg-primary-foreground/5 rounded-lg p-2 text-center">
-                      <div className="text-sm font-semibold text-secondary">{cert.name}</div>
-                      <div className="text-xs text-primary-foreground/70">{cert.description}</div>
-                    </div>
-                  ))}
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-blue-200">Transport sécurisé</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-blue-200">Assurance incluse</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-blue-200">Suivi en temps réel</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Quick Links */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold font-heading">Liens Rapides</h3>
+              <h3 className="text-xl font-black text-white">Liens Rapides</h3>
               <ul className="space-y-3">
                 {quickLinks.map((link) => (
                   <li key={link.name}>
-                    <Link 
+                    <a 
                       href={link.href} 
-                      className="text-primary-foreground/80 hover:text-secondary transition-colors duration-200 flex items-center group"
+                      className="text-blue-200 hover:text-orange-400 transition-colors duration-200 flex items-center group"
                     >
                       <ArrowRight className="mr-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-2 group-hover:translate-x-0" />
                       <span className="group-hover:translate-x-1 transition-transform duration-200">
                         {link.name}
                       </span>
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
 
-              {/* Quick Contact */}
-              <div className="bg-primary-foreground/5 rounded-lg p-4 space-y-3">
-                <h4 className="font-semibold flex items-center">
-                  <Phone className="mr-2 h-4 w-4 text-secondary" />
-                  Contact Rapide
+              {/* Rating */}
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <h4 className="font-bold mb-3 flex items-center text-white">
+                  <Star className="mr-2 h-4 w-4 text-orange-400" />
+                  Satisfaction Client
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <div>Urgences 24h/7j</div>
-                  <div className="text-secondary font-semibold">+33 6 12 34 56 78</div>
-                  <Button size="sm" variant="outline" className="w-full mt-2 border-secondary text-secondary hover:bg-secondary hover:text-white">
-                    Appeler maintenant
-                  </Button>
+                <div className="flex items-center gap-2 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                  ))}
+                  <span className="text-white font-bold ml-2">5.0/5</span>
+                </div>
+                <div className="text-blue-200 text-sm">
+                  Basé sur 850+ avis clients
                 </div>
               </div>
             </div>
 
             {/* Contact Info */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold font-heading flex items-center">
-                <MapPin className="mr-3 h-5 w-5 text-secondary" />
+              <h3 className="text-xl font-black flex items-center text-white">
+                <Phone className="mr-3 h-5 w-5 text-orange-400" />
                 Contact
               </h3>
               
               <div className="space-y-4">
-                {/* Address */}
+                {/* France Phone */}
                 <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-secondary mt-1 flex-shrink-0" />
-                  <div className="text-primary-foreground/80">
-                    <div className="font-medium text-primary-foreground">Siège Social</div>
-                    123 Avenue du Commerce<br />
-                    75001 Paris, France
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Phone className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-white">France</div>
+                    <div className="text-blue-200">+33 670 699 823</div>
+                    <div className="text-xs text-blue-300">WhatsApp disponible</div>
                   </div>
                 </div>
                 
-                {/* Phone */}
-                <div className="flex items-center space-x-3">
-                  <Phone className="h-5 w-5 text-secondary flex-shrink-0" />
+                {/* Burkina Phone */}
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Phone className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <div className="font-medium text-primary-foreground">Téléphone</div>
-                    <div className="text-primary-foreground/80">+33 1 23 45 67 89</div>
+                    <div className="font-bold text-white">Burkina Faso</div>
+                    <div className="text-blue-200">+226 766 019 81</div>
+                    <div className="text-xs text-blue-300">Livraison & support</div>
                   </div>
                 </div>
                 
                 {/* Email */}
-                <div className="flex items-center space-x-3">
-                  <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Mail className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <div className="font-medium text-primary-foreground">Email</div>
-                    <div className="text-primary-foreground/80">contact@import-export.com</div>
+                    <div className="font-bold text-white">Email</div>
+                    <div className="text-blue-200">contact@ieglobal.fr</div>
                   </div>
                 </div>
               </div>
 
               {/* Business Hours */}
-              <div className="bg-primary-foreground/5 rounded-lg p-4">
-                <h4 className="font-semibold mb-3 flex items-center">
-                  <Clock className="mr-2 h-4 w-4 text-secondary" />
-                  Horaires d'ouverture
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <h4 className="font-bold mb-3 flex items-center text-white">
+                  <Clock className="mr-2 h-4 w-4 text-orange-400" />
+                  Disponibilité
                 </h4>
-                <div className="space-y-2 text-sm text-primary-foreground/80">
-                  <div className="flex justify-between">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-blue-200">
                     <span>Lundi - Vendredi</span>
-                    <span className="font-medium">8h00 - 18h00</span>
+                    <span className="font-medium text-white">8h00 - 18h00</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-blue-200">
                     <span>Samedi</span>
-                    <span className="font-medium">9h00 - 12h00</span>
+                    <span className="font-medium text-white">9h00 - 15h00</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Dimanche</span>
-                    <span className="text-primary-foreground/60">Fermé</span>
-                  </div>
-                  <div className="pt-2 mt-2 border-t border-primary-foreground/10">
+                  <div className="pt-2 mt-2 border-t border-white/10">
                     <div className="flex items-center space-x-2">
-                      <Shield className="h-4 w-4 text-secondary" />
-                      <span className="text-secondary font-medium">Service d'urgence 24h/7j</span>
+                      <Heart className="h-4 w-4 text-orange-400" />
+                      <span className="text-orange-300 font-medium text-sm">Service familial 24h/7j</span>
                     </div>
                   </div>
                 </div>
@@ -291,31 +363,34 @@ export function Footer() {
         </div>
 
         {/* Bottom Footer */}
-        <div className="border-t border-primary-foreground/10 py-8">
+        <div className="border-t border-white/10 py-6 lg:py-8">
           <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
             
             {/* Copyright */}
             <div className="text-center lg:text-left">
-              <div className="text-primary-foreground/80">
-                © 2024 Import Export. Tous droits réservés.
+              <div className="text-blue-200">
+                © 2024 Import Export BF. Tous droits réservés.
+                <Link href="/legal" className="text-blue-300 hover:text-orange-400 transition-colors ml-1">
+                ToemeXpertise
+                </Link>
               </div>
-              <div className="text-sm text-primary-foreground/60 mt-1">
-                Société spécialisée en logistique internationale depuis 2004
+              <div className="text-sm text-blue-300 mt-1">
+                Connectons les cœurs entre la France et le Burkina Faso depuis 2016
               </div>
             </div>
 
             {/* Legal Links */}
-            <div className="flex flex-wrap justify-center lg:justify-end items-center gap-6 text-sm">
+            <div className="flex flex-wrap justify-center lg:justify-end items-center gap-4 lg:gap-6 text-sm">
               {legalLinks.map((link, index) => (
                 <React.Fragment key={link.name}>
-                  <Link 
+                  <a 
                     href={link.href} 
-                    className="text-primary-foreground/80 hover:text-secondary transition-colors"
+                    className="text-blue-200 hover:text-orange-400 transition-colors"
                   >
                     {link.name}
-                  </Link>
+                  </a>
                   {index < legalLinks.length - 1 && (
-                    <span className="text-primary-foreground/40">•</span>
+                    <span className="text-blue-400">•</span>
                   )}
                 </React.Fragment>
               ))}
@@ -324,5 +399,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

@@ -1,136 +1,223 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Ship, Truck, Plane, ArrowRight, CheckCircle, TrendingUp, Play } from 'lucide-react';
+import { Globe, Package, Truck, Plane, ArrowRight, CheckCircle, TrendingUp, Play, MapPin, Clock, Shield, Euro } from 'lucide-react';
 
-export default function ImportExportHero() {
+export default function Hero() {
   const [currentStat, setCurrentStat] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentService, setCurrentService] = useState(0);
 
   const stats = [
-    { number: "150+", label: "Pays desservis", icon: Globe },
-    { number: "25K+", label: "Expéditions réalisées", icon: Ship },
-    { number: "98%", label: "Satisfaction client", icon: CheckCircle },
-    { number: "15+", label: "Années d'expérience", icon: TrendingUp }
+    { number: "France", label: "Collecte partout", icon: MapPin, color: "text-blue-400" },
+    { number: "Burkina", label: "Livraison sûre", icon: Globe, color: "text-green-400" },
+    { number: "24/7", label: "Support client", icon: Clock, color: "text-orange-400" },
+    { number: "100%", label: "Sécurisé", icon: Shield, color: "text-purple-400" }
   ];
 
   const services = [
-    { icon: Ship, label: "Maritime" },
-    { icon: Plane, label: "Aérien" },
-    { icon: Truck, label: "Terrestre" }
+    { 
+      icon: Package, 
+      label: "Enlèvement Colis", 
+      price: "20€",
+      desc: "Collecte à domicile en France"
+    },
+    { 
+      icon: Truck, 
+      label: "Transport Barrique", 
+      price: "100€",
+      desc: "Fûts et contenants lourds"
+    },
+    { 
+      icon: Package, 
+      label: "Cartons 80x60x60", 
+      price: "100€",
+      desc: "Dimensions standardisées"
+    }
+  ];
+
+  const routes = [
+    { from: "Paris", to: "Ouagadougou", duration: "7-10 jours" },
+    { from: "Lyon", to: "Bobo-Dioulasso", duration: "8-12 jours" },
+    { from: "Marseille", to: "Koudougou", duration: "7-10 jours" }
   ];
 
   useEffect(() => {
     setIsVisible(true);
-    const interval = setInterval(() => {
+    const statInterval = setInterval(() => {
       setCurrentStat((prev) => (prev + 1) % stats.length);
     }, 4000);
-    return () => clearInterval(interval);
+    
+    const serviceInterval = setInterval(() => {
+      setCurrentService((prev) => (prev + 1) % services.length);
+    }, 3000);
+    
+    return () => {
+      clearInterval(statInterval);
+      clearInterval(serviceInterval);
+    };
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
-      {/* Subtle Background Elements */}
+    <div className="relative min-h-screen bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] overflow-hidden">
+      {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-32 left-20 w-80 h-80 bg-blue-900/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#010066]/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-orange-500/8 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Minimal Grid Pattern */}
-      {/* <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.02"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div> */}
+      {/* Network Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <svg className="w-full h-full" viewBox="0 0 1200 800">
+          <defs>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+          {/* Connection lines */}
+          <path d="M100,200 Q400,100 800,300" stroke="url(#grad)" strokeWidth="2" fill="none" opacity="0.3" />
+          <path d="M200,500 Q600,400 1000,600" stroke="url(#grad)" strokeWidth="2" fill="none" opacity="0.3" />
+          <defs>
+            <linearGradient id="grad">
+              <stop offset="0%" stopColor="#010066" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
 
       <div className="relative z-10 container mx-auto px-6 py-16 lg:py-24">
         <div className="flex flex-col lg:flex-row items-center min-h-[85vh] gap-16">
           
-          {/* Left Content - LumApps Style */}
+          {/* Left Content */}
           <div className="flex-1 max-w-3xl">
             <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               
-              {/* Company Logo/Badge */}
-              <div className="flex items-center gap-3 mb-12">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+              {/* Company Badge */}
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Globe className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <div className="text-orange-400 font-bold text-xl">IE Global</div>
-                  <div className="text-gray-400 text-sm">Import • Export</div>
+                  <div className="text-blue-300 text-sm font-medium">Transport France ↔ Burkina Faso</div>
                 </div>
               </div>
 
-              {/* Large Bold Typography - LumApps Style */}
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-8 leading-[0.9] tracking-tight">
-                Une logistique plus
+              {/* Main Title */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-[0.95] tracking-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
+                  Vos colis de France
+                </span>
                 <br />
-                <span className="text-gray-300">intelligente, qui</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+                  au Burkina Faso
+                </span>
                 <br />
-                <span className="text-orange-400">s'adapte à votre</span>
-                <br />
-                <span className="text-white">façon d'exporter.</span>
+                <span className="text-blue-300">en toute sécurité</span>
               </h1>
 
-              {/* Subtitle */}
-              <p className="text-xl text-gray-300 mb-12 max-w-2xl leading-relaxed font-medium">
-                Optimisez vos flux internationaux avec notre plateforme intelligente 
-                qui simplifie chaque étape de vos opérations d'import-export.
-              </p>
-
-              {/* Services Pills */}
-              <div className="flex flex-wrap gap-3 mb-12">
-                {services.map((service, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2 hover:bg-white/10 transition-all duration-300"
-                  >
-                    <service.icon className="w-4 h-4 text-orange-400" />
-                    <span className="text-gray-300 text-sm font-medium">{service.label}</span>
-                  </div>
-                ))}
+              {/* Value Proposition */}
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-8">
+                <p className="text-lg text-white/80 mb-4 font-medium">
+                  🇫🇷 Collecte dans toute la France • 🇧🇫 Livraison au Burkina Faso
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {services.map((service, index) => (
+                    <div 
+                      key={index}
+                      className={`p-4 rounded-xl border transition-all duration-300 ${
+                        index === currentService 
+                          ? 'bg-orange-500/20 border-orange-500/50' 
+                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <service.icon className="w-5 h-5 text-orange-400" />
+                        <span className="text-white font-semibold text-sm">{service.label}</span>
+                      </div>
+                      <div className="text-2xl font-black text-orange-400 mb-1">{service.price}</div>
+                      <div className="text-xs text-white/70">{service.desc}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* CTA Buttons - LumApps Style */}
+              {/* Key Benefits */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Tarif fixe</span>
+                </div>
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Suivi temps réel</span>
+                </div>
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Assurance incluse</span>
+                </div>
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Support 24/7</span>
+                </div>
+              </div>
+
+              {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="group bg-white text-black px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
+                <button className="group bg-gradient-to-r from-orange-500 to-red-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
                   <span className="flex items-center gap-3">
-                    Nous contactez
-                    <div className="w-8 h-8 bg-orange-400 rounded-lg flex items-center justify-center">
-                      <Play className="w-4 h-4 text-white ml-0.5" />
+                    Envoyer maintenant
+                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                      <ArrowRight className="w-4 h-4 text-white" />
                     </div>
                   </span>
                 </button>
-                <button className="border-2 border-gray-600 hover:border-orange-400 text-gray-300 hover:text-orange-400 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:bg-orange-400/5">
-                  Découvrir nos solutions
+                <button className="border-2 border-[#010066]/50 hover:border-orange-400 text-white/80 hover:text-orange-400 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:bg-orange-400/5">
+                  Calculer le prix
                 </button>
+              </div>
+
+              {/* Contact Info */}
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 text-sm">
+                <div className="flex items-center gap-2 text-white/70">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="font-medium">🇫🇷 France: +33 6 70 69 98 23</span>
+                </div>
+                <div className="flex items-center gap-2 text-white/70">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="font-medium">🇧🇫 Burkina: +226 76 60 19 81</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Content - Modern Stats Card */}
+          {/* Right Content - Enhanced Stats & Routes */}
           <div className="flex-1 flex justify-center lg:justify-end">
             <div className={`transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
               
-              {/* Stats Card - Cleaner Design */}
-              <div className="relative">
-                <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-8 min-w-[300px] shadow-2xl">
+              <div className="space-y-6">
+                {/* Live Stats Card */}
+                <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-6 min-w-[320px] shadow-2xl">
                   
-                  {/* Live Stats Indicator */}
                   <div className="flex items-center gap-2 mb-6">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-gray-400 text-xs font-medium uppercase tracking-wider">Données en temps réel</span>
+                    <span className="text-white/70 text-xs font-medium uppercase tracking-wider">Service actif</span>
                   </div>
 
-                  {/* Main Stat Display */}
-                  <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       {React.createElement(stats[currentStat].icon, { className: "w-8 h-8 text-white" })}
                     </div>
-                    <div className="text-4xl md:text-5xl font-black text-white mb-2">
+                    <div className={`text-3xl md:text-4xl font-black mb-2 ${stats[currentStat].color}`}>
                       {stats[currentStat].number}
                     </div>
-                    <div className="text-gray-400 font-medium">
+                    <div className="text-white/80 font-medium">
                       {stats[currentStat].label}
                     </div>
                   </div>
 
-                  {/* Progress Dots */}
-                  <div className="flex justify-center gap-2 mb-8">
+                  <div className="flex justify-center gap-2 mb-6">
                     {stats.map((_, index) => (
                       <button
                         key={index}
@@ -138,37 +225,77 @@ export default function ImportExportHero() {
                         className={`w-2 h-2 rounded-full transition-all duration-300 ${
                           index === currentStat 
                             ? 'bg-orange-400 w-6' 
-                            : 'bg-gray-600 hover:bg-gray-500'
+                            : 'bg-[#010066] hover:bg-[#010066]/70'
                         }`}
                       />
                     ))}
                   </div>
 
-                  {/* Quick Stats Grid */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center p-4 bg-white/[0.02] rounded-xl border border-white/5">
-                      <div className="text-lg font-black text-orange-400">24/7</div>
-                      <div className="text-xs text-gray-500 uppercase tracking-wide">Support</div>
+                    <div className="text-center p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                      <div className="text-lg font-black text-orange-400">7-10j</div>
+                      <div className="text-xs text-white/60 uppercase tracking-wide">Délai</div>
                     </div>
-                    <div className="text-center p-4 bg-white/[0.02] rounded-xl border border-white/5">
-                      <div className="text-lg font-black text-orange-400">ISO</div>
-                      <div className="text-xs text-gray-500 uppercase tracking-wide">Certifié</div>
+                    <div className="text-center p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                      <div className="text-lg font-black text-green-400">Sûr</div>
+                      <div className="text-xs text-white/60 uppercase tracking-wide">100%</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Floating Accent Elements */}
-                <div className="absolute -top-3 -right-3 w-6 h-6 bg-orange-500 rounded-full opacity-60"></div>
-                <div className="absolute -bottom-3 -left-3 w-4 h-4 bg-white/20 rounded-full opacity-40"></div>
+                {/* Popular Routes */}
+                <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
+                  <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                    <Plane className="w-5 h-5 text-orange-400" />
+                    Routes populaires
+                  </h3>
+                  <div className="space-y-3">
+                    {routes.map((route, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl border border-white/5 hover:bg-white/[0.05] transition-colors">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                          <span className="text-white/70 text-sm">{route.from}</span>
+                          <ArrowRight className="w-3 h-3 text-orange-400" />
+                          <span className="text-white/70 text-sm">{route.to}</span>
+                        </div>
+                        <span className="text-xs text-green-400 font-medium">{route.duration}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Next Departure */}
+                <div className="bg-gradient-to-r from-orange-500/10 to-red-600/10 backdrop-blur-xl border border-orange-500/20 rounded-2xl p-4 text-center">
+                  <div className="text-orange-400 text-sm font-bold mb-1">Prochain chargement</div>
+                  <div className="text-white text-lg font-black">18 JUIN 2025</div>
+                  <div className="text-orange-300 text-xs">Réservez votre place</div>
+                </div>
               </div>
+
+              {/* Floating Elements */}
+              <div className="absolute -top-3 -right-3 w-6 h-6 bg-orange-500 rounded-full opacity-60"></div>
+              <div className="absolute -bottom-3 -left-3 w-4 h-4 bg-blue-400/40 rounded-full"></div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="w-5 h-8 border border-gray-600 rounded-full flex justify-center opacity-60">
-            <div className="w-0.5 h-2 bg-gray-400 rounded-full mt-2 animate-pulse"></div>
+        {/* Bottom CTA Bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/[0.05] backdrop-blur-xl border-t border-white/10 p-4 z-50 lg:hidden">
+          <div className="flex items-center justify-between max-w-sm mx-auto">
+            <div>
+              <div className="text-orange-400 font-bold">À partir de 20€</div>
+              <div className="text-white/70 text-xs">France → Burkina</div>
+            </div>
+            <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-3 rounded-xl font-bold">
+              Envoyer
+            </button>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden lg:block">
+          <div className="w-5 h-8 border border-white/30 rounded-full flex justify-center opacity-60">
+            <div className="w-0.5 h-2 bg-white/50 rounded-full mt-2 animate-bounce"></div>
           </div>
         </div>
       </div>

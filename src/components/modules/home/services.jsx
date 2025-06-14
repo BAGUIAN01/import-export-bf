@@ -299,23 +299,6 @@ export default function Services() {
           </div>
         </div>
 
-        {/* Stats Bar */}
-        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 lg:mb-20 px-4 sm:px-0 transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          {[
-            { icon: Package, number: "500+", label: "Colis envoyés/mois" },
-            { icon: Clock, number: "15j", label: "Délai moyen" },
-            { icon: MapPin, number: "2", label: "Pays couverts" },
-            { icon: Target, number: "99%", label: "Colis livrés" },
-          ].map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-50 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4 border border-blue-100">
-                <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" style={{ color: '#010066' }} />
-              </div>
-              <div className="text-xl sm:text-2xl lg:text-4xl font-black mb-1 lg:mb-2" style={{ color: '#010066' }}>{stat.number}</div>
-              <div className="text-gray-600 font-medium text-xs sm:text-sm lg:text-base">{stat.label}</div>
-            </div>
-          ))}
-        </div>
 
         {/* CTA Section */}
         <div className={`text-center transition-all duration-1000 delay-900 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
