@@ -279,18 +279,6 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Bottom CTA Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white/[0.05] backdrop-blur-xl border-t border-white/10 p-4 z-50 lg:hidden">
-          <div className="flex items-center justify-between max-w-sm mx-auto">
-            <div>
-              <div className="text-orange-400 font-bold">À partir de 20€</div>
-              <div className="text-white/70 text-xs">France → Burkina</div>
-            </div>
-            <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-3 rounded-xl font-bold">
-              Envoyer
-            </button>
-          </div>
-        </div>
 
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden lg:block">
