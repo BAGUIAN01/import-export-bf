@@ -160,12 +160,16 @@ export function Header() {
     { name: "Contact", href: "/#contact" },
   ];
 
-const isActive = (href) => {
+  const isActive = (href) => {
+  if (typeof window === 'undefined') {
+    // Côté serveur, on compare seulement le pathname
+    return pathname === href;
+  }
+  
   if (href.includes('#')) {
-    // Pour les liens avec hash (comme "/#about")
+    // Côté client, on peut utiliser window.location.hash
     return pathname + window.location.hash === href;
   } else {
-    // Pour les liens normaux (comme "/services")
     return pathname === href && !window.location.hash;
   }
 };
