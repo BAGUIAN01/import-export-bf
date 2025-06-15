@@ -83,7 +83,7 @@ export default function FAQ() {
       category: 'contact',
       icon: Phone,
       question: "Comment vous contacter en cas de problème ?",
-      answer: "Notre support est disponible 24/7. En France : +33 6 70 69 98 23, au Burkina : +226 76 60 19 81. Vous pouvez aussi nous écrire par WhatsApp, email (contact@ieglobal.fr) ou via notre site web. Nous répondons sous 2h maximum.",
+      answer: "Notre support est disponible 24/7. En France : +33 6 70 69 98 23, au Burkina : +226 76 60 19 81. Vous pouvez aussi nous écrire par WhatsApp, email (contact@ieBF.fr) ou via notre site web. Nous répondons sous 2h maximum.",
       popular: false
     },
     {
@@ -195,14 +195,14 @@ export default function FAQ() {
           <div className="lg:col-span-2">
             <div className="space-y-4">
               {filteredFAQ.map((item, index) => {
-                const globalIndex = faqData.indexOf(item);
+                const BFIndex = faqData.indexOf(item);
                 return (
                   <div
-                    key={globalIndex}
+                    key={BFIndex}
                     className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-xl"
                   >
                     <button
-                      onClick={() => toggleItem(globalIndex)}
+                      onClick={() => toggleItem(BFIndex)}
                       className="w-full px-6 py-5 text-left flex items-center justify-between group hover:bg-gray-50 transition-colors duration-200"
                     >
                       <div className="flex items-start gap-4 flex-1">
@@ -226,14 +226,14 @@ export default function FAQ() {
                       </div>
                       <ChevronDown
                         className={`w-6 h-6 text-gray-400 transition-transform duration-300 flex-shrink-0 ${
-                          openItems.includes(globalIndex) ? 'rotate-180' : ''
+                          openItems.includes(BFIndex) ? 'rotate-180' : ''
                         }`}
                       />
                     </button>
                     
                     <div
                       className={`transition-all duration-300 overflow-hidden ${
-                        openItems.includes(globalIndex) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                        openItems.includes(BFIndex) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                       }`}
                     >
                       <div className="px-6 pb-6">
@@ -290,7 +290,7 @@ export default function FAQ() {
                   <Mail className="w-4 h-4 text-orange-400" />
                   <div>
                     <div className="font-semibold">Email</div>
-                    <div className="text-white/80">contact@ieglobal.fr</div>
+                    <div className="text-white/80">contact@ieBF.fr</div>
                   </div>
                 </div>
               </div>
@@ -307,9 +307,9 @@ export default function FAQ() {
                   <button
                     key={index}
                     onClick={() => {
-                      const globalIndex = faqData.indexOf(item);
+                      const BFIndex = faqData.indexOf(item);
                       setActiveCategory('all');
-                      toggleItem(globalIndex);
+                      toggleItem(BFIndex);
                       document.getElementById('faq-main')?.scrollIntoView({ behavior: 'smooth' });
                     }}
                     className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors group"

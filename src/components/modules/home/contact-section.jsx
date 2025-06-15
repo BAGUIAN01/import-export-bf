@@ -78,7 +78,7 @@ export default function ContactSection() {
       icon: Mail,
       title: "Email",
       details: [
-        { label: "Contact", value: "contact@ieglobal.fr", primary: true }
+        { label: "Contact", value: "contact@ieBF.fr", primary: true }
       ],
       color: "from-blue-500 to-blue-600",
       description: "Pour vos demandes détaillées"

@@ -99,7 +99,7 @@ export default function Hero() {
                   <Globe className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <div className="text-orange-400 font-bold text-xl">IE Global</div>
+                  <div className="text-orange-400 font-bold text-xl">IE BF</div>
                   <div className="text-blue-300 text-sm font-medium">Transport France ↔ Burkina Faso</div>
                 </div>
               </div>

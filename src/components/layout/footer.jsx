@@ -154,7 +154,7 @@ export  function Footer() {
                   {/* <Package className="h-7 w-7 text-white" /> */}
                   <Image
                     src="/logo.png"
-                    alt="IE Global Logo"
+                    alt="IE BF Logo"
                     width={40}
                     height={40}
                     // className="absolute inset-0 object-cover rounded-full"
@@ -330,7 +330,7 @@ export  function Footer() {
                   </div>
                   <div>
                     <div className="font-bold text-white">Email</div>
-                    <div className="text-blue-200">contact@ieglobal.fr</div>
+                    <div className="text-blue-200">contact@ieBF.fr</div>
                   </div>
                 </div>
               </div>

@@ -595,9 +595,9 @@ export default function TrackPackagePage() {
           </div>
           
           <div className="mt-8">
-            <a href="mailto:contact@ieglobal.fr" className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 font-medium transition-colors">
+            <a href="mailto:contact@ieBF.fr" className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 font-medium transition-colors">
               <Mail className="w-5 h-5" />
-              contact@ieglobal.fr
+              contact@ieBF.fr
             </a>
           </div>
         </div>

@@ -191,7 +191,7 @@ export function Header() {
               </div>
               <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors cursor-pointer">
                 <Mail className="w-4 h-4" />
-                <span>contact@ieglobal.fr</span>
+                <span>contact@ieBF.fr</span>
               </div>
               <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors">
                 <MapPin className="w-4 h-4" />
@@ -231,7 +231,7 @@ export function Header() {
                 <div className="relative overflow-hidden rounded-md">
                   <Image
                     src="/logo.jpg"
-                    alt="IE Global Logo"
+                    alt="IE BF Logo"
                     width={60}
                     height={48}
                     className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -240,7 +240,7 @@ export function Header() {
                 </div>
                 <div className="hidden sm:block">
                   <div className="text-xl font-bold bg-gradient-to-r from-[#010066] to-blue-900 bg-clip-text text-transparent">
-                    IE Global
+                    IE BF
                   </div>
                   <div className="text-xs text-gray-500 -mt-1">
                     Transport & Logistique

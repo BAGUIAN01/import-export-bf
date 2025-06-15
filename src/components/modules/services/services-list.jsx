@@ -289,7 +289,7 @@ export default function ServicesList() {
         <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-xl border border-gray-100">
           <div className="text-center mb-10">
             <h3 className="text-2xl lg:text-3xl font-black text-gray-900 mb-4">
-              Pourquoi choisir <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">IE Global</span> ?
+              Pourquoi choisir <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">IE BF</span> ?
             </h3>
             <p className="text-gray-600 max-w-2xl mx-auto">
               8 années d'expérience au service de la communauté franco-burkinabè
