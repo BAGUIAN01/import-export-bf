@@ -234,7 +234,7 @@ export default function TrackPackagePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white mt-16">
       
       {/* Hero Section */}
       <section className="relative py-16 lg:py-24 bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] overflow-hidden">
@@ -270,7 +270,7 @@ export default function TrackPackagePage() {
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto">
               <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-2">
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-col lg:flex-row ">
                   <div className="flex-1 relative">
                     <input
                       type="text"
