@@ -1,13 +1,8 @@
 // app/services/page.tsx
+
 import Hero from '@/src/components/modules/services/hero';
-// import ServicesList from '@/components/modules/services/services-list';
-// import ColisSection from '@/components/modules/services/colis-section';
-// import BarriqueSection from '@/components/modules/services/barrique-section';
-// import RamassageSection from '@/components/modules/services/ramassage-section';
-// import ProcessSection from '@/components/modules/services/process-section';
-// import PricingSection from '@/components/modules/services/pricing-section';
-// import TestimonialsSection from '@/components/modules/services/testimonials-section';
-// import FAQ from '@/components/modules/services/faq';
+import ServicesList from '@/src/components/modules/services/services-list';
+import FAQ from '@/src/components/modules/services/faq';
 // import CallToAction from '@/components/modules/services/call-to-action';
 
 export const metadata = {
@@ -25,22 +20,14 @@ export default function ServicesPage() {
   return (
     <main className="overflow-hidden">
       <Hero />
-      
-      {/* <ServicesList />
-      
-      <ColisSection />
-      
-      <BarriqueSection />
-      
-      <RamassageSection />
-      
-      <ProcessSection />
-      
-      <PricingSection />
-      
-      <TestimonialsSection />
-      
+      <ServicesList />
       <FAQ />
+      
+      {/* 
+      
+    
+      
+      
       
       <CallToAction /> */}
     </main>

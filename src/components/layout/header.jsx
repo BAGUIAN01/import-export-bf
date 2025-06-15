@@ -21,9 +21,44 @@ export function Header() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [currentPath, setCurrentPath] = useState("/");
   const dropdownTimeoutRef = useRef(null);
+
   const pathname = usePathname();
+  console.log("Pathname:", pathname);
   const router = useRouter();
+
+  useEffect(() => {
+    const updateCurrentPath = () => {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash;
+        const fullPath = pathname + hash;
+        console.log("Full path:", fullPath, "Hash:", hash, "Pathname:", pathname);
+        setCurrentPath(fullPath);
+      }
+    };
+
+    // Initial load
+    updateCurrentPath();
+
+    // Écouter les changements de hash
+    const handleHashChange = () => {
+      updateCurrentPath();
+    };
+
+    // Écouter les changements de pathname
+    const handlePathnameChange = () => {
+      updateCurrentPath();
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePathnameChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handlePathnameChange);
+    };
+  }, [pathname]);
 
   // Gestion du scroll avec hide/show du header
   useEffect(() => {
@@ -76,58 +111,64 @@ export function Header() {
     {
       name: "Services",
       href: "/services",
-      dropdown: [
-        {
-          name: "Transport Maritime",
-          href: "/services#maritime",
-          icon: "🚢",
-          desc: "Fret maritime international",
-          color: "bg-blue-50 text-blue-600",
-        },
-        {
-          name: "Transport Aérien",
-          href: "/services/aerien",
-          icon: "✈️",
-          desc: "Livraison express mondiale",
-          color: "bg-sky-50 text-sky-600",
-        },
-        {
-          name: "Transport Routier",
-          href: "/services/routier",
-          icon: "🚛",
-          desc: "Distribution terrestre",
-          color: "bg-green-50 text-green-600",
-        },
-        {
-          name: "Dédouanement",
-          href: "/services/dedouanement",
-          icon: "📋",
-          desc: "Procédures douanières",
-          color: "bg-orange-50 text-orange-600",
-        },
-        {
-          name: "Entreposage",
-          href: "/services/entreposage",
-          icon: "🏪",
-          desc: "Stockage sécurisé",
-          color: "bg-purple-50 text-purple-600",
-        },
-        {
-          name: "Assurance Transport",
-          href: "/services/assurance",
-          icon: "🛡️",
-          desc: "Protection complète",
-          color: "bg-red-50 text-red-600",
-        },
-      ],
+      // dropdown: [
+      //   {
+      //     name: "Transport Maritime",
+      //     href: "/services#maritime",
+      //     icon: "🚢",
+      //     desc: "Fret maritime international",
+      //     color: "bg-blue-50 text-blue-600",
+      //   },
+      //   {
+      //     name: "Transport Aérien",
+      //     href: "/services/aerien",
+      //     icon: "✈️",
+      //     desc: "Livraison express mondiale",
+      //     color: "bg-sky-50 text-sky-600",
+      //   },
+      //   {
+      //     name: "Transport Routier",
+      //     href: "/services/routier",
+      //     icon: "🚛",
+      //     desc: "Distribution terrestre",
+      //     color: "bg-green-50 text-green-600",
+      //   },
+      //   {
+      //     name: "Dédouanement",
+      //     href: "/services/dedouanement",
+      //     icon: "📋",
+      //     desc: "Procédures douanières",
+      //     color: "bg-orange-50 text-orange-600",
+      //   },
+      //   {
+      //     name: "Entreposage",
+      //     href: "/services/entreposage",
+      //     icon: "🏪",
+      //     desc: "Stockage sécurisé",
+      //     color: "bg-purple-50 text-purple-600",
+      //   },
+      //   {
+      //     name: "Assurance Transport",
+      //     href: "/services/assurance",
+      //     icon: "🛡️",
+      //     desc: "Protection complète",
+      //     color: "bg-red-50 text-red-600",
+      //   },
+      // ],
     },
-    { name: "À Propos", href: "/about" },
-    { name: "Témoignages", href: "/testimonials" },
-    { name: "Partenaires", href: "/partners" },
-    { name: "Contact", href: "/contact" },
+    { name: "À Propos", href: "/#about" },
+    { name: "Contact", href: "/#contact" },
   ];
 
-  const isActive = (href) => pathname === href;
+const isActive = (href) => {
+  if (href.includes('#')) {
+    // Pour les liens avec hash (comme "/#about")
+    return pathname + window.location.hash === href;
+  } else {
+    // Pour les liens normaux (comme "/services")
+    return pathname === href && !window.location.hash;
+  }
+};
 
   return (
     <>
@@ -181,26 +222,28 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {/* Logo avec animation */}
-            <div className="flex items-center space-x-3 group cursor-pointer">
-              <div className="relative overflow-hidden rounded-md">
-                <Image
-                  src="/logo.jpg"
-                  alt="IE Global Logo"
-                  width={60}
-                  height={48}
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#010066]/0 via-white/20 to-[#010066]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-xl font-bold bg-gradient-to-r from-[#010066] to-blue-900 bg-clip-text text-transparent">
-                  IE Global
+            <Link href={"/"}>
+              <div className="flex items-center space-x-3 group cursor-pointer">
+                <div className="relative overflow-hidden rounded-md">
+                  <Image
+                    src="/logo.jpg"
+                    alt="IE Global Logo"
+                    width={60}
+                    height={48}
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#010066]/0 via-white/20 to-[#010066]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
                 </div>
-                <div className="text-xs text-gray-500 -mt-1">
-                  Transport & Logistique
+                <div className="hidden sm:block">
+                  <div className="text-xl font-bold bg-gradient-to-r from-[#010066] to-blue-900 bg-clip-text text-transparent">
+                    IE Global
+                  </div>
+                  <div className="text-xs text-gray-500 -mt-1">
+                    Transport & Logistique
+                  </div>
                 </div>
               </div>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
@@ -292,14 +335,16 @@ export function Header() {
             {/* CTA & Mobile Button */}
             <div className="flex items-center space-x-4">
               {/* CTA Button amélioré */}
-              <button className="hidden md:flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 bg-gradient-to-r from-[#010066] to-blue-900 text-white shadow-lg hover:shadow-xl hover:scale-105 group relative overflow-hidden">
-                <span className="relative z-10">Suivre un colis</span>
-                <div className="w-6 h-6 bg-orange-500 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
-                  <ArrowRight className="w-3 h-3 text-white" />
-                </div>
-                {/* Effet de brillance */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
-              </button>
+              <Link href="/tracking">
+                <button className="hidden md:flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 bg-gradient-to-r from-[#010066] to-blue-900 text-white shadow-lg hover:shadow-xl hover:scale-105 group relative overflow-hidden">
+                  <span className="relative z-10">Suivre un colis</span>
+                  <div className="w-6 h-6 bg-orange-500 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
+                    <ArrowRight className="w-3 h-3 text-white" />
+                  </div>
+                  {/* Effet de brillance */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+                </button>
+              </Link>
 
               {/* Mobile Menu Button */}
               <button
@@ -338,19 +383,21 @@ export function Header() {
                   className="space-y-2"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <button
-                    className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-between group ${
-                      isActive(link.href)
-                        ? "text-white bg-gradient-to-r from-[#010066] to-blue-900 shadow-lg"
-                        : "text-gray-700 hover:text-[#010066] hover:bg-gray-50"
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <span>{link.name}</span>
-                    {link.dropdown && (
-                      <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
-                    )}
-                  </button>
+                  <Link href={link.href}>
+                    <button
+                      className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-between group ${
+                        isActive(link.href)
+                          ? "text-white bg-gradient-to-r from-[#010066] to-blue-900 shadow-lg"
+                          : "text-gray-700 hover:text-[#010066] hover:bg-gray-50"
+                      }`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <span>{link.name}</span>
+                      {link.dropdown && (
+                        <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
+                      )}
+                    </button>
+                  </Link>
 
                   {link.dropdown && (
                     <div className="ml-4 space-y-1">
@@ -373,14 +420,16 @@ export function Header() {
                   )}
                 </div>
               ))}
+              <Link href="/tracking" >
 
-              <button
-                className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#010066] to-blue-900 text-white text-center rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
-                onClick={() => setIsOpen(false)}
-              >
-                <span>Suivre un colis</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-              </button>
+                <button
+                  className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#010066] to-blue-900 text-white text-center rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span>Suivre un colis</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@ import ContactSection from "@/src/components/modules/home/contact-section";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
+    <main className="overflow-hidden">
       <Hero />
       <Stats />
       <Services />
@@ -19,6 +19,6 @@ export default function HomePage() {
       <CTA />
       <ContactSection />
 
-    </div>
+    </main>
   );
 }
