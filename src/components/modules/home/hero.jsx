@@ -57,7 +57,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] overflow-hidden mt-16">
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 right-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
