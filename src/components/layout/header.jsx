@@ -167,9 +167,13 @@ export function Header() {
   }
   
   if (href.includes('#')) {
-    // Côté client, on peut utiliser window.location.hash
+    
     return pathname + window.location.hash === href;
   } else {
+    if (href === '/services') {
+        const currentPathname = currentPath.split('#')[0];
+        return currentPathname === '/services';
+      }
     return pathname === href && !window.location.hash;
   }
 };

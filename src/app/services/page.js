@@ -3,6 +3,7 @@
 import Hero from '@/src/components/modules/services/hero';
 import ServicesList from '@/src/components/modules/services/services-list';
 import FAQ from '@/src/components/modules/services/faq';
+import CarShippingCard from '@/src/components/modules/services/car';
 // import CallToAction from '@/components/modules/services/call-to-action';
 
 export const metadata = {
@@ -20,16 +21,9 @@ export default function ServicesPage() {
   return (
     <main className="overflow-hidden">
       <Hero />
+      <CarShippingCard/>
       <ServicesList />
       <FAQ />
-      
-      {/* 
-      
-    
-      
-      
-      
-      <CallToAction /> */}
     </main>
   );
 }

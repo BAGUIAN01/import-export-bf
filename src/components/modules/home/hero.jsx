@@ -107,7 +107,7 @@ export default function Hero() {
               {/* Main Title */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-[0.95] tracking-tight">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
-                  Vos colis de France
+                  Vos colis de la France
                 </span>
                 <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
