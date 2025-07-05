@@ -107,7 +107,7 @@ export default function ContactSection() {
     {
       icon: Calendar,
       title: "Prochain chargement",
-      value: "18 Juin 2025",
+      value: "8 Juillet 2025",
       note: "Réservez votre place"
     },
     {

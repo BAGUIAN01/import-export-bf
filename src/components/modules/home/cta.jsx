@@ -92,7 +92,7 @@ export default function CTA() {
           {/* Urgency Badge */}
           <div className="inline-flex items-center gap-2 bg-orange-500 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 lg:mb-8 shadow-lg">
             <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-white animate-pulse" />
-            <span className="font-bold text-sm lg:text-base text-white">Prochain chargement : 18 Juin 2025</span>
+            <span className="font-bold text-sm lg:text-base text-white">Prochain chargement : 8 Juillet 2025</span>
           </div>
           
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 lg:mb-8 leading-tight text-white">

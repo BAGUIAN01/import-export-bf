@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Package, Users, MapPin, Clock, TrendingUp, CheckCircle, Truck, Calendar } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Stats() {
   const [isVisible, setIsVisible] = useState(false);
@@ -109,7 +110,7 @@ export default function Stats() {
     },
     {
       icon: Calendar,
-      value: "2x/mois",
+      value: "1x/mois",
       label: "Fréquence",
       detail: "Chargements réguliers"
     },
@@ -231,12 +232,16 @@ export default function Stats() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-orange-500 hover:bg-orange-400 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg">
-                Envoyer un colis
-              </button>
-              <button className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300">
-                Nos tarifs
-              </button>
+              <Link href={"/#contact"}>
+                <button className="bg-orange-500 hover:bg-orange-400 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg">
+                  Envoyer un colis
+                </button>
+              </Link>
+              <Link href={"/services"}>
+                <button className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300">
+                  Nos tarifs
+                </button>
+              </Link>
             </div>
           </div>
         </div>

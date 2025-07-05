@@ -22,14 +22,7 @@ export default function ServicesPage() {
       <Hero />
       <ServicesList />
       <FAQ />
-      
-      {/* 
-      
-    
-      
-      
-      
-      <CallToAction /> */}
+ 
     </main>
   );
 }

@@ -179,7 +179,7 @@ export  function Footer() {
                   <Calendar className="w-4 h-4 text-orange-400" />
                   <span className="font-bold text-orange-300">Prochain chargement</span>
                 </div>
-                <div className="text-white font-black text-lg">18 Juin 2025</div>
+                <div className="text-white font-black text-lg">8 Juillet 2025</div>
                 <div className="text-orange-200 text-sm">Réservez votre place maintenant</div>
               </div>
 

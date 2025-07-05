@@ -95,11 +95,11 @@ export default function Services() {
       title: "Chargements Réguliers",
       subtitle: "Départs programmés",
       description: "Chargements réguliers avec dates fixes pour planifier vos envois",
-      stats: "Prochain • 18 Juin",
+      stats: "Prochain • 8 Juillet",
       gradient: "from-[#010066] via-[#010088] to-[#0100aa]",
       accentColor: "primary",
       features: ["Départs réguliers", "Dates prévisibles", "Planning fixe"],
-      price: "Prochain: 18 Juin 2025"
+      price: "Prochain: 8 Juillet 2025"
     },
     {
       id: 5,
