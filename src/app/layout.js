@@ -4,6 +4,7 @@ import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/src/components/layout/header'
 import { Footer } from '@/src/components/layout/footer'
+import { icons } from 'lucide-react'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,14 +21,17 @@ const poppins = Poppins({
 
 export const metadata = {
   title: {
-    default: 'IE Global - Transport France Burkina Faso | Envoi de Colis',
-    template: '%s | IE Global'
+    default: 'Import Export BF - Transport France Burkina Faso | Envoi de Colis',
+    template: '%s | Import Export BF'
   },
-  description: 'Service familial d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Colis standard 20€, Transport barrique 100€, Ramassage domicile disponible.',
+  icons: { 
+    icon:"/logo.jpg",
+  },
+  description: 'Extreprise d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Colis standard 100€, Transport barrique 100€, Ramassage domicile disponible.',
   keywords: [
     'envoi colis Burkina Faso',
     'transport France Burkina',
-    'IE Global',
+    'Import Export BF',
     'colis Ouagadougou',
     'colis Bobo-Dioulasso',
     'ramassage domicile',
@@ -36,9 +40,9 @@ export const metadata = {
     'diaspora burkinabè',
     'service familial'
   ],
-  authors: [{ name: 'IE Global' }],
-  creator: 'IE Global',
-  publisher: 'IE Global',
+  authors: [{ name: 'Import Export BF' }],
+  creator: 'Import Export BF',
+  publisher: 'Import Export BF',
   formatDetection: {
     email: false,
     address: false,
@@ -52,34 +56,34 @@ export const metadata = {
     type: 'website',
     locale: 'fr_FR',
     url: 'https://ieglobal.fr',
-    title: 'IE Global - Transport France Burkina Faso',
+    title: 'Import Export BF - Transport France Burkina Faso',
     description: 'Service familial d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 20€.',
-    siteName: 'IE Global',
+    siteName: 'Import Export BF',
     images: [
       {
         url: '/logo.jpg', // Votre logo comme image principale
         width: 1200,
         height: 630,
-        alt: 'IE Global - Service d\'envoi de colis France Burkina Faso',
+        alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
         type: 'image/jpeg',
       },
       {
-        url: '/og-image.jpg', // Image alternative si vous en avez une
+        url: '/logo.jpg', // Image alternative si vous en avez une
         width: 1200,
         height: 630,
-        alt: 'IE Global - Transport et logistique',
+        alt: 'Import Export BF - Transport et logistique',
         type: 'image/jpeg',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IE Global - Transport France Burkina Faso',
+    title: 'Import Export BF - Transport France Burkina Faso',
     description: 'Service familial d\'envoi de colis vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 20€.',
     images: [
       {
         url: '/logo.jpg',
-        alt: 'IE Global - Service d\'envoi de colis France Burkina Faso',
+        alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
       }
     ],
     creator: '@ieglobal',
@@ -124,7 +128,7 @@ export const metadata = {
     'application/ld+json': JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'IE Global',
+      name: 'Import Export BF',
       description: 'Service familial d\'envoi de colis de la France vers le Burkina Faso',
       url: 'https://ieglobal.fr',
       logo: 'https://ieglobal.fr/logo.jpg',
