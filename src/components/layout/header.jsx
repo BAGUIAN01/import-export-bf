@@ -494,7 +494,7 @@ export function Header() {
                     >
                       <div className="p-3">
                         <div className="space-y-2">
-                          <Link href="/login">
+                          <Link href="/#">
                             <button
                               className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group/login"
                               onClick={() => setActiveDropdown(null)}
@@ -514,7 +514,7 @@ export function Header() {
                             </button>
                           </Link>
 
-                          <Link href="/register">
+                          <Link href="/#">
                             <button
                               className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group/register"
                               onClick={() => setActiveDropdown(null)}

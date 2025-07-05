@@ -39,27 +39,27 @@ export  function Footer() {
   };
 
   const services = [
-    { name: 'Envoi de Colis', href: '/services/colis', price: '100€' },
-    { name: 'Envoi Barrique', href: '/services/barrique', price: '100€' },
-    { name: 'Ramassage Domicile', href: '/services/ramassage', price: '20€' },
-    { name: 'Suivi en Ligne', href: '/services/suivi', price: 'Gratuit' },
-    { name: 'Assurance Colis', href: '/services/assurance', price: 'Incluse' }
+    { name: 'Envoi de Colis', href: '/services', price: '100€' },
+    { name: 'Envoi Barrique', href: '/services', price: '100€' },
+    { name: 'Ramassage Domicile', href: '/services', price: '20€' },
+    { name: 'Suivi en Ligne', href: '/tracking', price: 'Gratuit' },
+    { name: 'Assurance Colis', href: '/services', price: 'Incluse' }
   ];
 
   const quickLinks = [
-    { name: 'À propos', href: '/about' },
-    { name: 'Témoignages', href: '/testimonials' },
-    { name: 'Tarifs', href: '/pricing' },
-    { name: 'Contact', href: '/contact' },
-    { name: 'FAQ', href: '/faq' },
+    { name: 'À propos', href: '/#about' },
+    { name: 'Témoignages', href: '/#testimonials' },
+    { name: 'Tarifs', href: '/services' },
+    { name: 'Contact', href: '/#contact' },
+    { name: 'FAQ', href: '/services#faq' },
     { name: 'Suivi Colis', href: '/tracking' }
   ];
 
   const legalLinks = [
-    { name: 'Mentions légales', href: '/legal' },
-    { name: 'Politique de confidentialité', href: '/privacy' },
-    { name: 'Conditions générales', href: '/terms' },
-    { name: 'Cookies', href: '/cookies' }
+    { name: 'Mentions légales', href: '/#' },
+    { name: 'Politique de confidentialité', href: '/#' },
+    { name: 'Conditions générales', href: '/#' },
+    { name: 'Cookies', href: '/#' }
   ];
 
   const socialLinks = [

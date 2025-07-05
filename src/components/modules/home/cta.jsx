@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Package, Phone, MapPin, Calendar, ArrowRight, Clock, Shield, Heart, Truck, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CTA() {
   const [isVisible, setIsVisible] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
-    days: 12,
-    hours: 8,
-    minutes: 45,
-    seconds: 30
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
   });
   const sectionRef = useRef(null);
 
@@ -28,20 +29,28 @@ export default function CTA() {
 
   // Countdown timer simulation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        } else if (prev.days > 0) {
-          return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        }
-        return prev;
-      });
-    }, 1000);
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const targetDate = new Date('2025-07-08T00:00:00');
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24)) - 2;
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    // Calcul initial
+    calculateTimeLeft();
+
+    // Mise à jour chaque seconde
+    const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -60,7 +69,7 @@ export default function CTA() {
     {
       icon: Clock,
       title: "Délai garanti",
-      description: "15 jours maximum"
+      description: "45 jours maximum"
     },
     {
       icon: Heart,
@@ -134,15 +143,19 @@ export default function CTA() {
 
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center mb-12">
-            <button className="group bg-orange-500 hover:bg-orange-400 text-white px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-black text-lg lg:text-xl transition-all duration-300 hover:scale-105 shadow-2xl flex items-center justify-center gap-3">
-              <Package className="w-6 h-6 lg:w-7 lg:h-7" />
-              <span>Réserver ma place</span>
-              <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform" />
-            </button>
-            
-            <button className="border-2 border-white/50 hover:border-white text-white hover:bg-white/10 px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-bold text-lg lg:text-xl transition-all duration-300 backdrop-blur-sm">
-              Calculer le prix
-            </button>
+            <Link href={"/#contact"}>
+              <button className="group bg-orange-500 hover:bg-orange-400 text-white px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-black text-lg lg:text-xl transition-all duration-300 hover:scale-105 shadow-2xl flex items-center justify-center gap-3">
+                <Package className="w-6 h-6 lg:w-7 lg:h-7" />
+                <span>Réserver ma place</span>
+                <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform" />
+              </button>
+              
+            </Link>
+            <Link href={"/#contact"}>
+              <button className="border-2 border-white/50 hover:border-white text-white hover:bg-white/10 px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-bold text-lg lg:text-xl transition-all duration-300 backdrop-blur-sm">
+                Calculer le prix
+              </button>
+            </Link>
           </div>
         </div>
 

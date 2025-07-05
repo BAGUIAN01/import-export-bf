@@ -23,7 +23,7 @@ export default function Hero() {
     {
       icon: Package,
       title: "Colis Standard",
-      price: "20€",
+      price: "100€",
       desc: "Jusqu'à 30kg - Dimensions: 80x60x60cm",
       details: "Idéal pour vêtements, produits alimentaires, médicaments",
       popular: true,
@@ -39,7 +39,7 @@ export default function Hero() {
     {
       icon: Home,
       title: "Ramassage Domicile",
-      price: "+15€",
+      price: "+20€",
       desc: "Collecte à votre adresse en France",
       details: "Service pratique, nous venons chez vous",
       popular: false,
@@ -47,7 +47,7 @@ export default function Hero() {
   ];
 
   const features = [
-    { icon: Clock, text: "Livraison 7-10 jours", color: "text-blue-400" },
+    { icon: Clock, text: "Livraison 45 jours", color: "text-blue-400" },
     { icon: Shield, text: "Assurance incluse", color: "text-green-400" },
     { icon: MapPin, text: "Suivi GPS temps réel", color: "text-orange-400" },
     { icon: Users, text: "Service familial", color: "text-purple-400" },

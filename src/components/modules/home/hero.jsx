@@ -3,15 +3,11 @@ import {
   Globe,
   Package,
   Truck,
-  Plane,
   ArrowRight,
   CheckCircle,
-  TrendingUp,
-  Play,
   MapPin,
   Clock,
   Shield,
-  Euro,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -66,12 +62,6 @@ export default function Hero() {
       price: "100€",
       desc: "Dimensions standardisées",
     },
-  ];
-
-  const routes = [
-    { from: "Paris", to: "Ouagadougou", duration: "7-10 jours" },
-    { from: "Lyon", to: "Bobo-Dioulasso", duration: "8-12 jours" },
-    { from: "Marseille", to: "Koudougou", duration: "7-10 jours" },
   ];
 
   useEffect(() => {
@@ -321,7 +311,7 @@ export default function Hero() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="text-center p-3 bg-white/[0.02] rounded-xl border border-white/5">
                       <div className="text-lg font-black text-orange-400">
-                        7-10j
+                        45 Jours
                       </div>
                       <div className="text-xs text-white/60 uppercase tracking-wide">
                         Délai

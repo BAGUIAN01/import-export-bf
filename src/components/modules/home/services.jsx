@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Package, Truck, MapPin, Calendar, Phone, Shield, ArrowRight, Sparkles, Clock, Target } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Services() {
   const [activeService, setActiveService] = useState(0);
@@ -291,7 +292,9 @@ export default function Services() {
                     ? 'bg-orange-500 hover:bg-orange-400 shadow-orange-500/25'
                     : 'hover:opacity-90'
                 }`} style={services[activeService].accentColor === 'primary' ? { backgroundColor: '#010066' } : {}}>
-                  <span>En savoir plus</span>
+                  <Link href={"/#contact"}>
+                    <span>En savoir plus</span>
+                  </Link>
                   <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                 </button>
               </div>
@@ -329,15 +332,19 @@ export default function Services() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center">
-              <button className="text-white px-8 lg:px-10 py-4 lg:py-5 rounded-2xl font-bold text-base lg:text-lg hover:opacity-90 transition-all duration-300 flex items-center justify-center gap-3 shadow-xl" style={{ backgroundColor: '#010066' }}>
-                <span>Demander un ramassage</span>
-                <div className="w-6 h-6 lg:w-8 lg:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <ArrowRight className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
-                </div>
-              </button>
-              <button className="border-2 px-8 lg:px-10 py-4 lg:py-5 rounded-2xl font-bold text-base lg:text-lg hover:bg-blue-50 transition-all duration-300 backdrop-blur-sm" style={{ borderColor: '#010066', color: '#010066' }}>
-                Voir les tarifs
-              </button>
+                <Link href={"/#contact"}>
+                  <button className="text-white px-8 lg:px-10 py-4 lg:py-5 rounded-2xl font-bold text-base lg:text-lg hover:opacity-90 transition-all duration-300 flex items-center justify-center gap-3 shadow-xl" style={{ backgroundColor: '#010066' }}>
+                      <span>Demander un ramassage</span>
+                    <div className="w-6 h-6 lg:w-8 lg:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                      <ArrowRight className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
+                    </div>
+                  </button>
+                </Link>
+                <Link href={"/services#services-list"}>
+                  <button className="border-2 px-8 lg:px-10 py-4 lg:py-5 rounded-2xl font-bold text-base lg:text-lg hover:bg-blue-50 transition-all duration-300 backdrop-blur-sm" style={{ borderColor: '#010066', color: '#010066' }}>
+                    Voir les tarifs
+                  </button>
+                </Link>
             </div>
           </div>
         </div>

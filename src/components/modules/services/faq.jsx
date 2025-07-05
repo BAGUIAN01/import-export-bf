@@ -20,7 +20,7 @@ export default function FAQ() {
       category: 'pricing',
       icon: Package,
       question: "Combien coûte l'envoi d'un colis standard ?",
-      answer: "Notre tarif fixe pour un colis standard (jusqu'à 30kg, dimensions 80x60x60cm) est de 20€. Le ramassage à domicile coûte 15€ supplémentaires. Pour les barriques et contenants lourds, le tarif est de 100€. Tous nos prix incluent l'assurance et le dédouanement.",
+      answer: "Notre tarif fixe pour un colis standard (jusqu'à 30kg, dimensions 80x60x60cm) est de 20€. Le ramassage à domicile coûte 20€ supplémentaires. Pour les barriques et contenants lourds, le tarif est de 100€. Tous nos prix incluent l'assurance et le dédouanement.",
       popular: true
     },
     {
@@ -41,7 +41,7 @@ export default function FAQ() {
       category: 'pickup',
       icon: Package,
       question: "Le ramassage à domicile est-il disponible partout en France ?",
-      answer: "Oui, notre service de ramassage à domicile couvre toute la France métropolitaine pour 15€ supplémentaires. Nous planifions un rendez-vous selon vos disponibilités, emballons votre colis sur place et vous remettons immédiatement un reçu avec numéro de suivi.",
+      answer: "Oui, notre service de ramassage à domicile couvre toute la France métropolitaine pour 20€ supplémentaires. Nous planifions un rendez-vous selon vos disponibilités, emballons votre colis sur place et vous remettons immédiatement un reçu avec numéro de suivi.",
       popular: false
     },
     {
@@ -126,7 +126,9 @@ export default function FAQ() {
   const popularFAQ = faqData.filter(item => item.popular);
 
   return (
-    <section className="py-16 lg:py-24 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden">
+    <section 
+      className="py-16 lg:py-24 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden"
+      id="faq">
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 right-20 w-96 h-96 bg-[#010066]/5 rounded-full blur-3xl"></div>

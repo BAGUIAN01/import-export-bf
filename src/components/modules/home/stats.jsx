@@ -104,7 +104,7 @@ export default function Stats() {
     },
     {
       icon: Truck,
-      value: "15j",
+      value: "45j",
       label: "Délai moyen",
       detail: "De la France au Burkina"
     },

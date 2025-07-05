@@ -26,7 +26,7 @@ export default function ServicesList() {
         'Support client 24/7'
       ],
       includes: [
-        'Collecte possible (+15€)',
+        'Collecte possible (+20€)',
         'Emballage sécurisé',
         'Dédouanement inclus',
         'Livraison à domicile'
@@ -69,7 +69,7 @@ export default function ServicesList() {
       id: 'ramassage-domicile',
       icon: Home,
       title: 'Ramassage Domicile',
-      price: '+15€',
+      price: '+20€',
       originalPrice: null,
       popular: false,
       badge: 'Service premium',
