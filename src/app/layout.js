@@ -1,7 +1,7 @@
 // app/layout.tsx
 
 import { Inter, Poppins } from 'next/font/google'
-import './globals.css'
+import './BFs.css'
 import { Header } from '@/src/components/layout/header'
 import { Footer } from '@/src/components/layout/footer'
 
@@ -63,7 +63,7 @@ export const metadata = {
         type: 'image/jpeg',
       },
       {
-        url: 'https://import-export-bf.vercel.app/og-image.jpg', // ✅ Image optimisée pour Open Graph
+        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ Image optimisée pour Open Graph
         width: 1200,
         height: 630,
         alt: 'Import Export BF - Transport et logistique',
@@ -128,15 +128,15 @@ export const metadata = {
       logo: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ URL ABSOLUE
       image: 'https://import-export-bf.vercel.app/og-image.jpg', // ✅ URL ABSOLUE
       telephone: ['+33670699823', '+22676601981'],
-      email: 'contact@ieglobal.fr',
+      email: 'contact@ieBF.fr',
       address: {
         '@type': 'PostalAddress',
         addressCountry: 'FR',
         addressLocality: 'France',
       },
       sameAs: [
-        'https://facebook.com/ieglobal',
-        'https://instagram.com/ieglobal',
+        'https://facebook.com/ieBF',
+        'https://instagram.com/ieBF',
       ],
       serviceArea: ['France', 'Burkina Faso'],
       hasOfferCatalog: {
