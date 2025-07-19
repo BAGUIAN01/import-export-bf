@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Car, Ship, Shield, ArrowRight, CheckCircle, Phone, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 
 export default function CarShippingCard() {
@@ -40,31 +41,24 @@ export default function CarShippingCard() {
   const vehicles = [
     {
       id: 1,
-      name: "Berline familiale",
-      image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=250&fit=crop",
-      price: "À partir de 800€",
-      type: "Voiture particulière"
+      name: "",
+      image: "/images/image10.jpg",
+      price: "",
+      type: ""
     },
     {
       id: 2,
-      name: "SUV compact",
-      image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=250&fit=crop",
-      price: "À partir de 900€",
-      type: "SUV"
+      name: "",
+      image: "/images/image5.jpg",
+      price: "",
+      type: ""
     },
     {
       id: 3,
-      name: "Véhicule utilitaire",
-      image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=250&fit=crop",
-      price: "À partir de 1200€",
-      type: "Utilitaire"
-    },
-    {
-      id: 5,
-      name: "Pick-up",
-      image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&h=250&fit=crop",
-      price: "À partir de 1100€",
-      type: "Pick-up"
+      name: "",
+      image: "/images/image13.jpg",
+      price: "",
+      type: ""
     }
   ];
 
@@ -133,19 +127,20 @@ export default function CarShippingCard() {
                   >
                     {vehicles.map((vehicle) => (
                       <div key={vehicle.id} className="min-w-full relative h-full">
-                        <img 
+                        <Image 
                           src={vehicle.image} 
                           alt={vehicle.name}
+                          fill
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                        {/* <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                           <div className="bg-orange-500/80 backdrop-blur-sm rounded-lg px-3 py-1 text-xs font-semibold mb-2 inline-block">
                             {vehicle.type}
                           </div>
                           <h4 className="text-2xl font-bold mb-1">{vehicle.name}</h4>
                           <p className="text-orange-300 font-semibold text-lg">{vehicle.price}</p>
-                        </div>
+                        </div> */}
                       </div>
                     ))}
                   </div>

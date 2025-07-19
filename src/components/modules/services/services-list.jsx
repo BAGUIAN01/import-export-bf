@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Package, Truck, Home, ArrowRight, CheckCircle, Clock, Shield, Euro, Star, Zap, Users, Globe } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ServicesList() {
   const [visibleCards, setVisibleCards] = useState([]);
@@ -11,7 +12,7 @@ export default function ServicesList() {
       id: 'colis-standard',
       icon: Package,
       title: 'Colis Standard',
-      price: '20€',
+      price: '100€',
       originalPrice: null,
       popular: true,
       badge: 'Le plus populaire',
@@ -333,12 +334,14 @@ export default function ServicesList() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 group">
-                  <Zap className="w-5 h-5" />
-                  <span>Demander un devis</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
-                
+                <Link href="/#contact">
+                  <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 group">
+                    <Zap className="w-5 h-5" />
+                    <span>Demander un devis</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </button>
+                  
+                </Link>
                 <div className="flex items-center gap-4 text-sm text-white/70">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
