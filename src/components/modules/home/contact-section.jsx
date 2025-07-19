@@ -125,7 +125,7 @@ export default function ContactSection() {
     {
       icon: Clock,
       title: "Délai moyen",
-      value: "15 jours",
+      value: "45 jours",
       note: "France → Burkina"
     }
   ];

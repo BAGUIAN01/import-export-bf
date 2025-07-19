@@ -21,7 +21,7 @@ export default function ServicesList() {
       features: [
         'Jusqu\'à 30kg maximum',
         'Dimensions: 80x60x60cm',
-        'Livraison 7-10 jours',
+        'Livraison 20-45 jours',
         'Assurance incluse',
         'Suivi GPS temps réel',
         'Support client 24/7'
@@ -53,7 +53,7 @@ export default function ServicesList() {
         'Transport sécurisé',
         'Manutention spécialisée',
         'Assurance renforcée',
-        'Livraison 8-12 jours'
+        'Livraison 30-45 jours'
       ],
       includes: [
         'Collecte à domicile incluse',

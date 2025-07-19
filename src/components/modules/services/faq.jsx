@@ -27,7 +27,7 @@ export default function FAQ() {
       category: 'shipping',
       icon: Clock,
       question: "Quel est le délai de livraison vers le Burkina Faso ?",
-      answer: "Les délais de livraison sont de 7-10 jours pour les colis standards et le ramassage domicile, et de 8-12 jours pour les barriques. Ces délais incluent le transport, le dédouanement et la livraison finale. Nous vous tenons informé à chaque étape via SMS et WhatsApp.",
+      answer: "Les délais de livraison sont de 20-45 jours pour les colis standards et le ramassage domicile, et de 30-45 jours pour les barriques. Ces délais incluent le transport, le dédouanement et la livraison finale. Nous vous tenons informé à chaque étape via SMS et WhatsApp.",
       popular: true
     },
     {
