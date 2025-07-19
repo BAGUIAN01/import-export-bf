@@ -4,7 +4,6 @@ import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/src/components/layout/header'
 import { Footer } from '@/src/components/layout/footer'
-import { icons } from 'lucide-react'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,10 +23,7 @@ export const metadata = {
     default: 'Import Export BF - Transport France Burkina Faso | Envoi de Colis',
     template: '%s | Import Export BF'
   },
-  icons: { 
-    icon:"/logo.jpg",
-  },
-  description: 'Extreprise d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Colis standard 100€, Transport barrique 100€, Ramassage domicile disponible.',
+  description: 'Entreprise d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Colis standard 100€, Transport barrique 100€, Ramassage domicile disponible.',
   keywords: [
     'envoi colis Burkina Faso',
     'transport France Burkina',
@@ -47,27 +43,27 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://ieglobal.fr'),
+  metadataBase: new URL('https://import-export-bf.vercel.app'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://ieglobal.fr',
+    url: 'https://import-export-bf.vercel.app',
     title: 'Import Export BF - Transport France Burkina Faso',
-    description: 'Service  d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
+    description: 'Service d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
     siteName: 'Import Export BF',
     images: [
       {
-        url: '/logo.jpg', // Votre logo comme image principale
+        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ URL ABSOLUE
         width: 1200,
         height: 630,
         alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
         type: 'image/jpeg',
       },
       {
-        url: '/logo.jpg', // Image alternative si vous en avez une
+        url: 'https://import-export-bf.vercel.app/og-image.jpg', // ✅ Image optimisée pour Open Graph
         width: 1200,
         height: 630,
         alt: 'Import Export BF - Transport et logistique',
@@ -78,15 +74,15 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Import Export BF - Transport France Burkina Faso',
-    description: 'Service  d\'envoi de colis vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
+    description: 'Service d\'envoi de colis vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
     images: [
       {
-        url: '/logo.jpg',
+        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ URL ABSOLUE
         alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
       }
     ],
-    creator: '@ieglobal',
-    site: '@ieglobal',
+    creator: '@ImportExportBF',
+    site: '@ImportExportBF',
   },
   robots: {
     index: true,
@@ -102,7 +98,7 @@ export const metadata = {
   verification: {
     google: 'your-google-verification-code',
   },
-  // Métadonnées supplémentaires pour le logo
+  // Favicons avec chemins relatifs (OK pour les favicons)
   icons: {
     icon: [
       { url: '/logo_short-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -121,16 +117,16 @@ export const metadata = {
     ],
   },
   manifest: '/site.webmanifest',
-  // JSON-LD pour le référencement
+  // JSON-LD pour le référencement (URLs absolues aussi)
   other: {
     'application/ld+json': JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Organization',
       name: 'Import Export BF',
-      description: 'Service  d\'envoi de colis de la France vers le Burkina Faso',
-      url: 'https://ieglobal.fr',
-      logo: 'https://ieglobal.fr/logo.jpg',
-      image: 'https://ieglobal.fr/logo.jpg',
+      description: 'Service d\'envoi de colis de la France vers le Burkina Faso',
+      url: 'https://import-export-bf.vercel.app',
+      logo: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ URL ABSOLUE
+      image: 'https://import-export-bf.vercel.app/og-image.jpg', // ✅ URL ABSOLUE
       telephone: ['+33670699823', '+22676601981'],
       email: 'contact@ieglobal.fr',
       address: {
@@ -151,7 +147,7 @@ export const metadata = {
             '@type': 'Offer',
             name: 'Colis Standard',
             description: 'Envoi de colis jusqu\'à 30kg',
-            price: '20',
+            price: '100', // ✅ Corrigé selon votre description
             priceCurrency: 'EUR',
           },
           {
