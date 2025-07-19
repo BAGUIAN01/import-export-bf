@@ -37,8 +37,7 @@ export const metadata = {
     'ramassage domicile',
     'transport barrique',
     'livraison Burkina Faso',
-    'diaspora burkinabè',
-    'service familial'
+    'diaspora burkinabè'
   ],
   authors: [{ name: 'Import Export BF' }],
   creator: 'Import Export BF',
@@ -57,7 +56,7 @@ export const metadata = {
     locale: 'fr_FR',
     url: 'https://ieglobal.fr',
     title: 'Import Export BF - Transport France Burkina Faso',
-    description: 'Service familial d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 20€.',
+    description: 'Service  d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
     siteName: 'Import Export BF',
     images: [
       {
@@ -79,7 +78,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Import Export BF - Transport France Burkina Faso',
-    description: 'Service familial d\'envoi de colis vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 20€.',
+    description: 'Service  d\'envoi de colis vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
     images: [
       {
         url: '/logo.jpg',
@@ -128,7 +127,7 @@ export const metadata = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
       name: 'Import Export BF',
-      description: 'Service familial d\'envoi de colis de la France vers le Burkina Faso',
+      description: 'Service  d\'envoi de colis de la France vers le Burkina Faso',
       url: 'https://ieglobal.fr',
       logo: 'https://ieglobal.fr/logo.jpg',
       image: 'https://ieglobal.fr/logo.jpg',
