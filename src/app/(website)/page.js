@@ -7,7 +7,7 @@ import About from "@/src/components/modules/home/about";
 import Testimonials from "@/src/components/modules/home/testimonials";
 import CTA from "@/src/components/modules/home/cta";
 import ContactSection from "@/src/components/modules/home/contact-section";
-import Phototeque from "../components/modules/home/phototeque";
+import Phototeque from "../../components/modules/home/phototeque";
 
 export default function HomePage() {
   return (
