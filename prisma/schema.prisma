@@ -1,0 +1,255 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./db/dev.db"
+}
+
+// ===== AUTHENTIFICATION =====
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String    @unique
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("CLIENT") // CLIENT, ADMIN, STAFF, TRACKER
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts        Account[]
+  sessions        Session[]
+  clients         Client[]
+  packages        Package[]
+  trackingUpdates TrackingUpdate[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Code de vérification par SMS
+model PhoneVerification {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  attempts  Int      @default(0)
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([phone, code])
+  @@map("phone_verifications")
+}
+
+// ===== BUSINESS LOGIC =====
+
+// Informations client
+model Client {
+  id          String   @id @default(cuid())
+  userId      String?  // Lié à un compte utilisateur (optionnel)
+  firstName   String
+  lastName    String
+  phone       String
+  email       String?
+  address     String
+  city        String
+  country     String   @default("France")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Destinataire au Burkina Faso
+  recipientName    String
+  recipientPhone   String
+  recipientAddress String
+  recipientCity    String
+
+  user     User?     @relation(fields: [userId], references: [id])
+  packages Package[]
+
+  @@index([phone])
+  @@index([email])
+  @@map("clients")
+}
+
+// Conteneurs/Chargements
+model Container {
+  id               String   @id @default(cuid())
+  containerNumber  String   @unique // Numéro de suivi principal
+  departureDate    DateTime? // Date de départ prévue
+  actualDeparture  DateTime? // Date de départ réelle
+  arrivalDate      DateTime? // Date d'arrivée prévue
+  actualArrival    DateTime? // Date d'arrivée réelle
+  status           String   @default("PREPARATION") // PREPARATION, LOADED, IN_TRANSIT, CUSTOMS, DELIVERED, CANCELLED
+  capacity         Int      @default(100) // Capacité max
+  currentLoad      Int      @default(0) // Charge actuelle
+  origin           String   @default("France")
+  destination      String   @default("Burkina Faso")
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  packages         Package[]
+  trackingUpdates  TrackingUpdate[]
+
+  @@index([containerNumber])
+  @@index([status])
+  @@map("containers")
+}
+
+// Colis
+model Package {
+  id              String   @id @default(cuid())
+  packageNumber   String   @unique // Numéro unique du colis
+  clientId        String
+  containerId     String?
+  userId          String?  // Utilisateur qui a créé l'entrée
+  
+  // Détails du colis
+  type            String   // CARTON, BARRIQUE, VEHICLE, OTHER
+  description     String
+  weight          Float?
+  dimensions      String?  // "80x60x60"
+  value           Float?   // Valeur déclarée
+  
+  // Statut et suivi
+  status          String   @default("REGISTERED") // REGISTERED, COLLECTED, IN_CONTAINER, IN_TRANSIT, DELIVERED, RETURNED
+  pickupAddress   String?  // Adresse de ramassage
+  pickupDate      DateTime? // Date de ramassage
+  deliveryAddress String   // Adresse de livraison au Burkina
+  deliveryDate    DateTime? // Date de livraison
+  
+  // Tarification
+  price           Float
+  pickupFee       Float    @default(0)
+  totalAmount     Float
+  paymentStatus   String   @default("PENDING") // PENDING, PAID, CANCELLED, REFUNDED
+  
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  client    Client     @relation(fields: [clientId], references: [id])
+  container Container? @relation(fields: [containerId], references: [id])
+  user      User?      @relation(fields: [userId], references: [id])
+
+  @@index([packageNumber])
+  @@index([clientId])
+  @@index([containerId])
+  @@index([status])
+  @@map("packages")
+}
+
+// Suivi des conteneurs (mises à jour de position)
+model TrackingUpdate {
+  id          String   @id @default(cuid())
+  containerId String
+  userId      String   // Utilisateur qui fait la mise à jour
+  location    String   // Localisation actuelle
+  description String   // Description de l'étape
+  latitude    Float?   // Coordonnées GPS (optionnel)
+  longitude   Float?
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  container Container @relation(fields: [containerId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([containerId])
+  @@index([timestamp])
+  @@map("tracking_updates")
+}
+
+// Tarifs (pour gérer les prix dynamiques)
+model Pricing {
+  id        String   @id @default(cuid())
+  type      String   @unique // CARTON, BARRIQUE, VEHICLE, OTHER
+  basePrice Float
+  pickupFee Float    @default(20)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pricings")
+}
+
+// Messages WhatsApp envoyés
+model WhatsAppMessage {
+  id          String   @id @default(cuid())
+  to          String   // Numéro de téléphone
+  message     String   // Contenu du message
+  messageType String   @default("text") // text, template, media
+  status      String   @default("PENDING") // PENDING, SENT, DELIVERED, FAILED
+  messageId   String?  // ID du message WhatsApp
+  error       String?  // Erreur si échec
+  createdAt   DateTime @default(now())
+
+  @@index([to])
+  @@index([status])
+  @@map("whatsapp_messages")
+}
+
+// Log des actions (audit trail)
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // Action effectuée
+  resource   String   // Resource affectée (package, container, etc.)
+  resourceId String?  // ID de la resource
+  details    String?  // Détails supplémentaires en JSON
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
