@@ -1,9 +1,9 @@
 // app/services/page.tsx
 
-import Hero from '@/src/components/modules/services/hero';
-import ServicesList from '@/src/components/modules/services/services-list';
-import FAQ from '@/src/components/modules/services/faq';
-import CarShippingCard from '@/src/components/modules/services/car';
+import Hero from '@/components/modules/services/hero';
+import ServicesList from '@/components/modules/services/services-list';
+import FAQ from '@/components/modules/services/faq';
+import CarShippingCard from '@/components/modules/services/car';
 // import CallToAction from '@/components/modules/services/call-to-action';
 
 export const metadata = {

@@ -1,45 +1,35 @@
-// app/admin/layout.tsx
-import '../globals.css'
-import { Inter, Poppins } from 'next/font/google'
+'use client'
 
+import { SessionProvider } from 'next-auth/react'
+import { LayoutProvider } from '@/components/layout/admin/layout-provider'
+import { MobileSidebar } from '@/components/layout/admin/sidebar/mobile-sidebar'
+import { Sidebar } from '@/components/layout/admin/sidebar/sidebar'
+import { Header } from '@/components/layout/admin/header'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
-
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-poppins',
-  display: 'swap',
-})
-
-
-export default function AdminLayout({
-  children,
-}) {
+export default function DashboardLayout({ children }) {
   return (
-    <html lang="fr" className={`${inter.variable} ${poppins.variable}`}>
-      <head>
-        <link rel="icon" type="image/png" sizes="16x16" href="/logo_short-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/logo_short-32x32.png" />
-        <link rel="icon" type="image/png" sizes="96x96" href="/logo_short-96x96.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/logo_short.png" />
-        <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#010066" />
-        <meta name="msapplication-TileColor" content="#010066" />
-        <meta name="msapplication-TileImage" content="/logo_short-144x144.png" />
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <div className="min-h-screen flex flex-col">
-          <main className="flex-1">
-            {children}
-          </main>
+    <SessionProvider>
+      <LayoutProvider>
+        <div className="h-screen bg-background flex flex-col">
+          <MobileSidebar />
+          
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar fixe */}
+          <Sidebar />
+          
+          <div className="flex flex-1 flex-col overflow-hidden">
+            {/* Header fixe */}
+            <Header/>
+            
+            {/* Zone scrollable avec hauteur calculée */}
+            <main className="flex-1 overflow-y-auto p-4">
+              {children}
+            </main>
+          </div>
         </div>
-      </body>
-    </html>
+
+        </div>
+      </LayoutProvider>
+    </SessionProvider>
   )
 }

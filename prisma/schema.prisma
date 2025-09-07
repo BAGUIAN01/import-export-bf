@@ -46,10 +46,20 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  role          String    @default("CLIENT") // CLIENT, ADMIN, STAFF, TRACKER
+  password      String?   // Ajout du champ password manquant
+  role          UserRole  @default(CLIENT)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  
+  // Informations supplémentaires
+  firstName     String?
+  lastName      String?
+  address       String?
+  city          String?
+  country       String?   @default("France")
+  dateOfBirth   DateTime?
+  lastLoginAt   DateTime?
 
   // Relations
   accounts        Account[]
@@ -58,6 +68,9 @@ model User {
   packages        Package[]
   trackingUpdates TrackingUpdate[]
   auditLogs       AuditLog[]
+  invoices        Invoice[]
+  notifications   Notification[]
+  files           File[]
 
   @@map("users")
 }
@@ -71,7 +84,6 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// Code de vérification par SMS
 model PhoneVerification {
   id        String   @id @default(cuid())
   phone     String
@@ -82,15 +94,91 @@ model PhoneVerification {
   createdAt DateTime @default(now())
 
   @@unique([phone, code])
+  @@index([phone])
+  @@index([expiresAt])
   @@map("phone_verifications")
+}
+
+// ===== ENUMS =====
+enum UserRole {
+  CLIENT
+  ADMIN
+  STAFF
+  TRACKER
+  AGENT
+}
+
+enum PackageType {
+  CARTON
+  BARRIQUE
+  VEHICLE
+  MOTORCYCLE
+  ELECTRONICS
+  CLOTHING
+  FOOD
+  DOCUMENTS
+  OTHER
+}
+
+enum PackageStatus {
+  REGISTERED
+  COLLECTED
+  IN_CONTAINER
+  IN_TRANSIT
+  CUSTOMS
+  DELIVERED
+  RETURNED
+  CANCELLED
+}
+
+enum ContainerStatus {
+  PREPARATION
+  LOADED
+  IN_TRANSIT
+  CUSTOMS
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  MOBILE_MONEY
+  CHEQUE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum NotificationType {
+  SMS
+  EMAIL
+  WHATSAPP
+  PUSH
 }
 
 // ===== BUSINESS LOGIC =====
 
-// Informations client
 model Client {
   id          String   @id @default(cuid())
+  clientCode  String   @unique // Code client unique (ex: CLI001)
   userId      String?  // Lié à un compte utilisateur (optionnel)
+  
+  // Informations personnelles
   firstName   String
   lastName    String
   phone       String
@@ -98,40 +186,79 @@ model Client {
   address     String
   city        String
   country     String   @default("France")
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  postalCode  String?
+  
+  // Informations professionnelles
+  company     String?
+  siret       String?
+  
   // Destinataire au Burkina Faso
   recipientName    String
   recipientPhone   String
+  recipientEmail   String?
   recipientAddress String
   recipientCity    String
+  recipientRelation String? // Relation avec le destinataire
+  
+  // Métadonnées
+  isActive    Boolean  @default(true)
+  isVip       Boolean  @default(false)
+  creditLimit Float    @default(0)
+  totalSpent  Float    @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  // Relations
   user     User?     @relation(fields: [userId], references: [id])
   packages Package[]
+  invoices Invoice[]
+  payments Payment[]
 
   @@index([phone])
   @@index([email])
+  @@index([clientCode])
+  @@index([isActive])
   @@map("clients")
 }
 
-// Conteneurs/Chargements
 model Container {
-  id               String   @id @default(cuid())
-  containerNumber  String   @unique // Numéro de suivi principal
+  id               String          @id @default(cuid())
+  containerNumber  String          @unique // CNT202501001
+  name             String? // Nom du conteneur
+  
+  // Dates importantes
   departureDate    DateTime? // Date de départ prévue
   actualDeparture  DateTime? // Date de départ réelle
   arrivalDate      DateTime? // Date d'arrivée prévue
   actualArrival    DateTime? // Date d'arrivée réelle
-  status           String   @default("PREPARATION") // PREPARATION, LOADED, IN_TRANSIT, CUSTOMS, DELIVERED, CANCELLED
-  capacity         Int      @default(100) // Capacité max
-  currentLoad      Int      @default(0) // Charge actuelle
-  origin           String   @default("France")
-  destination      String   @default("Burkina Faso")
+  
+  // Statut et capacité
+  status           ContainerStatus @default(PREPARATION)
+  capacity         Int             @default(100) // Capacité max
+  currentLoad      Int             @default(0) // Charge actuelle
+  maxWeight        Float?          // Poids maximum autorisé
+  currentWeight    Float           @default(0) // Poids actuel
+  
+  // Localisation
+  origin           String          @default("France")
+  destination      String          @default("Burkina Faso")
+  currentLocation  String?
+  
+  // Informations transport
+  transportCompany String?
+  driverName       String?
+  driverPhone      String?
+  plateNumber      String?
+  
+  // Coûts
+  transportCost    Float?
+  customsCost      Float?
+  totalCost        Float?
+  
   notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   // Relations
   packages         Package[]
@@ -139,37 +266,58 @@ model Container {
 
   @@index([containerNumber])
   @@index([status])
+  @@index([departureDate])
   @@map("containers")
 }
 
-// Colis
 model Package {
-  id              String   @id @default(cuid())
-  packageNumber   String   @unique // Numéro unique du colis
+  id              String        @id @default(cuid())
+  packageNumber   String        @unique // PKG202501001
   clientId        String
   containerId     String?
   userId          String?  // Utilisateur qui a créé l'entrée
   
   // Détails du colis
-  type            String   // CARTON, BARRIQUE, VEHICLE, OTHER
+  type            PackageType
   description     String
+  quantity        Int           @default(1)
   weight          Float?
-  dimensions      String?  // "80x60x60"
+  dimensions      String?  // "LxlxH en cm"
   value           Float?   // Valeur déclarée
+  photos          String?  // JSON string des URLs des photos (MODIFIÉ)
   
   // Statut et suivi
-  status          String   @default("REGISTERED") // REGISTERED, COLLECTED, IN_CONTAINER, IN_TRANSIT, DELIVERED, RETURNED
+  status          PackageStatus @default(REGISTERED)
+  priority        String        @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  isFragile       Boolean       @default(false)
+  isInsured       Boolean       @default(false)
+  
+  // Adresses
   pickupAddress   String?  // Adresse de ramassage
   pickupDate      DateTime? // Date de ramassage
+  pickupTime      String?   // Créneau horaire
   deliveryAddress String   // Adresse de livraison au Burkina
   deliveryDate    DateTime? // Date de livraison
+  deliveryTime    String?
   
   // Tarification
-  price           Float
+  basePrice       Float
   pickupFee       Float    @default(0)
+  insuranceFee    Float    @default(0)
+  customsFee      Float    @default(0)
+  otherFees       Float    @default(0)
+  discount        Float    @default(0)
   totalAmount     Float
-  paymentStatus   String   @default("PENDING") // PENDING, PAID, CANCELLED, REFUNDED
   
+  // Paiement
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  paidAmount      Float         @default(0)
+  paidAt          DateTime?
+  
+  // Métadonnées
+  estimatedDelivery DateTime?
+  specialInstructions String?
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -178,26 +326,37 @@ model Package {
   client    Client     @relation(fields: [clientId], references: [id])
   container Container? @relation(fields: [containerId], references: [id])
   user      User?      @relation(fields: [userId], references: [id])
+  invoiceItems InvoiceItem[]
+  payments  Payment[]
+  files     File[]
 
   @@index([packageNumber])
   @@index([clientId])
   @@index([containerId])
   @@index([status])
+  @@index([createdAt])
   @@map("packages")
 }
 
-// Suivi des conteneurs (mises à jour de position)
 model TrackingUpdate {
   id          String   @id @default(cuid())
   containerId String
   userId      String   // Utilisateur qui fait la mise à jour
+  
+  // Informations de localisation
   location    String   // Localisation actuelle
   description String   // Description de l'étape
-  latitude    Float?   // Coordonnées GPS (optionnel)
+  latitude    Float?   // Coordonnées GPS
   longitude   Float?
+  
+  // Métadonnées
+  isPublic    Boolean  @default(true) // Visible par les clients
+  photos      String?  // JSON string des URLs des photos (MODIFIÉ)
+  temperature Float?   // Température si pertinent
   timestamp   DateTime @default(now())
   createdAt   DateTime @default(now())
 
+  // Relations
   container Container @relation(fields: [containerId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
 
@@ -206,36 +365,194 @@ model TrackingUpdate {
   @@map("tracking_updates")
 }
 
-// Tarifs (pour gérer les prix dynamiques)
 model Pricing {
-  id        String   @id @default(cuid())
-  type      String   @unique // CARTON, BARRIQUE, VEHICLE, OTHER
-  basePrice Float
-  pickupFee Float    @default(20)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  type        String   @unique // CARTON, BARRIQUE, etc.
+  name        String   // Nom affiché
+  description String?
+  
+  // Tarifs
+  basePrice   Float
+  pickupFee   Float    @default(20)
+  perKgPrice  Float?   // Prix par kg supplémentaire
+  minWeight   Float?   // Poids minimum
+  maxWeight   Float?   // Poids maximum
+  
+  // Validité
+  isActive    Boolean  @default(true)
+  validFrom   DateTime @default(now())
+  validUntil  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("pricings")
 }
 
-// Messages WhatsApp envoyés
+// ===== FACTURATION =====
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique // INV-2025-001
+  clientId      String
+  userId        String        // Créateur de la facture
+  
+  // Détails facture
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  status        InvoiceStatus @default(DRAFT)
+  
+  // Montants
+  subtotal      Float
+  taxRate       Float         @default(0)
+  taxAmount     Float         @default(0)
+  discount      Float         @default(0)
+  totalAmount   Float
+  paidAmount    Float         @default(0)
+  
+  // Informations
+  notes         String?
+  terms         String?
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  client        Client        @relation(fields: [clientId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  items         InvoiceItem[]
+  payments      Payment[]
+
+  @@index([invoiceNumber])
+  @@index([clientId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  packageId   String?
+  
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Float
+  totalPrice  Float
+
+  // Relations
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  package     Package? @relation(fields: [packageId], references: [id])
+
+  @@map("invoice_items")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  paymentNumber String        @unique // PAY-2025-001
+  clientId      String
+  invoiceId     String?
+  packageId     String?
+  
+  amount        Float
+  method        PaymentMethod
+  status        String        @default("COMPLETED") // PENDING, COMPLETED, FAILED, CANCELLED
+  
+  // Détails paiement
+  reference     String?       // Référence externe
+  transactionId String?       // ID de transaction
+  
+  paidAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+
+  // Relations
+  client        Client        @relation(fields: [clientId], references: [id])
+  invoice       Invoice?      @relation(fields: [invoiceId], references: [id])
+  package       Package?      @relation(fields: [packageId], references: [id])
+
+  @@index([paymentNumber])
+  @@index([clientId])
+  @@map("payments")
+}
+
+// ===== COMMUNICATIONS =====
+
 model WhatsAppMessage {
   id          String   @id @default(cuid())
   to          String   // Numéro de téléphone
   message     String   // Contenu du message
-  messageType String   @default("text") // text, template, media
-  status      String   @default("PENDING") // PENDING, SENT, DELIVERED, FAILED
+  messageType String   @default("text") // text, template, media, document
+  templateName String? // Nom du template utilisé
+  
+  // Statut
+  status      String   @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
   messageId   String?  // ID du message WhatsApp
   error       String?  // Erreur si échec
+  retryCount  Int      @default(0)
+  
+  // Métadonnées
+  packageId   String?  // Lié à un colis si applicable
+  clientId    String?  // Lié à un client
+  
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
   createdAt   DateTime @default(now())
 
   @@index([to])
   @@index([status])
+  @@index([createdAt])
   @@map("whatsapp_messages")
 }
 
-// Log des actions (audit trail)
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  data        String?          // Données JSON supplémentaires
+  
+  isRead      Boolean          @default(false)
+  readAt      DateTime?
+  createdAt   DateTime         @default(now())
+
+  // Relations
+  user        User             @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+// ===== FICHIERS =====
+
+model File {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  path        String
+  url         String?
+  
+  // Métadonnées
+  uploadedBy  String
+  packageId   String?
+  description String?
+  
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user        User     @relation(fields: [uploadedBy], references: [id])
+  package     Package? @relation(fields: [packageId], references: [id])
+
+  @@index([packageId])
+  @@index([uploadedBy])
+  @@map("files")
+}
+
+// ===== AUDIT =====
+
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
@@ -244,12 +561,30 @@ model AuditLog {
   resourceId String?  // ID de la resource
   details    String?  // Détails supplémentaires en JSON
   ipAddress  String?
+  userAgent  String?
   createdAt  DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([action])
+  @@index([resource])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ===== CONFIGURATION =====
+
+model Setting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  type        String   @default("string") // string, number, boolean, json
+  isPublic    Boolean  @default(false)
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("settings")
 }
