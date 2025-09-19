@@ -1,130 +1,139 @@
-// app/api/containers/[id]/status/route.js - Endpoint spécialisé pour mise à jour de statut
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
-export async function PATCH(request, { params }) {
+// GET - Récupérer l'historique de suivi
+export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !['ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    
+    if (!session) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = await params;
-    const { status, currentLocation, notes } = await request.json();
-
-    if (!status) {
-      return NextResponse.json(
-        { error: 'Le statut est requis' },
-        { status: 400 }
-      );
-    }
-
-    // Vérifier que le statut est valide
-    const validStatuses = [
-      'PREPARATION', 'LOADED', 'IN_TRANSIT', 'CUSTOMS', 'DELIVERED', 'CANCELLED'
-    ];
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: 'Statut invalide' },
-        { status: 400 }
-      );
-    }
-
-    // Récupérer l'ancien statut pour l'audit
-    const currentContainer = await prisma.container.findUnique({
-      where: { id },
-      select: { status: true, containerNumber: true },
+    const trackingUpdates = await prisma.trackingUpdate.findMany({
+      where: { containerId: params.id },
+      include: {
+        user: {
+          select: {
+            name: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: {
+        timestamp: 'desc',
+      },
     });
 
-    if (!currentContainer) {
-      return NextResponse.json({ error: 'Conteneur non trouvé' }, { status: 404 });
+    return NextResponse.json({ trackingUpdates });
+  } catch (error) {
+    console.error("Erreur récupération suivi:", error);
+    return NextResponse.json(
+      { error: "Erreur serveur" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Créer une nouvelle mise à jour de suivi
+export async function POST(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !['ADMIN', 'STAFF', 'TRACKER'].includes(session.user.role)) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    // Préparer les données de mise à jour
-    const updateData = {
-      status,
-      updatedAt: new Date(),
-    };
+    const body = await request.json();
+    const { 
+      location, 
+      description, 
+      latitude, 
+      longitude, 
+      temperature, 
+      isPublic,
+      photos 
+    } = body;
 
-    if (currentLocation) {
-      updateData.currentLocation = currentLocation;
+    // Validation
+    if (!location || !description) {
+      return NextResponse.json(
+        { error: "Localisation et description sont obligatoires" },
+        { status: 400 }
+      );
     }
 
-    if (notes) {
-      updateData.notes = notes;
+    // Vérifier que le conteneur existe
+    const container = await prisma.container.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!container) {
+      return NextResponse.json(
+        { error: "Conteneur non trouvé" },
+        { status: 404 }
+      );
     }
 
-    // Mise à jour du statut avec actualisation des dates
-    if (status === 'IN_TRANSIT' && !currentContainer.actualDeparture) {
-      updateData.actualDeparture = new Date();
-    }
-    if (status === 'DELIVERED') {
-      updateData.actualArrival = new Date();
-    }
-
-    const updatedContainer = await prisma.container.update({
-      where: { id },
-      data: updateData,
+    // Créer la mise à jour de suivi
+    const trackingUpdate = await prisma.trackingUpdate.create({
+      data: {
+        containerId: params.id,
+        userId: session.user.id,
+        location,
+        description,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        temperature: temperature ? parseFloat(temperature) : null,
+        isPublic: isPublic ?? true,
+        photos: photos ? JSON.stringify(photos) : null,
+        timestamp: new Date(),
+      },
       include: {
-        packages: {
+        user: {
           select: {
-            id: true,
-            status: true,
+            name: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
     });
 
-    // Créer une mise à jour de tracking automatique
-    if (currentLocation) {
-      try {
-        await prisma.trackingUpdate.create({
-          data: {
-            containerId: id,
-            userId: session.user.id,
-            location: currentLocation,
-            description: `Conteneur mis à jour: ${status}`,
-            isPublic: true,
-            timestamp: new Date(),
-          },
-        });
-      } catch (trackingError) {
-        console.warn('Erreur création tracking update:', trackingError);
-      }
-    }
-
-    // Log audit
-    try {
-      await prisma.auditLog.create({
-        data: {
-          userId: session.user.id,
-          action: 'UPDATE_CONTAINER_STATUS',
-          resource: 'container',
-          resourceId: id,
-          details: JSON.stringify({
-            oldStatus: currentContainer.status,
-            newStatus: status,
-            currentLocation,
-            notes,
-            containerNumber: currentContainer.containerNumber,
-          }),
-        },
-      });
-    } catch (auditError) {
-      console.warn('Erreur audit log:', auditError);
-    }
-
-    return NextResponse.json({
-      message: 'Statut du conteneur mis à jour avec succès',
-      container: updatedContainer,
+    // Mettre à jour la localisation actuelle du conteneur
+    await prisma.container.update({
+      where: { id: params.id },
+      data: {
+        currentLocation: location,
+        updatedAt: new Date(),
+      },
     });
 
+    // Log de l'audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "CREATE_TRACKING_UPDATE",
+        resource: "container",
+        resourceId: params.id,
+        details: JSON.stringify({ location, description, isPublic }),
+        ipAddress: request.headers.get("x-forwarded-for") || 
+                   request.headers.get("x-real-ip") || 
+                   "unknown",
+      },
+    });
+
+    return NextResponse.json({
+      message: "Mise à jour créée avec succès",
+      trackingUpdate,
+    });
   } catch (error) {
-    console.error('Erreur PATCH /api/containers/[id]/status:', error);
+    console.error("Erreur création suivi:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour du statut' },
+      { error: "Erreur lors de la création" },
       { status: 500 }
     );
   }

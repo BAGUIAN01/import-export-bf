@@ -133,7 +133,6 @@ export async function DELETE(request, { params }) {
 
     const { id } = await params;
 
-    // Vérification que le client existe
     const existingClient = await prisma.client.findUnique({
       where: { id },
       include: {
@@ -149,7 +148,6 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ message: "Client non trouvé" }, { status: 404 });
     }
 
-    // Vérification des colis associés
     if (existingClient._count.packages > 0) {
       return NextResponse.json(
         { 
@@ -159,7 +157,6 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    // Suppression du client
     await prisma.client.delete({
       where: { id },
     });

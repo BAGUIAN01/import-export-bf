@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { DataTableColumnHeader } from "@/components/modules/data-table/data-table-column-header";
 import { DataTableRowActions } from "@/components/modules/data-table/data-table-row-actions";
 import { Container, MapPin, Calendar, Truck, Weight, Users } from "lucide-react";
+import Link from "next/link";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 const formatCurrency = (amount) => (amount ? `${amount.toFixed(2)}€` : "-");
@@ -61,17 +62,22 @@ export const containersColumns = ({ onEdit, onDelete, onView, onTrack }) => [
     cell: ({ row }) => {
       const container = row.original;
       return (
-        <div className="flex items-center gap-3">
+        <Link 
+          href={`/admin/containers/${container.id}`}
+          className="flex items-center gap-3 hover:bg-gray-50 -m-2 p-2 rounded-lg transition-colors"
+        >
           <div className="p-2 rounded-full bg-blue-50">
             <Container className="h-4 w-4 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium">{container.containerNumber}</div>
+            <div className="font-medium text-blue-600 hover:text-blue-800">
+              {container.containerNumber}
+            </div>
             <div className="text-xs text-muted-foreground">
               {container.name}
             </div>
           </div>
-        </div>
+        </Link>
       );
     },
   },

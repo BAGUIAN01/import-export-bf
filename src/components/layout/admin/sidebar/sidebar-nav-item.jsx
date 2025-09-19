@@ -91,7 +91,7 @@ export const SidebarNavItem = ({ item, isActive = false, onClick, searchQuery = 
                   "w-full justify-center h-9 px-2 font-medium transition-all duration-200 relative",
                   "cursor-pointer hover:cursor-pointer",
                   isActive 
-                    ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90" 
+                    ? "bg-primary text-primary-foreground shadow-md " 
                     : "hover:bg-accent hover:text-accent-foreground"
                 )}
                 style={{ cursor: 'pointer' }}

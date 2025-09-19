@@ -67,7 +67,6 @@ export function CustomDataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  // ✅ Responsive: auto-masquer les colonnes marquées meta.hiddenOnMobile sur <640px
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 640px)");
@@ -75,7 +74,7 @@ export function CustomDataTable({
       const next = {};
       table.getAllLeafColumns().forEach((col) => {
         if (col.columnDef?.meta?.hiddenOnMobile) {
-          next[col.id] = !mq.matches; // visible si ≥ sm
+          next[col.id] = !mq.matches; 
         }
       });
       if (Object.keys(next).length) {
@@ -85,7 +84,6 @@ export function CustomDataTable({
     apply();
     mq.addEventListener?.("change", apply);
     return () => mq.removeEventListener?.("change", apply);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table]);
 
   const visibleLeafColumnCount = table.getVisibleLeafColumns().length || 1;
@@ -110,7 +108,6 @@ export function CustomDataTable({
         customActions={customActions}
       />
 
-      {/* ✅ Responsive: scroll horizontal sur mobile, largeur minimale */}
       <div className="rounded-md border w-full overflow-x-auto">
         <Table className="min-w-[720px] sm:min-w-full">
           <TableHeader>

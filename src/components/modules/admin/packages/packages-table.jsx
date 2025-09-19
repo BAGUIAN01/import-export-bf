@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { CustomDataTable } from "@/components/modules/data-table/data-table";
 import { packagesColumns } from "@/components/modules/admin/packages/packages-columns";
-import { PackageDialog } from "@/components/modules/admin/packages/package-dialog";
+import PackageDialog  from "@/components/modules/admin/packages/package-dialog";
 import { PackagesStats } from "@/components/modules/admin/packages/packages-stats";
 import { toast } from "sonner";
 

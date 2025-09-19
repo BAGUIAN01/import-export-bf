@@ -17,30 +17,21 @@ import { PageTitle } from "@/components/layout/admin/page-title";
 
 async function getPackagesData(session) {
   try {
-    // Construction du filtre selon le rôle
-    let where = {};
-    if (session.user.role === 'CLIENT') {
-      const userClient = await prisma.client.findFirst({
-        where: { userId: session.user.id }
-      });
-      if (userClient) {
-        where.clientId = userClient.id;
-      }
-    }
-
-    // Récupération des packages
+    // Récupération des colis avec toutes les relations nécessaires
     const packages = await prisma.package.findMany({
-      where,
       include: {
         client: {
           select: {
             id: true,
-            clientCode: true,
             firstName: true,
             lastName: true,
-            recipientCity: true,
+            phone: true,
+            email: true,
+            city: true,
             recipientName: true,
-          },
+            recipientCity: true,
+            recipientAddress: true,
+          }
         },
         container: {
           select: {
@@ -48,134 +39,200 @@ async function getPackagesData(session) {
             containerNumber: true,
             name: true,
             status: true,
-          },
+            departureDate: true,
+            arrivalDate: true,
+          }
         },
         user: {
           select: {
             id: true,
+            name: true,
             firstName: true,
             lastName: true,
-          },
-        },
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc',
       },
-      take: 100, // Limite pour les performances
     });
 
-    // Calcul des statistiques
-    const [
-      total,
-      statusCounts,
-      paymentStatusCounts,
-    ] = await Promise.all([
-      prisma.package.count({ where }),
-      prisma.package.groupBy({
-        by: ['status'],
-        where,
-        _count: {
-          status: true,
-        },
-      }),
-      prisma.package.groupBy({
-        by: ['paymentStatus'],
-        where,
-        _count: {
-          paymentStatus: true,
-        },
-      }),
-    ]);
-
-    const statusMap = statusCounts.reduce((acc, item) => {
-      acc[item.status] = item._count.status;
-      return acc;
-    }, {});
-
-    const paymentMap = paymentStatusCounts.reduce((acc, item) => {
-      acc[item.paymentStatus] = item._count.paymentStatus;
-      return acc;
-    }, {});
-
-    const stats = {
-      total,
-      inTransit: statusMap.IN_TRANSIT || 0,
-      delivered: statusMap.DELIVERED || 0,
-      pending: statusMap.REGISTERED || 0,
-      paymentPending: (paymentMap.PENDING || 0) + (paymentMap.PARTIAL || 0),
-      issues: (statusMap.RETURNED || 0) + (statusMap.CANCELLED || 0),
-      byStatus: statusMap,
-      byPaymentStatus: paymentMap,
-    };
-
-    // Récupération des clients
+    // Récupération des clients pour le dialog
     const clients = await prisma.client.findMany({
-      where: {
-        isActive: true,
-      },
       select: {
         id: true,
         clientCode: true,
         firstName: true,
         lastName: true,
-        recipientCity: true,
+        phone: true,
+        email: true,
+        city: true,
+        country: true,
         recipientName: true,
+        recipientPhone: true,
+        recipientAddress: true,
+        recipientCity: true,
+        isActive: true,
         isVip: true,
       },
-      orderBy: [
-        { lastName: 'asc' },
-        { firstName: 'asc' },
-      ],
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        firstName: 'asc',
+      },
     });
 
-    // Récupération des conteneurs disponibles
+    // Récupération des conteneurs actifs pour le dialog
     const containers = await prisma.container.findMany({
-      where: {
-        status: {
-          in: ['PREPARATION', 'LOADED']
-        }
-      },
       select: {
         id: true,
         containerNumber: true,
         name: true,
         status: true,
-        currentLoad: true,
-        capacity: true,
         departureDate: true,
+        arrivalDate: true,
+        capacity: true,
+        currentLoad: true,
+      },
+      where: {
+        status: {
+          in: ['PREPARATION', 'LOADED', 'IN_TRANSIT']
+        }
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    return {
-      packages,
-      stats,
-      clients,
-      containers,
+    // Calcul des statistiques
+    const [
+      totalPackages,
+      registeredCount,
+      collectedCount,
+      inContainerCount,
+      inTransitCount,
+      customsCount,
+      deliveredCount,
+      returnedCount,
+      cancelledCount
+    ] = await Promise.all([
+      prisma.package.count(),
+      prisma.package.count({ where: { status: 'REGISTERED' } }),
+      prisma.package.count({ where: { status: 'COLLECTED' } }),
+      prisma.package.count({ where: { status: 'IN_CONTAINER' } }),
+      prisma.package.count({ where: { status: 'IN_TRANSIT' } }),
+      prisma.package.count({ where: { status: 'CUSTOMS' } }),
+      prisma.package.count({ where: { status: 'DELIVERED' } }),
+      prisma.package.count({ where: { status: 'RETURNED' } }),
+      prisma.package.count({ where: { status: 'CANCELLED' } }),
+    ]);
+
+    // Statistiques de paiement
+    const [paymentPendingCount, paymentPartialCount, paymentPaidCount] = await Promise.all([
+      prisma.package.count({ where: { paymentStatus: 'PENDING' } }),
+      prisma.package.count({ where: { paymentStatus: 'PARTIAL' } }),
+      prisma.package.count({ where: { paymentStatus: 'PAID' } }),
+    ]);
+
+    // Colis avec problèmes (retournés ou annulés)
+    const issuesCount = returnedCount + cancelledCount;
+
+    // Colis en attente de paiement (pending ou partial)
+    const paymentPendingTotal = paymentPendingCount + paymentPartialCount;
+
+    // Nouveaux colis du mois
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const newThisMonth = await prisma.package.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    // Colis urgents
+    const urgentCount = await prisma.package.count({
+      where: {
+        priority: 'URGENT',
+        status: {
+          notIn: ['DELIVERED', 'CANCELLED', 'RETURNED']
+        }
+      }
+    });
+
+    // Revenus du mois
+    const monthlyRevenue = await prisma.package.aggregate({
+      where: {
+        paymentStatus: 'PAID',
+        paidAt: {
+          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+        }
+      },
+      _sum: {
+        totalAmount: true
+      }
+    });
+
+    const stats = {
+      total: totalPackages,
+      pending: registeredCount, // En attente (enregistrés)
+      inTransit: inTransitCount + inContainerCount, // En transit (conteneur + transit)
+      delivered: deliveredCount,
+      paymentPending: paymentPendingTotal,
+      issues: issuesCount,
+      newThisMonth,
+      urgent: urgentCount,
+      monthlyRevenue: monthlyRevenue._sum.totalAmount || 0,
+      
+      // Détail par statut
+      statusBreakdown: {
+        registered: registeredCount,
+        collected: collectedCount,
+        inContainer: inContainerCount,
+        inTransit: inTransitCount,
+        customs: customsCount,
+        delivered: deliveredCount,
+        returned: returnedCount,
+        cancelled: cancelledCount,
+      },
+      
+      // Détail paiements
+      paymentBreakdown: {
+        pending: paymentPendingCount,
+        partial: paymentPartialCount,
+        paid: paymentPaidCount,
+      }
+    };
+
+    return { 
+      packages, 
+      clients, 
+      containers, 
+      stats 
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération des données:', error);
+    console.error('Erreur lors de la récupération des données colis:', error);
     throw error;
   }
 }
 
 export default async function PackagesPage() {
   try {
-    // Vérification de l'authentification
     const session = await getServerSession(authOptions);
     
     if (!session) {
       redirect('/auth/signin');
     }
 
-    // Vérification des permissions
-    if (!['ADMIN', 'STAFF'].includes(session.user.role)) {
+    // Vérification des permissions - Colis gérés par ADMIN, STAFF et AGENT
+    if (!['ADMIN', 'STAFF', 'AGENT'].includes(session.user.role)) {
       redirect('/unauthorized');
     }
 
-    const { packages, stats, clients, containers } = await getPackagesData(session);
+    const { packages, clients, containers, stats } = await getPackagesData(session);
 
     return (
       <PageContainer>
@@ -183,7 +240,7 @@ export default async function PackagesPage() {
         <PageHeader
           breadcrumbs={[
             { label: "Accueil", href: "/admin/dashboard" },
-            { label: "Expédition" },
+            { label: "Gestion" },
             { label: "Colis" },
           ]}
         />
@@ -205,7 +262,7 @@ export default async function PackagesPage() {
         <PageHeader
           breadcrumbs={[
             { label: "Accueil", href: "/admin/dashboard" },
-            { label: "Expédition" },
+            { label: "Gestion" },
             { label: "Colis" },
           ]}
         />

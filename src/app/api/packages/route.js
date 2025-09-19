@@ -1,21 +1,44 @@
 // app/api/packages/route.js
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+const toNumOrNull = (v) =>
+  v === "" || v === undefined || v === null || Number.isNaN(Number(v))
+    ? null
+    : Number(v);
+
+const toIntOr = (v, fallback) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+};
+
+const toDateOrNull = (v) => (v ? new Date(v) : null);
+
+const isValidPaymentStatus = (s) =>
+  ["PENDING", "PARTIAL", "PAID", "CANCELLED", "REFUNDED"].includes(s);
+
+const derivePaymentStatus = (totalAmount, paidAmount) => {
+  const total = Number(totalAmount || 0);
+  const paid = Number(paidAmount || 0);
+  if (paid <= 0) return "PENDING";
+  if (paid < total) return "PARTIAL";
+  return "PAID";
+};
 
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 50;
-    const status = searchParams.get('status');
-    const clientId = searchParams.get('clientId');
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 50;
+    const status = searchParams.get("status");
+    const clientId = searchParams.get("clientId");
 
     // Construction des filtres
     const where = {};
@@ -23,9 +46,9 @@ export async function GET(request) {
     if (clientId) where.clientId = clientId;
 
     // Si c'est un client, ne voir que ses colis
-    if (session.user.role === 'CLIENT') {
+    if (session.user.role === "CLIENT") {
       const userClient = await prisma.client.findFirst({
-        where: { userId: session.user.id }
+        where: { userId: session.user.id },
       });
       if (userClient) {
         where.clientId = userClient.id;
@@ -62,7 +85,7 @@ export async function GET(request) {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -80,133 +103,187 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    console.error('Erreur GET /api/packages:', error);
-    return NextResponse.json(
-      { error: 'Erreur serveur' },
-      { status: 500 }
-    );
+    console.error("Erreur GET /api/packages:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role === 'CLIENT') {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    if (!session || session.user.role === "CLIENT") {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     const body = await request.json();
 
-    // --- Validation champs requis ---
-    if (!body.clientId || !body.type || !body.description || !body.deliveryAddress) {
+    // --- Validation requis minimal ---
+    if (
+      !body.clientId ||
+      !body.type ||
+      !body.description ||
+      !body.deliveryAddress
+    ) {
       return NextResponse.json(
-        { error: 'Champs requis manquants (clientId, type, description, deliveryAddress)' },
+        {
+          error:
+            "Champs requis manquants (clientId, type, description, deliveryAddress)",
+        },
         { status: 400 }
       );
     }
 
-    // --- Validation des enums / valeurs attendues ---
     const validTypes = [
-      'CARTON','BARRIQUE','VEHICLE','MOTORCYCLE','ELECTRONICS',
-      'CLOTHING','FOOD','DOCUMENTS','OTHER'
+      "CARTON",
+      "BARRIQUE",
+      "VEHICLE",
+      "MOTORCYCLE",
+      "ELECTRONICS",
+      "CLOTHING",
+      "FOOD",
+      "DOCUMENTS",
+      "OTHER",
     ];
     if (!validTypes.includes(body.type)) {
       return NextResponse.json(
-        { error: `Type invalide. Attendu: ${validTypes.join(', ')}` },
+        { error: `Type invalide. Attendu: ${validTypes.join(", ")}` },
         { status: 400 }
       );
     }
 
-    // Nettoyage des IDs vides ("")
+    // --- IDs & existence ---
     const clientId = body.clientId?.trim?.() || body.clientId;
     const containerId = body.containerId?.trim?.() || body.containerId || null;
 
-    // --- Vérifier l’existence des entités liées AVANT la création ---
     const [client, user] = await Promise.all([
       prisma.client.findUnique({ where: { id: clientId } }),
       prisma.user.findUnique({ where: { id: session.user.id } }),
     ]);
-
-    if (!client) {
+    if (!client)
       return NextResponse.json(
-        { error: 'Client introuvable (clientId invalide)' },
+        { error: "Client introuvable (clientId invalide)" },
         { status: 400 }
       );
-    }
-    if (!user) {
+    if (!user)
       return NextResponse.json(
-        { error: 'Utilisateur de session introuvable' },
+        { error: "Utilisateur de session introuvable" },
         { status: 401 }
       );
-    }
 
     let container = null;
     if (containerId) {
-      container = await prisma.container.findUnique({ where: { id: containerId } });
+      container = await prisma.container.findUnique({
+        where: { id: containerId },
+      });
       if (!container) {
         return NextResponse.json(
-          { error: 'Conteneur introuvable (containerId invalide)' },
+          { error: "Conteneur introuvable (containerId invalide)" },
           { status: 400 }
         );
       }
     }
 
-    // --- Génération numéro colis ---
+    // --- Numéro colis ---
     const year = new Date().getFullYear();
     const count = (await prisma.package.count()) + 1;
-    const packageNumber = `PKG${year}${String(count).padStart(5, '0')}`;
+    const packageNumber = `PKG${year}${String(count).padStart(5, "0")}`;
 
-    // --- Tarification ---
+    // --- Pricing de référence (fallback) ---
     const pricing = await prisma.pricing.findFirst({
       where: { type: body.type, isActive: true },
     });
 
-    const basePrice = pricing?.basePrice ?? 50;
-    const pickupFee = body.pickupAddress ? (pricing?.pickupFee ?? 20) : 0;
-    const insuranceFee = body.isInsured && body.value ? (body.value * 0.02) : 0;
-    const customsFee = 15;
-    const totalAmount = basePrice + pickupFee + insuranceFee + customsFee;
+    // --- Normalisations ---
+    const normalizedValue = toNumOrNull(body.value);
+    const normalizedWeight = toNumOrNull(body.weight);
 
-    // --- Création du colis (utilise connect au lieu des *_Id bruts) ---
+    const basePrice = toNumOrNull(body.basePrice) ?? pricing?.basePrice ?? 50;
+
+    const normalizedPickupFee =
+      toNumOrNull(body.pickupFee) ??
+      (body.pickupAddress ? pricing?.pickupFee ?? 20 : 0);
+
+    const normalizedCustoms =
+      toNumOrNull(body.customsFee) ?? pricing?.customsFee ?? 15;
+
+    const discount = Math.max(0, toNumOrNull(body.discount) ?? 0);
+
+    const isInsured = !!body.isInsured;
+    const insuranceFee =
+      isInsured && normalizedValue != null
+        ? Math.max(10, normalizedValue * 0.02)
+        : 0;
+
+    const totalAmount = Math.max(
+      0,
+      Number(basePrice || 0) +
+        Number(normalizedPickupFee || 0) +
+        Number(insuranceFee || 0) +
+        Number(normalizedCustoms || 0) -
+        Number(discount || 0)
+    );
+
+    // --- Paiement ---
+    const paidAmount = Math.max(0, toNumOrNull(body.paidAmount) ?? 0);
+    const paymentStatus =
+      body.paymentStatus && isValidPaymentStatus(body.paymentStatus)
+        ? body.paymentStatus
+        : derivePaymentStatus(totalAmount, paidAmount);
+    const paidAt =
+      paidAmount > 0
+        ? body.paidAt
+          ? new Date(body.paidAt)
+          : new Date()
+        : null;
+    const paymentMethod = body.paymentMethod ?? null;
+
+    // --- Création ---
     const newPackage = await prisma.package.create({
       data: {
         packageNumber,
-        // relations
-        client:   { connect: { id: client.id } },
-        user:     { connect: { id: user.id } },
+        client: { connect: { id: client.id } },
+        user: { connect: { id: user.id } },
         ...(container ? { container: { connect: { id: container.id } } } : {}),
 
-        // données
         type: body.type,
         description: body.description,
-        quantity: body.quantity ?? 1,
-        weight: body.weight ?? null,
-        dimensions: body.dimensions ?? null,
-        value: body.value ?? null,
-        priority: body.priority ?? 'NORMAL',
+        quantity: toIntOr(body.quantity, 1),
+        weight: normalizedWeight,
+        dimensions: body.dimensions || null, // toléré si encore envoyé par l'UI
+        value: normalizedValue,
+        priority: body.priority ?? "NORMAL",
         isFragile: !!body.isFragile,
-        isInsured: !!body.isInsured,
-        pickupAddress: body.pickupAddress ?? null,
-        pickupDate: body.pickupDate ? new Date(body.pickupDate) : null,
-        pickupTime: body.pickupTime ?? null,
+        isInsured,
+        pickupAddress: body.pickupAddress || null,
+        pickupDate: toDateOrNull(body.pickupDate),
+        pickupTime: body.pickupTime || null,
         deliveryAddress: body.deliveryAddress,
-        specialInstructions: body.specialInstructions ?? null,
-        notes: body.notes ?? null,
+        specialInstructions: body.specialInstructions || null,
+        notes: body.notes || null,
 
         basePrice,
-        pickupFee,
+        pickupFee: normalizedPickupFee,
         insuranceFee,
-        customsFee,
+        customsFee: normalizedCustoms,
+        discount,
         totalAmount,
 
-        status: 'REGISTERED',
-        paymentStatus: 'PENDING',
+        paymentStatus,
+        paymentMethod,
+        paidAmount,
+        paidAt,
+
+        status: "REGISTERED",
       },
       include: {
         client: {
           select: {
-            id: true, clientCode: true, firstName: true, lastName: true,
-            recipientCity: true, recipientName: true,
+            id: true,
+            clientCode: true,
+            firstName: true,
+            lastName: true,
+            recipientCity: true,
+            recipientName: true,
           },
         },
         container: {
@@ -216,46 +293,46 @@ export async function POST(request) {
       },
     });
 
-    // --- Audit (non bloquant) ---
+    // --- Audit non bloquant ---
     try {
       await prisma.auditLog.create({
         data: {
           userId: user.id,
-          action: 'CREATE_PACKAGE',
-          resource: 'package',
+          action: "CREATE_PACKAGE",
+          resource: "package",
           resourceId: newPackage.id,
           details: JSON.stringify({ packageNumber }),
         },
       });
-    } catch (auditError) {
-      console.warn("Audit log error:", auditError);
-    }
+    } catch {}
 
     return NextResponse.json(
-      { message: 'Colis créé avec succès', package: newPackage },
+      { message: "Colis créé avec succès", package: newPackage },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Erreur POST /api/packages:', error);
-
-    // Messages d’erreurs Prisma plus précis
-    if (error.code === 'P2003') {
-      // contrainte FK
+    console.error("Erreur POST /api/packages:", error);
+    if (error.code === "P2003") {
       return NextResponse.json(
-        { error: `Contrainte de clé étrangère violée${error.meta?.field_name ? ` (${error.meta.field_name})` : ''}` },
+        {
+          error: `Contrainte de clé étrangère violée${
+            error.meta?.field_name ? ` (${error.meta.field_name})` : ""
+          }`,
+        },
         { status: 400 }
       );
     }
-    if (error.code === 'P2025') {
-      // connect() cible inexistante
+    if (error.code === "P2025") {
       return NextResponse.json(
-        { error: 'Une référence liée est introuvable (client / conteneur / utilisateur)' },
+        {
+          error:
+            "Une référence liée est introuvable (client / conteneur / utilisateur)",
+        },
         { status: 400 }
       );
     }
-
     return NextResponse.json(
-      { error: 'Erreur lors de la création du colis' },
+      { error: "Erreur lors de la création du colis" },
       { status: 500 }
     );
   }

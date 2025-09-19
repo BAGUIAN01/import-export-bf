@@ -1,572 +1,393 @@
 "use client";
-import React, { useState } from 'react';
-import { 
-  Users, Package, Container, CreditCard, TrendingUp, Clock, 
-  MapPin, AlertCircle, CheckCircle, MoreHorizontal, Calendar,
-  ArrowUpRight, ArrowDownRight, Eye, Search, Filter, Plus,
-  Truck, Globe, DollarSign, Activity
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React, { useState, useEffect } from "react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Package,
+  Container,
+  TrendingUp,
+  Users,
+  Clock,
+  MapPin,
+  AlertCircle,
+  CheckCircle2,
+  ArrowUpRight,
+  Calendar,
+  Euro,
+  Activity,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
 
-// Données simulées
-const stats = {
-  totalClients: 247,
-  activePackages: 89,
-  monthlyRevenue: 45230.50,
-  containersInTransit: 3,
-  pendingPayments: 12,
-  deliveredThisMonth: 156
+const mockData = {
+  stats: {
+    totalPackages: 847,
+    packagesThisMonth: 234,
+    activeContainers: 12,
+    totalClients: 156,
+    monthlyRevenue: 45280,
+    deliveredThisWeek: 89,
+  },
+  recentContainers: [
+    {
+      id: "1",
+      containerNumber: "CNT202501001",
+      name: "Conteneur Express Janvier",
+      status: "IN_TRANSIT",
+      currentLocation: "Port d'Abidjan",
+      departureDate: "2025-01-15",
+      currentLoad: 85,
+      capacity: 100,
+    },
+    {
+      id: "2",
+      containerNumber: "CNT202501002",
+      name: "Conteneur Standard Février",
+      status: "PREPARATION",
+      currentLocation: "Lyon, France",
+      departureDate: "2025-02-01",
+      currentLoad: 45,
+      capacity: 100,
+    },
+    {
+      id: "3",
+      containerNumber: "CNT202412015",
+      name: "Conteneur Décembre",
+      status: "DELIVERED",
+      currentLocation: "Ouagadougou",
+      departureDate: "2024-12-20",
+      currentLoad: 100,
+      capacity: 100,
+    },
+  ],
+  recentActivity: [
+    {
+      id: 1,
+      type: "container_update",
+      message: "CNT202501001 - Arrivée au port d'Abidjan",
+      time: "Il y a 2h",
+      status: "info",
+    },
+    {
+      id: 2,
+      type: "package_delivered",
+      message: "PKG20250115789 livré avec succès",
+      time: "Il y a 4h",
+      status: "success",
+    },
+    {
+      id: 3,
+      type: "new_client",
+      message: "Nouveau client enregistré: Marie Dupont",
+      time: "Il y a 6h",
+      status: "info",
+    },
+    {
+      id: 4,
+      type: "alert",
+      message: "Retard signalé sur CNT202412020",
+      time: "Il y a 1j",
+      status: "warning",
+    },
+  ],
 };
-
-const recentPackages = [
-  {
-    id: "PKG202501045",
-    client: "Sophie Martin",
-    destination: "Ouagadougou",
-    status: "IN_TRANSIT",
-    amount: 125.00,
-    date: "2024-12-15",
-    priority: "NORMAL"
-  },
-  {
-    id: "PKG202501046", 
-    client: "Jean Dupont",
-    destination: "Bobo-Dioulasso",
-    status: "DELIVERED",
-    amount: 180.50,
-    date: "2024-12-14",
-    priority: "HIGH"
-  },
-  {
-    id: "PKG202501047",
-    client: "Marie Kouadio",
-    destination: "Koudougou",
-    status: "CUSTOMS",
-    amount: 95.00,
-    date: "2024-12-13", 
-    priority: "URGENT"
-  },
-  {
-    id: "PKG202501048",
-    client: "Pierre Lambert",
-    destination: "Ouahigouya",
-    status: "REGISTERED",
-    amount: 75.00,
-    date: "2024-12-12",
-    priority: "NORMAL"
-  }
-];
-
-const containers = [
-  {
-    id: "CNT202501003",
-    name: "Conteneur Décembre 2024",
-    status: "IN_TRANSIT",
-    progress: 65,
-    location: "En mer - Méditerranée",
-    packages: 34,
-    departureDate: "2024-12-05",
-    estimatedArrival: "2024-12-20"
-  },
-  {
-    id: "CNT202501004",
-    name: "Conteneur Janvier 2025",
-    status: "PREPARATION", 
-    progress: 45,
-    location: "Entrepôt Paris",
-    packages: 28,
-    departureDate: "2025-01-15",
-    estimatedArrival: "2025-01-30"
-  },
-  {
-    id: "CNT202501005",
-    name: "Conteneur Février 2025",
-    status: "PREPARATION",
-    progress: 12,
-    location: "En cours de chargement",
-    packages: 8,
-    departureDate: "2025-02-10", 
-    estimatedArrival: "2025-02-25"
-  }
-];
-
-const recentActivities = [
-  {
-    type: "package_delivered",
-    message: "Colis PKG202501046 livré à Jean Dupont",
-    time: "Il y a 2h",
-    icon: CheckCircle,
-    color: "text-green-600"
-  },
-  {
-    type: "payment_received",
-    message: "Paiement de 180.50€ reçu de Sophie Martin",
-    time: "Il y a 3h", 
-    icon: CreditCard,
-    color: "text-blue-600"
-  },
-  {
-    type: "container_departure",
-    message: "Conteneur CNT202501003 en transit",
-    time: "Il y a 5h",
-    icon: Truck,
-    color: "text-orange-600"
-  },
-  {
-    type: "new_client",
-    message: "Nouveau client inscrit: Marie Kouadio",
-    time: "Il y a 1j",
-    icon: Users,
-    color: "text-purple-600"
-  }
-];
 
 const statusConfig = {
-  REGISTERED: { label: "Enregistré", color: "bg-blue-50 text-blue-700 border-blue-200" },
-  IN_TRANSIT: { label: "En transit", color: "bg-orange-50 text-orange-700 border-orange-200" },
-  DELIVERED: { label: "Livré", color: "bg-green-50 text-green-700 border-green-200" },
-  CUSTOMS: { label: "Douanes", color: "bg-red-50 text-red-700 border-red-200" },
-  PREPARATION: { label: "Préparation", color: "bg-gray-50 text-gray-700 border-gray-200" }
+  PREPARATION: { label: "Préparation", variant: "secondary" },
+  LOADED: { label: "Chargé", variant: "default" },
+  IN_TRANSIT: { label: "En transit", variant: "default" },
+  CUSTOMS: { label: "Douane", variant: "destructive" },
+  DELIVERED: {
+    label: "Livré",
+    variant: "default",
+    className: "bg-green-100 text-green-800",
+  },
+  CANCELLED: { label: "Annulé", variant: "destructive" },
 };
 
-const priorityConfig = {
-  LOW: { label: "Faible", color: "bg-gray-50 text-gray-600" },
-  NORMAL: { label: "Normal", color: "bg-blue-50 text-blue-600" },
-  HIGH: { label: "Élevé", color: "bg-orange-50 text-orange-600" },
-  URGENT: { label: "Urgent", color: "bg-red-50 text-red-600" }
+const getActivityIcon = (type, status) => {
+  if (status === "success")
+    return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+  if (status === "warning")
+    return <AlertCircle className="h-4 w-4 text-orange-500" />;
+  return <Activity className="h-4 w-4 text-blue-500" />;
 };
 
-export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
+export default function Dashboard({ user, data }) {
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const StatCard = ({ title, value, description, icon: Icon, trend, trendValue }) => (
-    <Card className="relative overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && (
-          <div className="flex items-center pt-1">
-            {trend && (
-              <div className={`flex items-center text-xs ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                {trend === 'up' ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
-                {trendValue}
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground ml-2">{description}</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const { stats, recentContainers, recentActivity } = data;
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* En-tête de bienvenue */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
-          <p className="text-muted-foreground">Vue d'ensemble de votre activité d'expédition</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Bonjour, {user?.firstName || user?.name || "Admin"}
+          </h1>
+          <p className="text-muted-foreground">
+            {currentTime.toLocaleDateString("fr-FR", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}{" "}
+            •{" "}
+            {currentTime.toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Calendar className="h-4 w-4 mr-2" />
-            Derniers 30 jours
+        <div className="flex gap-3">
+          <Button asChild>
+            <Link href="/admin/packages/new">
+              <Package className="h-4 w-4 mr-2" />
+              Nouveau colis
+            </Link>
           </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau colis
+          <Button variant="outline" asChild>
+            <Link href="/admin/containers/new">
+              <Container className="h-4 w-4 mr-2" />
+              Nouveau conteneur
+            </Link>
           </Button>
         </div>
       </div>
 
       {/* Statistiques principales */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Clients"
-          value={stats.totalClients.toLocaleString()}
-          description="ce mois"
-          icon={Users}
-          trend="up"
-          trendValue="+12%"
-        />
-        <StatCard
-          title="Colis Actifs"
-          value={stats.activePackages}
-          description={`${stats.pendingPayments} en attente`}
-          icon={Package}
-          trend="up"
-          trendValue="+5%"
-        />
-        <StatCard
-          title="Chiffre d'Affaires"
-          value={`${stats.monthlyRevenue.toLocaleString()}€`}
-          description="ce mois"
-          icon={DollarSign}
-          trend="up"
-          trendValue="+23%"
-        />
-        <StatCard
-          title="Conteneurs"
-          value={stats.containersInTransit}
-          description="en transit"
-          icon={Container}
-          trend="down"
-          trendValue="-1"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Colis total
+                </p>
+                <p className="text-2xl font-bold">{stats.totalPackages}</p>
+                <p className="text-xs text-muted-foreground">
+                  +{stats.packagesThisMonth} ce mois
+                </p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <Package className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Conteneurs actifs
+                </p>
+                <p className="text-2xl font-bold">{stats.activeContainers}</p>
+                <p className="text-xs text-muted-foreground">
+                  En cours de transport
+                </p>
+              </div>
+              <div className="p-3 bg-green-50 rounded-lg">
+                <Container className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Clients
+                </p>
+                <p className="text-2xl font-bold">{stats.totalClients}</p>
+                <p className="text-xs text-muted-foreground">
+                  Base client active
+                </p>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  CA mensuel
+                </p>
+                <p className="text-2xl font-bold">
+                  {stats.monthlyRevenue.toLocaleString()}€
+                </p>
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  +12% vs mois dernier
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-50 rounded-lg">
+                <Euro className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="packages">Colis</TabsTrigger>
-          <TabsTrigger value="containers">Conteneurs</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            {/* Graphique principal */}
-            <Card className="col-span-4">
-              <CardHeader>
-                <CardTitle>Évolution du chiffre d'affaires</CardTitle>
-                <CardDescription>Revenus des 12 derniers mois</CardDescription>
-              </CardHeader>
-              <CardContent className="pl-2">
-                <div className="h-[300px] flex items-end justify-between px-4 space-x-2">
-                  {[32, 45, 38, 52, 48, 61, 55, 67, 73, 69, 78, 85].map((height, index) => (
-                    <div key={index} className="flex flex-col items-center space-y-2">
-                      <div 
-                        className="bg-primary w-8 rounded-t transition-all hover:bg-primary/80"
-                        style={{ height: `${height * 3}px` }}
-                      ></div>
-                      <span className="text-xs text-muted-foreground">
-                        {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][index]}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Activité récente */}
-            <Card className="col-span-3">
-              <CardHeader>
-                <CardTitle>Activité récente</CardTitle>
-                <CardDescription>Dernières actions sur la plateforme</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivities.map((activity, index) => {
-                    const Icon = activity.icon;
-                    return (
-                      <div key={index} className="flex items-start space-x-3">
-                        <div className={`p-1 rounded-full ${activity.color}`}>
-                          <Icon className="h-3 w-3" />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium leading-none">{activity.message}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            {/* Derniers colis */}
-            <Card className="col-span-4">
-              <CardHeader className="flex flex-row items-center">
-                <div className="grid gap-2">
-                  <CardTitle>Derniers colis</CardTitle>
-                  <CardDescription>Colis récemment créés ou mis à jour</CardDescription>
-                </div>
-                <Button variant="ghost" size="sm" className="ml-auto">
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentPackages.map((pkg) => (
-                    <div key={pkg.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2">
-                            <p className="text-sm font-medium">{pkg.id}</p>
-                            <Badge 
-                              variant="outline" 
-                              className={`text-xs ${priorityConfig[pkg.priority].color}`}
-                            >
-                              {priorityConfig[pkg.priority].label}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{pkg.client} → {pkg.destination}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge 
-                          variant="outline" 
-                          className={statusConfig[pkg.status].color}
-                        >
-                          {statusConfig[pkg.status].label}
-                        </Badge>
-                        <p className="text-sm font-medium">{pkg.amount.toFixed(2)}€</p>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Voir détails</DropdownMenuItem>
-                            <DropdownMenuItem>Modifier</DropdownMenuItem>
-                            <DropdownMenuItem>Suivi</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* État des conteneurs */}
-            <Card className="col-span-3">
-              <CardHeader>
-                <CardTitle>État des conteneurs</CardTitle>
-                <CardDescription>Suivi en temps réel</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {containers.map((container) => (
-                  <div key={container.id} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{container.name}</p>
-                        <p className="text-xs text-muted-foreground">{container.packages} colis</p>
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className={statusConfig[container.status].color}
-                      >
-                        {statusConfig[container.status].label}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Chargement</span>
-                        <span>{container.progress}%</span>
-                      </div>
-                      <Progress value={container.progress} className="h-2" />
-                    </div>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {container.location}
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="packages" className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Conteneurs récents */}
+        <div className="lg:col-span-2">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Gestion des colis</CardTitle>
-                  <CardDescription>Liste complète de tous vos colis</CardDescription>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Rechercher..." className="pl-8 w-[300px]" />
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtres
-                  </Button>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouveau colis
-                  </Button>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Container className="h-5 w-5" />
+                Conteneurs récents
+              </CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/admin/containers">
+                  Voir tout
+                  <ArrowUpRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentPackages.map((pkg) => (
-                  <div key={pkg.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <p className="font-medium">{pkg.id}</p>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${priorityConfig[pkg.priority].color}`}
+            <CardContent className="space-y-4">
+              {recentContainers.length > 0 ? (
+                (() => {
+                  const container = recentContainers[0]; // Prendre seulement le premier (le plus récent)
+                  const statusInfo = statusConfig[container.status];
+                  const loadPercentage =
+                    (container.currentLoad / container.capacity) * 100;
+
+                  return (
+                    <Link
+                      href={`/admin/containers/${container.id}`}
+                      className="block p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <h4 className="font-medium">
+                            {container.containerNumber}
+                          </h4>
+                          <Badge
+                            variant={statusInfo.variant}
+                            className={statusInfo.className}
                           >
-                            {priorityConfig[pkg.priority].label}
+                            {statusInfo.label}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{pkg.client}</p>
+                        <div className="text-sm text-muted-foreground">
+                          {container.currentLoad}/{container.capacity}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{pkg.destination}</p>
-                        <p className="text-xs text-muted-foreground">{pkg.date}</p>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          {container.currentLocation || container.origin}
+                        </div>
+                        <Progress value={loadPercentage} className="h-2" />
                       </div>
-                      <Badge 
-                        variant="outline" 
-                        className={statusConfig[pkg.status].color}
-                      >
-                        {statusConfig[pkg.status].label}
-                      </Badge>
-                      <p className="font-medium w-20 text-right">{pkg.amount.toFixed(2)}€</p>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Voir détails</DropdownMenuItem>
-                          <DropdownMenuItem>Modifier</DropdownMenuItem>
-                          <DropdownMenuItem>Suivi</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Supprimer</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
-              </div>
+
+                      {container.name && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          {container.name}
+                        </p>
+                      )}
+                    </Link>
+                  );
+                })()
+              ) : (
+                <div className="text-center py-8">
+                  <Container className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    Aucun conteneur trouvé
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="containers" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {containers.map((container) => (
-              <Card key={container.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{container.name}</CardTitle>
-                    <Badge 
-                      variant="outline" 
-                      className={statusConfig[container.status].color}
-                    >
-                      {statusConfig[container.status].label}
-                    </Badge>
+        {/* Activité récente */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Activité récente
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {recentActivity.map((activity) => (
+                <div key={activity.id} className="flex gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    {getActivityIcon(activity.type, activity.status)}
                   </div>
-                  <CardDescription>{container.id}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Chargement</span>
-                      <span className="font-medium">{container.progress}%</span>
-                    </div>
-                    <Progress value={container.progress} className="h-2" />
-                    <p className="text-xs text-muted-foreground">{container.packages} colis chargés</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-5">
+                      {activity.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {activity.time}
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{container.location}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Arrivée: {container.estimatedArrival}</span>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Suivi
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance mensuelle</CardTitle>
-                <CardDescription>Évolution des indicateurs clés</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Colis livrés</span>
-                    <span className="font-medium">{stats.deliveredThisMonth}</span>
-                  </div>
-                  <Progress value={78} className="h-2" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Taux de satisfaction</span>
-                    <span className="font-medium">94.2%</span>
-                  </div>
-                  <Progress value={94} className="h-2" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Délai moyen</span>
-                    <span className="font-medium">18 jours</span>
-                  </div>
-                  <Progress value={82} className="h-2" />
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Destinations populaires</CardTitle>
-                <CardDescription>Villes les plus desservies</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {[
-                    { city: "Ouagadougou", count: 45, percentage: 65 },
-                    { city: "Bobo-Dioulasso", count: 23, percentage: 35 },
-                    { city: "Koudougou", count: 12, percentage: 20 },
-                    { city: "Banfora", count: 8, percentage: 15 }
-                  ].map((dest, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>{dest.city}</span>
-                        <span className="font-medium">{dest.count} colis</span>
-                      </div>
-                      <Progress value={dest.percentage} className="h-2" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+      {/* Actions rapides */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Actions rapides</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+              <Link href="/admin/packages">
+                <Package className="h-6 w-6" />
+                <span className="text-sm">Gestion colis</span>
+              </Link>
+            </Button>
+
+            <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+              <Link href="/admin/containers">
+                <Container className="h-6 w-6" />
+                <span className="text-sm">Conteneurs</span>
+              </Link>
+            </Button>
+
+            <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+              <Link href="/admin/clients">
+                <Users className="h-6 w-6" />
+                <span className="text-sm">Clients</span>
+              </Link>
+            </Button>
+
+            <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+              <Link href="/admin/reports">
+                <TrendingUp className="h-6 w-6" />
+                <span className="text-sm">Rapports</span>
+              </Link>
+            </Button>
           </div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }

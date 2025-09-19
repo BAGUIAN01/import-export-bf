@@ -166,9 +166,7 @@ export function ContainersTable({
   };
 
   const handleTrack = (container) => {
-    // Redirection vers la page de suivi GPS ou ouverture d'un modal de tracking
     toast.info(`Suivi GPS du conteneur ${container.containerNumber}`);
-    // router.push(`/admin/containers/${container.id}/tracking`);
   };
 
   const filters = [
@@ -255,7 +253,6 @@ export function ContainersTable({
 
   return (
     <div className="space-y-6 p-6">
-      {/* Stats (affichables/masquables) */}
       {showStats && <ContainersStats stats={stats} />}
 
       <CustomDataTable

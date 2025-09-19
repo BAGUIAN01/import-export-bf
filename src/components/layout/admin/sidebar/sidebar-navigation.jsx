@@ -93,7 +93,7 @@ export const SidebarNavigation = () => {
             <div className="px-3 py-2">
               <nav className="grid gap-1">
                 {filteredNavigation.map((item) => {
-                  const isActive = pathname === item.url;
+                  const isActive = pathname.includes(item.url);
                   return (
                     <SidebarNavItem
                       key={item.url || item.title}

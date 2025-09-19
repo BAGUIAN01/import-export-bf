@@ -17,7 +17,7 @@ import { PageTitle } from "@/components/layout/admin/page-title";
 
 async function getContainersData(session) {
   try {
-    // Récupération des conteneurs avec les colis associés
+
     const containers = await prisma.container.findMany({
       include: {
         packages: {
@@ -32,7 +32,7 @@ async function getContainersData(session) {
       },
     });
 
-    // Calcul des statistiques
+
     const [total, statusCounts] = await Promise.all([
       prisma.container.count(),
       prisma.container.groupBy({
@@ -43,7 +43,7 @@ async function getContainersData(session) {
       }),
     ]);
 
-    // Calcul du nombre total de colis dans tous les conteneurs
+
     const totalPackages = containers.reduce((sum, container) => {
       return sum + (container.currentLoad || 0);
     }, 0);
@@ -78,7 +78,7 @@ export default async function ContainersPage() {
       redirect('/auth/signin');
     }
 
-    // Vérification des permissions - Conteneurs gérés par ADMIN seulement
+
     if (!['ADMIN'].includes(session.user.role)) {
       redirect('/unauthorized');
     }
