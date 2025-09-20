@@ -1,11 +1,70 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { CustomDataTable } from "@/components/modules/data-table/data-table";
 import { packagesColumns } from "@/components/modules/admin/packages/packages-columns";
-import PackageDialog  from "@/components/modules/admin/packages/package-dialog";
+import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { PackagesStats } from "@/components/modules/admin/packages/packages-stats";
 import { toast } from "sonner";
+import { PACKAGE_TYPES } from "@/lib/data/packages";
+
+/* ----------------------------- Helpers utils ----------------------------- */
+
+// Récupère le tableau des types à partir d'un package (supporte string JSON ou array)
+function getTypesArray(pkg) {
+  if (!pkg) return [];
+  if (Array.isArray(pkg.selectedTypes)) return pkg.selectedTypes;
+  if (typeof pkg.types === "string") {
+    try {
+      return JSON.parse(pkg.types);
+    } catch {
+      return [];
+    }
+  }
+  if (Array.isArray(pkg.types)) return pkg.types;
+  return [];
+}
+
+// Renvoie un libellé court pour un type
+function labelForType(value) {
+  const meta = PACKAGE_TYPES.find((t) => t.value === value);
+  return meta?.label || value || "";
+}
+
+// Texte joint pour affichage/CSV/filtre
+function buildTypesText(pkg) {
+  const arr = getTypesArray(pkg);
+  if (!arr.length) return "";
+  return arr
+    .map((t) => `${labelForType(t.type)}×${t.quantity ?? 1}`)
+    .join(", ");
+}
+
+// Premier type (pour compat colonnes existantes qui lisent encore `type`)
+function firstTypeValue(pkg) {
+  const arr = getTypesArray(pkg);
+  return arr[0]?.type || "";
+}
+
+// Normalise un package pour la table (ajoute champs calculés attendus par colonnes/filters)
+function normalizePackage(pkg, clients, containers) {
+  const client = pkg.client || (clients || []).find((c) => c.id === pkg.clientId) || null;
+  const container =
+    pkg.container || (containers || []).find((c) => c.id === pkg.containerId) || null;
+
+  return {
+    ...pkg,
+    client,
+    container,
+    // champs utiles pour filtres / colonnes legacy
+    type: pkg.type ?? firstTypeValue(pkg),
+    typesText: buildTypesText(pkg),
+    destination: pkg.destination ?? client?.recipientCity ?? "",
+    totalAmount: pkg.totalAmount ?? 0,
+  };
+}
+
+/* --------------------------------- Options -------------------------------- */
 
 const statusOptions = [
   { label: "Enregistré", value: "REGISTERED" },
@@ -33,17 +92,13 @@ const paymentStatusOptions = [
   { label: "Remboursé", value: "REFUNDED" },
 ];
 
-const packageTypeOptions = [
-  { label: "Carton", value: "CARTON" },
-  { label: "Barrique", value: "BARRIQUE" },
-  { label: "Véhicule", value: "VEHICLE" },
-  { label: "Moto", value: "MOTORCYCLE" },
-  { label: "Électronique", value: "ELECTRONICS" },
-  { label: "Vêtements", value: "CLOTHING" },
-  { label: "Alimentation", value: "FOOD" },
-  { label: "Documents", value: "DOCUMENTS" },
-  { label: "Autre", value: "OTHER" },
-];
+// Options de type basées sur le référentiel PACKAGE_TYPES
+const packageTypeOptions = PACKAGE_TYPES.map((t) => ({
+  label: t.label,
+  value: t.value,
+}));
+
+/* ------------------------------- Composant -------------------------------- */
 
 export function PackagesTable({
   initialPackages,
@@ -51,12 +106,16 @@ export function PackagesTable({
   initialClients,
   initialContainers,
 }) {
-  const [packages, setPackages] = useState(initialPackages);
+  const [packages, setPackages] = useState(
+    (initialPackages || []).map((p) =>
+      normalizePackage(p, initialClients, initialContainers)
+    )
+  );
   const [stats, setStats] = useState(initialStats);
   const [clients] = useState(initialClients);
   const [containers] = useState(initialContainers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPackage, setEditingPackage] = useState(null);
+  const [editingPackage, setEditingPackage] = useState(null); // édition simple éventuellement plus tard
   const [loading, setLoading] = useState(false);
   const [showStats, setShowStats] = useState(true);
 
@@ -65,13 +124,11 @@ export function PackagesTable({
       acc[pkg.status] = (acc[pkg.status] || 0) + 1;
       return acc;
     }, {});
-
-    const paymentPendingCount = list.filter(pkg => 
-      pkg.paymentStatus === 'PENDING' || pkg.paymentStatus === 'PARTIAL'
+    const paymentPendingCount = list.filter(
+      (pkg) => pkg.paymentStatus === "PENDING" || pkg.paymentStatus === "PARTIAL"
     ).length;
-
-    const issuesCount = list.filter(pkg => 
-      pkg.status === 'RETURNED' || pkg.status === 'CANCELLED'
+    const issuesCount = list.filter(
+      (pkg) => pkg.status === "RETURNED" || pkg.status === "CANCELLED"
     ).length;
 
     setStats({
@@ -86,34 +143,29 @@ export function PackagesTable({
 
   const handleAdd = () => {
     setEditingPackage(null);
-    setIsDialogOpen(true);
+    setIsDialogOpen(true); // Ouvre le dialog multi-colis / expédition
   };
 
   const handleEdit = (pkg) => {
+    // Option : ouvrir un autre dialog dédié à l’édition 1 colis
     setEditingPackage(pkg);
+    toast.info("Édition d’un colis existant (mode simple).");
     setIsDialogOpen(true);
   };
 
-  const withLinkedEntities = (pkg, form) => {
-    const client = pkg.client ?? 
-      clients.find((c) => c.id === form.clientId) ?? null;
-    const container = pkg.container ?? 
-      containers.find((c) => c.id === form.containerId) ?? null;
-    return { ...pkg, client, container };
-  };
+  const withLinkedEntities = (pkg) => normalizePackage(pkg, clients, containers);
 
+  // Création expédition multi-colis (POST /api/packages => { shipment, packages })
   const handleSave = async (form) => {
     try {
       setLoading(true);
       let response;
 
+      // Si editingPackage est défini, on pourrait appeler PUT ici — laissé tel quel pour compat
       if (editingPackage) {
-        // API PUT /api/packages/{id}
         response = await fetch(`/api/packages/${editingPackage.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
 
@@ -122,80 +174,84 @@ export function PackagesTable({
           setPackages((prev) => {
             const next = prev.map((pkg) =>
               pkg.id === editingPackage.id
-                ? withLinkedEntities(data.package ?? { ...pkg, ...form }, form)
+                ? withLinkedEntities(data.package ?? { ...pkg, ...form })
                 : pkg
             );
             refreshStats(next);
             return next;
           });
-          toast.success(data.message || 'Colis modifié avec succès');
+          toast.success(data.message || "Colis modifié avec succès");
           setIsDialogOpen(false);
         } else {
-          const error = await response.json();
-          toast.error(error.message || 'Erreur lors de la modification');
+          const error = await response.json().catch(() => ({}));
+          toast.error(error.message || "Erreur lors de la modification");
         }
       } else {
-        // API POST /api/packages
-        response = await fetch('/api/packages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form),
+        // CREATION multi-colis
+        response = await fetch("/api/packages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form), // { clientId, containerId, sharedData, packages:[...] }
         });
 
         if (response.ok) {
           const data = await response.json();
-          const created = withLinkedEntities(
-            data.package ?? { ...form, id: Date.now(), packageNumber: `PKG${Date.now()}` },
-            form
-          );
+          const createdList = Array.isArray(data.packages) ? data.packages : [];
+          const normalized = createdList.map(withLinkedEntities);
+
           setPackages((prev) => {
-            const next = [...prev, created];
+            const next = [...prev, ...normalized];
             refreshStats(next);
             return next;
           });
-          toast.success(data.message || 'Colis créé avec succès');
+
+          toast.success(
+            data.message ||
+              `Expédition créée: ${createdList.length} colis enregistrés`
+          );
           setIsDialogOpen(false);
         } else {
-          const error = await response.json();
-          toast.error(error.message || 'Erreur lors de la création');
+          const error = await response.json().catch(() => ({}));
+          toast.error(error.message || "Erreur lors de la création");
         }
       }
     } catch (err) {
-      console.error('Erreur lors de la sauvegarde:', err);
-      toast.error('Erreur de connexion');
+      console.error("Erreur lors de la sauvegarde:", err);
+      toast.error("Erreur de connexion");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (pkg) => {
-    if (!window.confirm(
-      `Supprimer le colis ${pkg.packageNumber} de ${pkg.client?.firstName} ${pkg.client?.lastName} ?`
-    )) return;
+    if (
+      !window.confirm(
+        `Supprimer le colis ${pkg.packageNumber} de ${pkg.client?.firstName} ${pkg.client?.lastName} ?`
+      )
+    )
+      return;
 
     try {
       setLoading(true);
       const response = await fetch(`/api/packages/${pkg.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         setPackages((prev) => {
           const next = prev.filter((p) => p.id !== pkg.id);
           refreshStats(next);
           return next;
         });
-        toast.success(data.message || 'Colis supprimé avec succès');
+        toast.success(data.message || "Colis supprimé avec succès");
       } else {
-        const error = await response.json();
-        toast.error(error.message || 'Erreur lors de la suppression');
+        const error = await response.json().catch(() => ({}));
+        toast.error(error.message || "Erreur lors de la suppression");
       }
     } catch (err) {
-      console.error('Erreur suppression:', err);
-      toast.error('Erreur de connexion');
+      console.error("Erreur suppression:", err);
+      toast.error("Erreur de connexion");
     } finally {
       setLoading(false);
     }
@@ -208,70 +264,59 @@ export function PackagesTable({
   };
 
   const handleTrack = (pkg) => {
-    // Redirection vers la page de suivi ou ouverture d'un modal de tracking
     toast.info(`Suivi du colis ${pkg.packageNumber}`);
-    // router.push(`/admin/packages/${pkg.id}/tracking`);
   };
 
+  // Filtres : on conserve "type" mais il pointera vers un champ calculé `typesText` via mapping data
   const filters = [
-    {
-      key: "status",
-      title: "Statut",
-      options: statusOptions,
-    },
-    {
-      key: "priority",
-      title: "Priorité",
-      options: priorityOptions,
-    },
-    {
-      key: "paymentStatus",
-      title: "Paiement",
-      options: paymentStatusOptions,
-    },
-    {
-      key: "type",
-      title: "Type",
-      options: packageTypeOptions,
-    },
+    { key: "status", title: "Statut", options: statusOptions },
+    { key: "priority", title: "Priorité", options: priorityOptions },
+    { key: "paymentStatus", title: "Paiement", options: paymentStatusOptions },
+    // on s'appuie sur `typesText` pour filtrer visuellement par libellé
+    { key: "typesText", title: "Type", options: packageTypeOptions },
   ];
 
-  const columns = packagesColumns({
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-    onView: handleView,
-    onTrack: handleTrack,
-  });
+  const columns = useMemo(
+    () =>
+      packagesColumns({
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+        onView: handleView,
+        onTrack: handleTrack,
+      }),
+    []
+  );
 
   const handleExport = () => {
     try {
       const csv = [
         [
-          "N° Colis", 
-          "Client", 
-          "Description", 
-          "Type", 
-          "Statut", 
-          "Priorité", 
-          "Poids", 
-          "Montant", 
-          "Paiement", 
-          "Destination", 
-          "Date création"
+          "N° Colis",
+          "Client",
+          "Description",
+          "Types",
+          "Statut",
+          "Priorité",
+          "Poids",
+          "Montant",
+          "Paiement",
+          "Destination",
+          "Date création",
         ].join(","),
         ...packages.map((pkg) => {
           const clientName = `${pkg.client?.firstName || ""} ${pkg.client?.lastName || ""}`.trim();
           const description = (pkg.description || "").replace(/"/g, '""');
           const destination = pkg.client?.recipientCity || "";
-          const createdAt = pkg.createdAt 
-            ? new Date(pkg.createdAt).toLocaleDateString("fr-FR") 
+          const createdAt = pkg.createdAt
+            ? new Date(pkg.createdAt).toLocaleDateString("fr-FR")
             : "";
+          const typesText = buildTypesText(pkg);
 
           return [
             pkg.packageNumber,
             clientName,
             `"${description}"`,
-            pkg.type,
+            `"${typesText}"`,
             pkg.status,
             pkg.priority,
             pkg.weight || "",
@@ -312,7 +357,6 @@ export function PackagesTable({
 
   return (
     <div className="space-y-6 p-6">
-      {/* Stats (affichables/masquables) */}
       {showStats && <PackagesStats stats={stats} />}
 
       <CustomDataTable
@@ -320,12 +364,18 @@ export function PackagesTable({
         columns={columns}
         searchPlaceholder="Rechercher par numéro de colis, client..."
         searchKey="packageNumber"
-        globalSearchKeys={["packageNumber", "client.firstName", "client.lastName", "description"]}
+        globalSearchKeys={[
+          "packageNumber",
+          "client.firstName",
+          "client.lastName",
+          "description",
+          "typesText",
+        ]}
         filters={filters}
         onAdd={handleAdd}
         onExport={handleExport}
         onImport={handleImport}
-        addButtonText="Nouveau Colis"
+        addButtonText="Nouvelle expédition"
         customActions={[
           {
             label: showStats ? "Masquer Stats" : "Voir Stats",
@@ -334,11 +384,23 @@ export function PackagesTable({
             variant: "outline",
           },
         ]}
+        initialHiddenColumns={[
+          "description",
+          "priority",
+          "weight",
+          "totalAmount",
+          "paymentStatus",
+          "destination",
+          "estimatedDelivery",
+        ]}
       />
 
       <PackageDialog
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setEditingPackage(null);
+        }}
         package={editingPackage}
         clients={clients}
         containers={containers}

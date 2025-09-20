@@ -21,10 +21,7 @@ const countryOptions = [
   { label: "Niger", value: "Niger" },
 ];
 
-export function ClientsTable({
-  initialClients,
-  initialStats,
-}) {
+export function ClientsTable({ initialClients, initialStats }) {
   const [clients, setClients] = useState(initialClients);
   const [stats, setStats] = useState(initialStats);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -33,18 +30,17 @@ export function ClientsTable({
   const [showStats, setShowStats] = useState(true);
 
   const refreshStats = (list = clients) => {
-    const activeCount = list.filter(client => client.isActive).length;
-    const vipCount = list.filter(client => client.isVip).length;
-    const withOrdersCount = list.filter(client => (client.packagesCount || 0) > 0).length;
-    const burkinaRecipientsCount = list.filter(client => 
-      client.recipientCity && client.recipientCity.trim() !== ""
+    const activeCount = list.filter((client) => client.isActive).length;
+    const vipCount = list.filter((client) => client.isVip).length;
+    const withOrdersCount = list.filter((client) => (client.packagesCount || 0) > 0).length;
+    const burkinaRecipientsCount = list.filter(
+      (client) => client.recipientCity && client.recipientCity.trim() !== ""
     ).length;
 
-    // Calcul des nouveaux clients du mois
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const newThisMonth = list.filter(client => 
-      new Date(client.createdAt) >= thirtyDaysAgo
+    const newThisMonth = list.filter(
+      (client) => new Date(client.createdAt) >= thirtyDaysAgo
     ).length;
 
     setStats({
@@ -73,12 +69,9 @@ export function ClientsTable({
       let response;
 
       if (editingClient) {
-        // API PUT /api/clients/{id}
         response = await fetch(`/api/clients/${editingClient.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
 
@@ -86,26 +79,21 @@ export function ClientsTable({
           const data = await response.json();
           setClients((prev) => {
             const next = prev.map((client) =>
-              client.id === editingClient.id
-                ? { ...client, ...data.client, ...form }
-                : client
+              client.id === editingClient.id ? { ...client, ...data.client, ...form } : client
             );
             refreshStats(next);
             return next;
           });
-          toast.success(data.message || 'Client modifié avec succès');
+          toast.success(data.message || "Client modifié avec succès");
           setIsDialogOpen(false);
         } else {
           const error = await response.json();
-          toast.error(error.message || 'Erreur lors de la modification');
+          toast.error(error.message || "Erreur lors de la modification");
         }
       } else {
-        // API POST /api/clients
-        response = await fetch('/api/clients', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+        response = await fetch("/api/clients", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
 
@@ -124,31 +112,32 @@ export function ClientsTable({
             refreshStats(next);
             return next;
           });
-          toast.success(data.message || 'Client créé avec succès');
+          toast.success(data.message || "Client créé avec succès");
           setIsDialogOpen(false);
         } else {
           const error = await response.json();
-          toast.error(error.message || 'Erreur lors de la création');
+          toast.error(error.message || "Erreur lors de la création");
         }
       }
     } catch (err) {
-      console.error('Erreur lors de la sauvegarde:', err);
-      toast.error('Erreur de connexion');
+      console.error("Erreur lors de la sauvegarde:", err);
+      toast.error("Erreur de connexion");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (client) => {
-    if (!window.confirm(
-      `Supprimer le client ${client.firstName} ${client.lastName} (${client.clientCode}) ?\n\nAttention: Cette action supprimera également tous les colis associés.`
-    )) return;
+    if (
+      !window.confirm(
+        `Supprimer le client ${client.firstName} ${client.lastName} (${client.clientCode}) ?\n\nAttention: Cette action supprimera également tous les colis associés.`
+      )
+    )
+      return;
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/clients/${client.id}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
 
       if (response.ok) {
         const data = await response.json();
@@ -157,14 +146,14 @@ export function ClientsTable({
           refreshStats(next);
           return next;
         });
-        toast.success(data.message || 'Client supprimé avec succès');
+        toast.success(data.message || "Client supprimé avec succès");
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Erreur lors de la suppression');
+        toast.error(error.message || "Erreur lors de la suppression");
       }
     } catch (err) {
-      console.error('Erreur suppression:', err);
-      toast.error('Erreur de connexion');
+      console.error("Erreur suppression:", err);
+      toast.error("Erreur de connexion");
     } finally {
       setLoading(false);
     }
@@ -177,23 +166,12 @@ export function ClientsTable({
   };
 
   const handleCreatePackage = (client) => {
-    // Redirection vers la création de colis avec le client pré-sélectionné
     toast.info(`Créer un nouveau colis pour ${client.firstName} ${client.lastName}`);
-    // Ici on pourrait rediriger vers la page des colis avec le client pré-rempli
-    // router.push(`/admin/packages/new?clientId=${client.id}`);
   };
 
   const filters = [
-    {
-      key: "status",
-      title: "Statut",
-      options: statusOptions,
-    },
-    {
-      key: "country",
-      title: "Pays",
-      options: countryOptions,
-    },
+    { key: "status", title: "Statut", options: statusOptions },
+    { key: "country", title: "Pays", options: countryOptions },
   ];
 
   const columns = clientsColumns({
@@ -222,13 +200,12 @@ export function ClientsTable({
           "VIP",
           "Total Dépensé",
           "Nb Colis",
-          "Date création"
+          "Date création",
         ].join(","),
         ...clients.map((client) => {
-          const createdAt = client.createdAt 
-            ? new Date(client.createdAt).toLocaleDateString("fr-FR") 
+          const createdAt = client.createdAt
+            ? new Date(client.createdAt).toLocaleDateString("fr-FR")
             : "";
-
           return [
             client.clientCode,
             client.firstName,
@@ -279,7 +256,6 @@ export function ClientsTable({
 
   return (
     <div className="space-y-6 p-6">
-      {/* Stats (affichables/masquables) */}
       {showStats && <ClientsStats stats={stats} />}
 
       <CustomDataTable
@@ -287,7 +263,6 @@ export function ClientsTable({
         columns={columns}
         searchPlaceholder="Rechercher par nom, code client, téléphone..."
         searchKey="clientCode"
-        globalSearchKeys={["clientCode", "firstName", "lastName", "phone", "email", "company"]}
         filters={filters}
         onAdd={handleAdd}
         onExport={handleExport}
@@ -300,6 +275,14 @@ export function ClientsTable({
             icon: showStats ? "EyeOff" : "Eye",
             variant: "outline",
           },
+        ]}
+        /* <<< Colonnes masquées par défaut */
+        initialHiddenColumns={[
+          "email",
+          "company",
+          "recipientPhone",
+          "totalSpent",
+          "packagesCount",
         ]}
       />
 

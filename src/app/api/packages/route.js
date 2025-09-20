@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+// ---------- Helpers ----------
 const toNumOrNull = (v) =>
   v === "" || v === undefined || v === null || Number.isNaN(Number(v))
     ? null
@@ -19,6 +20,9 @@ const toDateOrNull = (v) => (v ? new Date(v) : null);
 const isValidPaymentStatus = (s) =>
   ["PENDING", "PARTIAL", "PAID", "CANCELLED", "REFUNDED"].includes(s);
 
+const isValidPaymentMethod = (m) =>
+  ["CASH", "CARD", "TRANSFER", "MOBILE_MONEY", "CHEQUE"].includes(m);
+
 const derivePaymentStatus = (totalAmount, paidAmount) => {
   const total = Number(totalAmount || 0);
   const paid = Number(paidAmount || 0);
@@ -27,6 +31,65 @@ const derivePaymentStatus = (totalAmount, paidAmount) => {
   return "PAID";
 };
 
+// Tous les types permis (doivent correspondre au schema.prisma)
+const validTypes = [
+  "CARTON",
+  "CARTON_MEDIUM",
+  "CARTON_LARGE",
+  "BARRIQUE",
+  "FUT_BLACK_270L",
+  "VEHICLE",
+  "SUV_4X4",
+  "MOTORCYCLE",
+  "ELECTRONICS",
+  "FRIDGE_SMALL",
+  "FRIDGE_STANDARD",
+  "FRIDGE_LARGE",
+  "FRIDGE_AMERICAN",
+  "FREEZER_SMALL",
+  "FREEZER_MEDIUM",
+  "FREEZER_LARGE",
+  "FREEZER_XLARGE",
+  "WASHING_MACHINE",
+  "STOVE",
+  "TV_32",
+  "TV_40",
+  "TV_48",
+  "TV_55",
+  "TV_65",
+  "TV_75",
+  "TV_80",
+  "TV_OTHER",
+  "VALISE_SMALL",
+  "VALISE_MEDIUM",
+  "VALISE_LARGE",
+  "VALISE_XLARGE",
+  "SAC_MEDIUM",
+  "SAC_LARGE",
+  "SAC_XLARGE",
+  "CANTINE_SMALL",
+  "CANTINE_MEDIUM",
+  "CANTINE_LARGE",
+  "CANTINE_XLARGE",
+  "CHAIR_STACKABLE",
+  "CHAIR_STANDARD",
+  "OFFICE_CHAIR",
+  "ARMCHAIR",
+  "SOFA_SEAT",
+  "MATTRESS_SEAT",
+  "WINE_6_BOTTLES",
+  "WINE_12_BOTTLES",
+  "CHAMPAGNE_6_BOTTLES",
+  "CHAMPAGNE_12_BOTTLES",
+  "GENERATOR_SMALL",
+  "CLOTHING",
+  "FOOD",
+  "DOCUMENTS",
+  "INDUSTRIAL",
+  "OTHER",
+];
+
+// ---------- GET /api/packages ----------
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -39,13 +102,15 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get("limit")) || 50;
     const status = searchParams.get("status");
     const clientId = searchParams.get("clientId");
+    const shipmentId = searchParams.get("shipmentId");
 
-    // Construction des filtres
     const where = {};
     if (status) where.status = status;
     if (clientId) where.clientId = clientId;
+    // IMPORTANT : plus de shipmentId scalaire → filtrer via la relation
+    if (shipmentId) where.shipment = { id: shipmentId };
 
-    // Si c'est un client, ne voir que ses colis
+    // Un client ne voit que ses colis
     if (session.user.role === "CLIENT") {
       const userClient = await prisma.client.findFirst({
         where: { userId: session.user.id },
@@ -69,32 +134,33 @@ export async function GET(request) {
           },
         },
         container: {
-          select: {
-            id: true,
-            containerNumber: true,
-            name: true,
-            status: true,
-          },
+          select: { id: true, containerNumber: true, name: true, status: true },
         },
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
+        shipment: {
+          select: { id: true, shipmentNumber: true, paymentStatus: true },
         },
+        user: { select: { id: true, firstName: true, lastName: true } },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
     });
 
+    const packagesWithParsedTypes = packages.map((pkg) => ({
+      ...pkg,
+      parsedTypes: (() => {
+        try {
+          return JSON.parse(pkg.types);
+        } catch {
+          return [];
+        }
+      })(),
+    }));
+
     const total = await prisma.package.count({ where });
 
     return NextResponse.json({
-      data: packages,
+      data: packagesWithParsedTypes,
       pagination: {
         page,
         limit,
@@ -108,6 +174,7 @@ export async function GET(request) {
   }
 }
 
+// ---------- POST /api/packages ----------
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -117,41 +184,286 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    // --- Validation requis minimal ---
-    if (
-      !body.clientId ||
-      !body.type ||
-      !body.description ||
-      !body.deliveryAddress
-    ) {
+    // ====== CAS 1: Payload Wizard (batch groupé) ======
+    // { clientId, containerId, sharedData, packages: [...] }
+    if (Array.isArray(body.packages)) {
+      const { clientId, containerId = null, sharedData = {} } = body;
+      if (!clientId) {
+        return NextResponse.json(
+          { error: "clientId manquant (format batch/wizard)" },
+          { status: 400 }
+        );
+      }
+
+      // Créer l'expédition (Shipment) d'abord
+      const year = new Date().getFullYear();
+      const shCount = (await prisma.shipment.count()) + 1;
+      const shipmentNumber = `SHP${year}${String(shCount).padStart(5, "0")}`;
+
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+      });
+      if (!user)
+        return NextResponse.json(
+          { error: "Utilisateur introuvable" },
+          { status: 401 }
+        );
+
+      const shipment = await prisma.shipment.create({
+        data: {
+          shipmentNumber,
+          client: { connect: { id: clientId } },
+          user: { connect: { id: user.id } },
+          ...(containerId
+            ? { container: { connect: { id: containerId } } }
+            : {}),
+
+          // Partagés
+          pickupAddress: sharedData.pickupAddress || null,
+          pickupDate: sharedData.pickupDate
+            ? new Date(sharedData.pickupDate)
+            : null,
+          pickupTime: sharedData.pickupTime || null,
+          deliveryAddress: body.deliveryAddress || null,
+          specialInstructions: sharedData.specialInstructions || null,
+
+          // Paiement groupé partagé (status final recalculé plus bas)
+          paymentMethod: sharedData.paymentMethod || null,
+          paidAmount: Number(sharedData.paidAmount || 0),
+          paidAt: sharedData.paidAt ? new Date(sharedData.paidAt) : null,
+          paymentStatus: derivePaymentStatus(
+            0,
+            Number(sharedData.paidAmount || 0)
+          ),
+        },
+      });
+
+      // Créer chaque package et les lier à l'expédition
+      const created = [];
+      for (const pkg of body.packages) {
+        const single = {
+          clientId,
+          containerId: pkg.containerId ?? containerId ?? null,
+          selectedTypes: pkg.selectedTypes,
+          description: pkg.description,
+          weight: pkg.weight,
+          value: pkg.value,
+          priority: pkg.priority,
+          isFragile: pkg.isFragile,
+          isInsured: pkg.isInsured,
+          pickupFee: pkg.pickupFee,
+          insuranceFee: pkg.insuranceFee,
+          customsFee: pkg.customsFee,
+          discount: pkg.discount,
+          pickupAddress: pkg.pickupAddress ?? sharedData.pickupAddress ?? null,
+          pickupDate: pkg.pickupDate ?? sharedData.pickupDate ?? null,
+          pickupTime: pkg.pickupTime ?? sharedData.pickupTime ?? null,
+          deliveryAddress: pkg.deliveryAddress ?? body.deliveryAddress ?? null,
+          specialInstructions:
+            pkg.specialInstructions ?? sharedData.specialInstructions ?? null,
+
+          // Paiement — on copie le shared pour cohérence
+          paidAmount: Number(sharedData.paidAmount || 0),
+          paymentMethod: sharedData.paymentMethod || null,
+          paidAt: sharedData.paidAt || null,
+
+          // Lien expédition (on passe l'id, la fonction interne fera connect)
+          shipmentId: shipment.id,
+        };
+
+        const result = await createSinglePackageInternal(single, session);
+        if (result.error) {
+          if (created.length === 0) {
+            // rollback minimal si 1er colis échoue
+            await prisma.shipment.delete({ where: { id: shipment.id } });
+          }
+          return NextResponse.json(
+            { error: result.error },
+            { status: result.status || 400 }
+          );
+        }
+        created.push(result.package);
+      }
+
+      // Agréger les totaux sur l'expédition
+      const packagesCount = created.length;
+      const totalQuantity = created.reduce(
+        (s, p) => s + (p.totalQuantity || 0),
+        0
+      );
+      const subtotal = created.reduce((s, p) => s + (p.basePrice || 0), 0);
+      const pickupFeeTotal = created.reduce(
+        (s, p) => s + (p.pickupFee || 0),
+        0
+      );
+      const insuranceFeeTotal = created.reduce(
+        (s, p) => s + (p.insuranceFee || 0),
+        0
+      );
+      const customsFeeTotal = created.reduce(
+        (s, p) => s + (p.customsFee || 0),
+        0
+      );
+      const discountTotal = created.reduce((s, p) => s + (p.discount || 0), 0);
+      const totalAmount = created.reduce((s, p) => s + (p.totalAmount || 0), 0);
+
+      await prisma.shipment.update({
+        where: { id: shipment.id },
+        data: {
+          packagesCount,
+          totalQuantity,
+          subtotal,
+          pickupFeeTotal,
+          insuranceFeeTotal,
+          customsFeeTotal,
+          discountTotal,
+          totalAmount,
+          paymentStatus: derivePaymentStatus(
+            totalAmount,
+            Number(sharedData.paidAmount || 0)
+          ),
+        },
+      });
+
       return NextResponse.json(
         {
-          error:
-            "Champs requis manquants (clientId, type, description, deliveryAddress)",
+          message: "Expédition créée",
+          shipment: { id: shipment.id, shipmentNumber },
+          packages: created,
         },
-        { status: 400 }
+        { status: 201 }
       );
     }
 
-    const validTypes = [
-      "CARTON",
-      "BARRIQUE",
-      "VEHICLE",
-      "MOTORCYCLE",
-      "ELECTRONICS",
-      "CLOTHING",
-      "FOOD",
-      "DOCUMENTS",
-      "OTHER",
-    ];
-    if (!validTypes.includes(body.type)) {
+    // ====== CAS 2: batch simple (array d'objets colis) ======
+    if (Array.isArray(body)) {
+      const results = [];
+      for (const item of body) {
+        const res = await createSinglePackageInternal(item, session);
+        if (res.error) {
+          return NextResponse.json(
+            { error: res.error, index: results.length },
+            { status: res.status || 400 }
+          );
+        }
+        results.push(res.package);
+      }
       return NextResponse.json(
-        { error: `Type invalide. Attendu: ${validTypes.join(", ")}` },
-        { status: 400 }
+        { message: "Colis créés", count: results.length, packages: results },
+        { status: 201 }
       );
     }
 
-    // --- IDs & existence ---
+    // ====== CAS 3: unitaire ======
+    const single = await createSinglePackageInternal(body, session);
+    if (single.error) {
+      return NextResponse.json(
+        { error: single.error },
+        { status: single.status || 400 }
+      );
+    }
+    return NextResponse.json(
+      { message: "Colis créé avec succès", package: single.package },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Erreur POST /api/packages:", error);
+    return NextResponse.json(
+      { error: "Erreur lors de la création du colis" },
+      { status: 500 }
+    );
+  }
+}
+
+// ---------- createSinglePackageInternal ----------
+async function createSinglePackageInternal(body, session) {
+  try {
+    // Détecter le format
+    const isLegacyFormat = body.type && !body.types && !body.selectedTypes;
+    const isMultiTypesFormat =
+      body.selectedTypes && Array.isArray(body.selectedTypes);
+    const isDirectTypesFormat = body.types !== undefined;
+
+    let typesData = [];
+    let totalQuantity = 1;
+    let basePrice = 0;
+
+    if (isLegacyFormat) {
+      if (!validTypes.includes(body.type)) {
+        return { error: `Type invalide: ${body.type}`, status: 400 };
+      }
+      typesData = [
+        {
+          type: body.type,
+          quantity: body.quantity || 1,
+          unitPrice: body.basePrice || 50,
+          isQuoteOnly: false,
+        },
+      ];
+      totalQuantity = body.quantity || 1;
+      basePrice = (body.basePrice || 50) * totalQuantity;
+    } else if (isMultiTypesFormat) {
+      if (body.selectedTypes.length === 0) {
+        return { error: "Au moins un type doit être sélectionné", status: 400 };
+      }
+      for (const typeItem of body.selectedTypes) {
+        if (!typeItem.type || !validTypes.includes(typeItem.type)) {
+          return { error: `Type invalide: ${typeItem.type}`, status: 400 };
+        }
+        if (!typeItem.quantity || typeItem.quantity < 1) {
+          return {
+            error: `Quantité invalide pour ${typeItem.type}`,
+            status: 400,
+          };
+        }
+      }
+      typesData = body.selectedTypes;
+      totalQuantity = typesData.reduce((sum, it) => sum + it.quantity, 0);
+      basePrice = typesData.reduce(
+        (sum, it) =>
+          sum + (it.isQuoteOnly ? 0 : Number(it.unitPrice || 0) * it.quantity),
+        0
+      );
+    } else if (isDirectTypesFormat) {
+      try {
+        typesData =
+          typeof body.types === "string" ? JSON.parse(body.types) : body.types;
+        if (!Array.isArray(typesData) || typesData.length === 0) {
+          throw new Error("Types doit être un array non vide");
+        }
+      } catch {
+        return { error: "Format de types invalide", status: 400 };
+      }
+      totalQuantity =
+        body.totalQuantity ||
+        typesData.reduce((sum, it) => sum + Number(it.quantity || 0), 0);
+      basePrice =
+        body.basePrice ||
+        typesData.reduce(
+          (sum, it) =>
+            sum +
+            (it.isQuoteOnly
+              ? 0
+              : Number(it.unitPrice || 0) * Number(it.quantity || 0)),
+          0
+        );
+    } else {
+      return {
+        error:
+          "Format de données invalide. Utilisez 'type' (legacy), 'selectedTypes' (nouveau), 'types' (direct) ou le batch wizard.",
+        status: 400,
+      };
+    }
+
+    // Champs requis minimaux
+    if (!body.clientId || !body.description) {
+      return {
+        error: "Champs requis manquants (clientId, description)",
+        status: 400,
+      };
+    }
+
+    // Vérifs existence
     const clientId = body.clientId?.trim?.() || body.clientId;
     const containerId = body.containerId?.trim?.() || body.containerId || null;
 
@@ -159,53 +471,29 @@ export async function POST(request) {
       prisma.client.findUnique({ where: { id: clientId } }),
       prisma.user.findUnique({ where: { id: session.user.id } }),
     ]);
-    if (!client)
-      return NextResponse.json(
-        { error: "Client introuvable (clientId invalide)" },
-        { status: 400 }
-      );
+    if (!client) return { error: "Client introuvable", status: 400 };
     if (!user)
-      return NextResponse.json(
-        { error: "Utilisateur de session introuvable" },
-        { status: 401 }
-      );
+      return { error: "Utilisateur de session introuvable", status: 401 };
 
     let container = null;
     if (containerId) {
       container = await prisma.container.findUnique({
         where: { id: containerId },
       });
-      if (!container) {
-        return NextResponse.json(
-          { error: "Conteneur introuvable (containerId invalide)" },
-          { status: 400 }
-        );
-      }
+      if (!container) return { error: "Conteneur introuvable", status: 400 };
     }
 
-    // --- Numéro colis ---
+    // Génération du numéro de colis
     const year = new Date().getFullYear();
     const count = (await prisma.package.count()) + 1;
     const packageNumber = `PKG${year}${String(count).padStart(5, "0")}`;
 
-    // --- Pricing de référence (fallback) ---
-    const pricing = await prisma.pricing.findFirst({
-      where: { type: body.type, isActive: true },
-    });
-
-    // --- Normalisations ---
+    // Normalisations / calculs frais
     const normalizedValue = toNumOrNull(body.value);
     const normalizedWeight = toNumOrNull(body.weight);
-
-    const basePrice = toNumOrNull(body.basePrice) ?? pricing?.basePrice ?? 50;
-
     const normalizedPickupFee =
-      toNumOrNull(body.pickupFee) ??
-      (body.pickupAddress ? pricing?.pickupFee ?? 20 : 0);
-
-    const normalizedCustoms =
-      toNumOrNull(body.customsFee) ?? pricing?.customsFee ?? 15;
-
+      toNumOrNull(body.pickupFee) ?? (body.pickupAddress ? 20 : 0);
+    const normalizedCustoms = toNumOrNull(body.customsFee) ?? 15;
     const discount = Math.max(0, toNumOrNull(body.discount) ?? 0);
 
     const isInsured = !!body.isInsured;
@@ -223,7 +511,7 @@ export async function POST(request) {
         Number(discount || 0)
     );
 
-    // --- Paiement ---
+    // Paiement
     const paidAmount = Math.max(0, toNumOrNull(body.paidAmount) ?? 0);
     const paymentStatus =
       body.paymentStatus && isValidPaymentStatus(body.paymentStatus)
@@ -235,65 +523,83 @@ export async function POST(request) {
           ? new Date(body.paidAt)
           : new Date()
         : null;
-    const paymentMethod = body.paymentMethod ?? null;
 
-    // --- Création ---
-    const newPackage = await prisma.package.create({
-      data: {
-        packageNumber,
-        client: { connect: { id: client.id } },
-        user: { connect: { id: user.id } },
-        ...(container ? { container: { connect: { id: container.id } } } : {}),
+    const paymentMethod =
+      body.paymentMethod &&
+      body.paymentMethod.trim() !== "" &&
+      isValidPaymentMethod(body.paymentMethod)
+        ? body.paymentMethod
+        : null;
 
-        type: body.type,
-        description: body.description,
-        quantity: toIntOr(body.quantity, 1),
-        weight: normalizedWeight,
-        dimensions: body.dimensions || null, // toléré si encore envoyé par l'UI
-        value: normalizedValue,
-        priority: body.priority ?? "NORMAL",
-        isFragile: !!body.isFragile,
-        isInsured,
-        pickupAddress: body.pickupAddress || null,
-        pickupDate: toDateOrNull(body.pickupDate),
-        pickupTime: body.pickupTime || null,
-        deliveryAddress: body.deliveryAddress,
-        specialInstructions: body.specialInstructions || null,
-        notes: body.notes || null,
-
-        basePrice,
-        pickupFee: normalizedPickupFee,
-        insuranceFee,
-        customsFee: normalizedCustoms,
-        discount,
-        totalAmount,
-
-        paymentStatus,
-        paymentMethod,
-        paidAmount,
-        paidAt,
-
-        status: "REGISTERED",
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            clientCode: true,
-            firstName: true,
-            lastName: true,
-            recipientCity: true,
-            recipientName: true,
-          },
+    // Création du colis (⚠️ liaison shipment par relation)
+    // Création du colis (⚠️ liaison shipment par relation) avec numéro unique robuste
+    const include = {
+      client: {
+        select: {
+          id: true,
+          clientCode: true,
+          firstName: true,
+          lastName: true,
+          recipientCity: true,
+          recipientName: true,
         },
-        container: {
-          select: { id: true, containerNumber: true, name: true, status: true },
-        },
-        user: { select: { id: true, firstName: true, lastName: true } },
       },
-    });
+      container: {
+        select: { id: true, containerNumber: true, name: true, status: true },
+      },
+      shipment: { select: { id: true, shipmentNumber: true } },
+      user: { select: { id: true, firstName: true, lastName: true } },
+    };
 
-    // --- Audit non bloquant ---
+    const data = {
+      client: { connect: { id: client.id } },
+      user: { connect: { id: user.id } },
+      ...(container ? { container: { connect: { id: container.id } } } : {}),
+      ...(body.shipmentId
+        ? { shipment: { connect: { id: body.shipmentId } } }
+        : {}),
+
+      // Multi-types JSON
+      types: JSON.stringify(typesData),
+      description: body.description,
+      totalQuantity,
+      weight: normalizedWeight,
+      dimensions: body.dimensions || null,
+      value: normalizedValue,
+      priority: body.priority ?? "NORMAL",
+      isFragile: !!body.isFragile,
+      isInsured,
+
+      pickupAddress: body.pickupAddress || null,
+      pickupDate: toDateOrNull(body.pickupDate),
+      pickupTime: body.pickupTime || null,
+      deliveryAddress: body.deliveryAddress || client.recipientAddress,
+      specialInstructions: body.specialInstructions || null,
+      notes: body.notes || null,
+
+      basePrice,
+      pickupFee: normalizedPickupFee,
+      insuranceFee,
+      customsFee: normalizedCustoms,
+      discount,
+      totalAmount,
+
+      paymentStatus,
+      paymentMethod,
+      paidAmount,
+      paidAt,
+
+      status: "REGISTERED",
+    };
+
+    const newPackage = await createPackageWithUniqueNumber(
+      prisma,
+      year,
+      data,
+      include
+    );
+
+    // Audit (best-effort)
     try {
       await prisma.auditLog.create({
         data: {
@@ -301,39 +607,62 @@ export async function POST(request) {
           action: "CREATE_PACKAGE",
           resource: "package",
           resourceId: newPackage.id,
-          details: JSON.stringify({ packageNumber }),
+          details: JSON.stringify({
+            packageNumber,
+            typesCount: typesData.length,
+            totalQuantity,
+            format: isLegacyFormat
+              ? "legacy"
+              : isMultiTypesFormat
+              ? "multi-types"
+              : "direct-types",
+            shipmentId: body.shipmentId ?? null,
+          }),
         },
       });
     } catch {}
 
-    return NextResponse.json(
-      { message: "Colis créé avec succès", package: newPackage },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Erreur POST /api/packages:", error);
-    if (error.code === "P2003") {
-      return NextResponse.json(
-        {
-          error: `Contrainte de clé étrangère violée${
-            error.meta?.field_name ? ` (${error.meta.field_name})` : ""
-          }`,
-        },
-        { status: 400 }
-      );
-    }
-    if (error.code === "P2025") {
-      return NextResponse.json(
-        {
-          error:
-            "Une référence liée est introuvable (client / conteneur / utilisateur)",
-        },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json(
-      { error: "Erreur lors de la création du colis" },
-      { status: 500 }
-    );
+    return { package: { ...newPackage, parsedTypes: typesData } };
+  } catch (e) {
+    console.error("createSinglePackageInternal error:", e);
+    return { error: "Erreur interne", status: 500 };
   }
+}
+
+// Génération robuste d'un numéro colis unique, avec retry
+async function createPackageWithUniqueNumber(prisma, year, data, include) {
+  // On part du nombre de colis déjà créés cette année
+  const baseSeq =
+    (await prisma.package.count({
+      where: { packageNumber: { startsWith: `PKG${year}` } },
+    })) + 1;
+
+  const maxAttempts = 10; // essaie jusqu'à 10 numéros consécutifs
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const seq = baseSeq + i;
+    const packageNumber = `PKG${year}${String(seq).padStart(5, "0")}`;
+
+    try {
+      return await prisma.package.create({
+        data: { ...data, packageNumber },
+        include,
+      });
+    } catch (e) {
+      // Collision d'unicité → on tente le numéro suivant
+      if (
+        e?.code === "P2002" &&
+        Array.isArray(e.meta?.target) &&
+        e.meta.target.includes("packageNumber")
+      ) {
+        continue;
+      }
+      // Autre erreur → on remonte
+      throw e;
+    }
+  }
+
+  throw new Error(
+    "Impossible de générer un numéro de colis unique après plusieurs tentatives."
+  );
 }

@@ -26,22 +26,6 @@ export const Header = ({ children }) => {
         </h1>
       </div>
 
-      <div className="flex items-center gap-2">
-        {children}
-        <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
-          {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-        </Button>
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Menu className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
-            <MobileSidebar />
-          </Sheet>
-        </div>
-      </div>
     </header>
   );
 };

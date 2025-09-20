@@ -46,20 +46,20 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // Ajout du champ password manquant
+  password      String? // Ajout du champ password manquant
   role          UserRole  @default(CLIENT)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   // Informations supplémentaires
-  firstName     String?
-  lastName      String?
-  address       String?
-  city          String?
-  country       String?   @default("France")
-  dateOfBirth   DateTime?
-  lastLoginAt   DateTime?
+  firstName   String?
+  lastName    String?
+  address     String?
+  city        String?
+  country     String?   @default("France")
+  dateOfBirth DateTime?
+  lastLoginAt DateTime?
 
   // Relations
   accounts        Account[]
@@ -71,6 +71,8 @@ model User {
   invoices        Invoice[]
   notifications   Notification[]
   files           File[]
+
+  shipments Shipment[]
 
   @@map("users")
 }
@@ -109,14 +111,85 @@ enum UserRole {
 }
 
 enum PackageType {
+  // Cartons
   CARTON
+  CARTON_MEDIUM
+  CARTON_LARGE
+
+  // Fûts/Barriques
   BARRIQUE
+  FUT_BLACK_270L
+
+  // Véhicules
   VEHICLE
+  SUV_4X4
   MOTORCYCLE
+
+  // Électroménager
   ELECTRONICS
+  FRIDGE_SMALL
+  FRIDGE_STANDARD
+  FRIDGE_LARGE
+  FRIDGE_AMERICAN
+  FREEZER_SMALL
+  FREEZER_MEDIUM
+  FREEZER_LARGE
+  FREEZER_XLARGE
+  WASHING_MACHINE
+  STOVE
+
+  // Téléviseurs
+  TV_32
+  TV_40
+  TV_48
+  TV_55
+  TV_65
+  TV_75
+  TV_80
+  TV_OTHER
+
+  // Bagages
+  VALISE_SMALL
+  VALISE_MEDIUM
+  VALISE_LARGE
+  VALISE_XLARGE
+  SAC_MEDIUM
+  SAC_LARGE
+  SAC_XLARGE
+
+  // Cantines
+  CANTINE_SMALL
+  CANTINE_MEDIUM
+  CANTINE_LARGE
+  CANTINE_XLARGE
+
+  // Mobilier
+  CHAIR_STACKABLE
+  CHAIR_STANDARD
+  OFFICE_CHAIR
+  ARMCHAIR
+  SOFA_SEAT
+  MATTRESS_SEAT
+
+  // Vins & Champagnes
+  WINE_6_BOTTLES
+  WINE_12_BOTTLES
+  CHAMPAGNE_6_BOTTLES
+  CHAMPAGNE_12_BOTTLES
+
+  // Divers existants
   CLOTHING
   FOOD
   DOCUMENTS
+
+  // Nouveaux divers
+  GENERATOR_SMALL
+  INDUSTRIAL
+  LARGE_BAGGAGE
+  CONTAINERS
+  TRACTORS
+
+  // Générique
   OTHER
 }
 
@@ -174,32 +247,32 @@ enum NotificationType {
 // ===== BUSINESS LOGIC =====
 
 model Client {
-  id          String   @id @default(cuid())
-  clientCode  String   @unique // Code client unique (ex: CLI001)
-  userId      String?  // Lié à un compte utilisateur (optionnel)
-  
+  id         String  @id @default(cuid())
+  clientCode String  @unique // Code client unique (ex: CLI001)
+  userId     String? // Lié à un compte utilisateur (optionnel)
+
   // Informations personnelles
-  firstName   String
-  lastName    String
-  phone       String
-  email       String?
-  address     String
-  city        String
-  country     String   @default("France")
-  postalCode  String?
-  
+  firstName  String
+  lastName   String
+  phone      String
+  email      String?
+  address    String
+  city       String
+  country    String  @default("France")
+  postalCode String?
+
   // Informations professionnelles
-  company     String?
-  siret       String?
-  
+  company String?
+  siret   String?
+
   // Destinataire au Burkina Faso
-  recipientName    String
-  recipientPhone   String
-  recipientEmail   String?
-  recipientAddress String
-  recipientCity    String
+  recipientName     String
+  recipientPhone    String
+  recipientEmail    String?
+  recipientAddress  String
+  recipientCity     String
   recipientRelation String? // Relation avec le destinataire
-  
+
   // Métadonnées
   isActive    Boolean  @default(true)
   isVip       Boolean  @default(false)
@@ -215,6 +288,8 @@ model Client {
   invoices Invoice[]
   payments Payment[]
 
+  shipments Shipment[]
+
   @@index([phone])
   @@index([email])
   @@index([clientCode])
@@ -223,46 +298,48 @@ model Client {
 }
 
 model Container {
-  id               String          @id @default(cuid())
-  containerNumber  String          @unique // CNT202501001
-  name             String? // Nom du conteneur
-  
+  id              String  @id @default(cuid())
+  containerNumber String  @unique // CNT202501001
+  name            String? // Nom du conteneur
+
   // Dates importantes
-  departureDate    DateTime? // Date de départ prévue
-  actualDeparture  DateTime? // Date de départ réelle
-  arrivalDate      DateTime? // Date d'arrivée prévue
-  actualArrival    DateTime? // Date d'arrivée réelle
-  
+  departureDate   DateTime? // Date de départ prévue
+  actualDeparture DateTime? // Date de départ réelle
+  arrivalDate     DateTime? // Date d'arrivée prévue
+  actualArrival   DateTime? // Date d'arrivée réelle
+
   // Statut et capacité
-  status           ContainerStatus @default(PREPARATION)
-  capacity         Int             @default(100) // Capacité max
-  currentLoad      Int             @default(0) // Charge actuelle
-  maxWeight        Float?          // Poids maximum autorisé
-  currentWeight    Float           @default(0) // Poids actuel
-  
+  status        ContainerStatus @default(PREPARATION)
+  capacity      Int             @default(100) // Capacité max
+  currentLoad   Int             @default(0) // Charge actuelle
+  maxWeight     Float? // Poids maximum autorisé
+  currentWeight Float           @default(0) // Poids actuel
+
   // Localisation
-  origin           String          @default("France")
-  destination      String          @default("Burkina Faso")
-  currentLocation  String?
-  
+  origin          String  @default("France")
+  destination     String  @default("Burkina Faso")
+  currentLocation String?
+
   // Informations transport
   transportCompany String?
   driverName       String?
   driverPhone      String?
   plateNumber      String?
-  
+
   // Coûts
-  transportCost    Float?
-  customsCost      Float?
-  totalCost        Float?
-  
-  notes            String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  transportCost Float?
+  customsCost   Float?
+  totalCost     Float?
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  packages         Package[]
-  trackingUpdates  TrackingUpdate[]
+  packages        Package[]
+  trackingUpdates TrackingUpdate[]
+
+  shipments Shipment[]
 
   @@index([containerNumber])
   @@index([status])
@@ -271,65 +348,69 @@ model Container {
 }
 
 model Package {
-  id              String        @id @default(cuid())
-  packageNumber   String        @unique // PKG202501001
-  clientId        String
-  containerId     String?
-  userId          String?  // Utilisateur qui a créé l'entrée
-  
-  // Détails du colis
-  type            PackageType
-  description     String
-  quantity        Int           @default(1)
-  weight          Float?
-  dimensions      String?  // "LxlxH en cm"
-  value           Float?   // Valeur déclarée
-  photos          String?  // JSON string des URLs des photos (MODIFIÉ)
-  
+  id            String  @id @default(cuid())
+  packageNumber String  @unique // PKG202501001
+  clientId      String
+  containerId   String?
+  userId        String? // Utilisateur qui a créé l'entrée
+
+  // Détails du colis - MODIFIÉ pour supporter plusieurs types
+  types         String // JSON: [{"type": "CARTON", "quantity": 2}, {"type": "TV_55", "quantity": 1}]
+  description   String
+  totalQuantity Int     @default(1) // Quantité totale tous types confondus
+  weight        Float?
+  dimensions    String? // "LxlxH en cm"
+  value         Float? // Valeur déclarée
+  photos        String? // JSON string des URLs des photos
+
   // Statut et suivi
-  status          PackageStatus @default(REGISTERED)
-  priority        String        @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
-  isFragile       Boolean       @default(false)
-  isInsured       Boolean       @default(false)
-  
+  status    PackageStatus @default(REGISTERED)
+  priority  String        @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  isFragile Boolean       @default(false)
+  isInsured Boolean       @default(false)
+
   // Adresses
-  pickupAddress   String?  // Adresse de ramassage
+  pickupAddress   String? // Adresse de ramassage
   pickupDate      DateTime? // Date de ramassage
-  pickupTime      String?   // Créneau horaire
-  deliveryAddress String   // Adresse de livraison au Burkina
+  pickupTime      String? // Créneau horaire
+  deliveryAddress String // Adresse de livraison au Burkina
   deliveryDate    DateTime? // Date de livraison
   deliveryTime    String?
-  
+
   // Tarification
-  basePrice       Float
-  pickupFee       Float    @default(0)
-  insuranceFee    Float    @default(0)
-  customsFee      Float    @default(0)
-  otherFees       Float    @default(0)
-  discount        Float    @default(0)
-  totalAmount     Float
-  
+  basePrice    Float
+  pickupFee    Float @default(0)
+  insuranceFee Float @default(0)
+  customsFee   Float @default(0)
+  otherFees    Float @default(0)
+  discount     Float @default(0)
+  totalAmount  Float
+
   // Paiement
-  paymentStatus   PaymentStatus @default(PENDING)
-  paymentMethod   PaymentMethod?
-  paidAmount      Float         @default(0)
-  paidAt          DateTime?
-  
+  paymentStatus PaymentStatus  @default(PENDING)
+  paymentMethod PaymentMethod?
+  paidAmount    Float          @default(0)
+  paidAt        DateTime?
+
   // Métadonnées
-  estimatedDelivery DateTime?
+  estimatedDelivery   DateTime?
   specialInstructions String?
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  // Relations
-  client    Client     @relation(fields: [clientId], references: [id])
-  container Container? @relation(fields: [containerId], references: [id])
-  user      User?      @relation(fields: [userId], references: [id])
+  // Relations (inchangées)
+  client       Client        @relation(fields: [clientId], references: [id])
+  container    Container?    @relation(fields: [containerId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
   invoiceItems InvoiceItem[]
-  payments  Payment[]
-  files     File[]
+  payments     Payment[]
+  files        File[]
 
+  shipmentId String? // <--- NOUVEAU
+  shipment   Shipment? @relation(fields: [shipmentId], references: [id])
+
+  @@index([shipmentId])
   @@index([packageNumber])
   @@index([clientId])
   @@index([containerId])
@@ -339,20 +420,20 @@ model Package {
 }
 
 model TrackingUpdate {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   containerId String
-  userId      String   // Utilisateur qui fait la mise à jour
-  
+  userId      String // Utilisateur qui fait la mise à jour
+
   // Informations de localisation
-  location    String   // Localisation actuelle
-  description String   // Description de l'étape
-  latitude    Float?   // Coordonnées GPS
+  location    String // Localisation actuelle
+  description String // Description de l'étape
+  latitude    Float? // Coordonnées GPS
   longitude   Float?
-  
+
   // Métadonnées
   isPublic    Boolean  @default(true) // Visible par les clients
-  photos      String?  // JSON string des URLs des photos (MODIFIÉ)
-  temperature Float?   // Température si pertinent
+  photos      String? // JSON string des URLs des photos (MODIFIÉ)
+  temperature Float? // Température si pertinent
   timestamp   DateTime @default(now())
   createdAt   DateTime @default(now())
 
@@ -366,25 +447,25 @@ model TrackingUpdate {
 }
 
 model Pricing {
-  id          String   @id @default(cuid())
-  type        String   @unique // CARTON, BARRIQUE, etc.
-  name        String   // Nom affiché
+  id          String  @id @default(cuid())
+  type        String  @unique // CARTON, BARRIQUE, etc.
+  name        String // Nom affiché
   description String?
-  
+
   // Tarifs
-  basePrice   Float
-  pickupFee   Float    @default(20)
-  perKgPrice  Float?   // Prix par kg supplémentaire
-  minWeight   Float?   // Poids minimum
-  maxWeight   Float?   // Poids maximum
-  
+  basePrice  Float
+  pickupFee  Float  @default(20)
+  perKgPrice Float? // Prix par kg supplémentaire
+  minWeight  Float? // Poids minimum
+  maxWeight  Float? // Poids maximum
+
   // Validité
-  isActive    Boolean  @default(true)
-  validFrom   DateTime @default(now())
-  validUntil  DateTime?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive   Boolean   @default(true)
+  validFrom  DateTime  @default(now())
+  validUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("pricings")
 }
@@ -392,36 +473,36 @@ model Pricing {
 // ===== FACTURATION =====
 
 model Invoice {
-  id            String        @id @default(cuid())
-  invoiceNumber String        @unique // INV-2025-001
+  id            String @id @default(cuid())
+  invoiceNumber String @unique // INV-2025-001
   clientId      String
-  userId        String        // Créateur de la facture
-  
+  userId        String // Créateur de la facture
+
   // Détails facture
-  issueDate     DateTime      @default(now())
-  dueDate       DateTime
-  status        InvoiceStatus @default(DRAFT)
-  
+  issueDate DateTime      @default(now())
+  dueDate   DateTime
+  status    InvoiceStatus @default(DRAFT)
+
   // Montants
-  subtotal      Float
-  taxRate       Float         @default(0)
-  taxAmount     Float         @default(0)
-  discount      Float         @default(0)
-  totalAmount   Float
-  paidAmount    Float         @default(0)
-  
+  subtotal    Float
+  taxRate     Float @default(0)
+  taxAmount   Float @default(0)
+  discount    Float @default(0)
+  totalAmount Float
+  paidAmount  Float @default(0)
+
   // Informations
-  notes         String?
-  terms         String?
-  
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  notes String?
+  terms String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  client        Client        @relation(fields: [clientId], references: [id])
-  user          User          @relation(fields: [userId], references: [id])
-  items         InvoiceItem[]
-  payments      Payment[]
+  client   Client        @relation(fields: [clientId], references: [id])
+  user     User          @relation(fields: [userId], references: [id])
+  items    InvoiceItem[]
+  payments Payment[]
 
   @@index([invoiceNumber])
   @@index([clientId])
@@ -430,44 +511,44 @@ model Invoice {
 }
 
 model InvoiceItem {
-  id          String  @id @default(cuid())
-  invoiceId   String
-  packageId   String?
-  
+  id        String  @id @default(cuid())
+  invoiceId String
+  packageId String?
+
   description String
-  quantity    Int     @default(1)
+  quantity    Int    @default(1)
   unitPrice   Float
   totalPrice  Float
 
   // Relations
-  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  package     Package? @relation(fields: [packageId], references: [id])
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  package Package? @relation(fields: [packageId], references: [id])
 
   @@map("invoice_items")
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  paymentNumber String        @unique // PAY-2025-001
+  id            String  @id @default(cuid())
+  paymentNumber String  @unique // PAY-2025-001
   clientId      String
   invoiceId     String?
   packageId     String?
-  
-  amount        Float
-  method        PaymentMethod
-  status        String        @default("COMPLETED") // PENDING, COMPLETED, FAILED, CANCELLED
-  
+
+  amount Float
+  method PaymentMethod
+  status String        @default("COMPLETED") // PENDING, COMPLETED, FAILED, CANCELLED
+
   // Détails paiement
-  reference     String?       // Référence externe
-  transactionId String?       // ID de transaction
-  
-  paidAt        DateTime      @default(now())
-  createdAt     DateTime      @default(now())
+  reference     String? // Référence externe
+  transactionId String? // ID de transaction
+
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   // Relations
-  client        Client        @relation(fields: [clientId], references: [id])
-  invoice       Invoice?      @relation(fields: [invoiceId], references: [id])
-  package       Package?      @relation(fields: [packageId], references: [id])
+  client  Client   @relation(fields: [clientId], references: [id])
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+  package Package? @relation(fields: [packageId], references: [id])
 
   @@index([paymentNumber])
   @@index([clientId])
@@ -477,26 +558,26 @@ model Payment {
 // ===== COMMUNICATIONS =====
 
 model WhatsAppMessage {
-  id          String   @id @default(cuid())
-  to          String   // Numéro de téléphone
-  message     String   // Contenu du message
-  messageType String   @default("text") // text, template, media, document
+  id           String  @id @default(cuid())
+  to           String // Numéro de téléphone
+  message      String // Contenu du message
+  messageType  String  @default("text") // text, template, media, document
   templateName String? // Nom du template utilisé
-  
+
   // Statut
-  status      String   @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
-  messageId   String?  // ID du message WhatsApp
-  error       String?  // Erreur si échec
-  retryCount  Int      @default(0)
-  
+  status     String  @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  messageId  String? // ID du message WhatsApp
+  error      String? // Erreur si échec
+  retryCount Int     @default(0)
+
   // Métadonnées
-  packageId   String?  // Lié à un colis si applicable
-  clientId    String?  // Lié à un client
-  
+  packageId String? // Lié à un colis si applicable
+  clientId  String? // Lié à un client
+
   sentAt      DateTime?
   deliveredAt DateTime?
   readAt      DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@index([to])
   @@index([status])
@@ -505,19 +586,19 @@ model WhatsAppMessage {
 }
 
 model Notification {
-  id          String           @id @default(cuid())
-  userId      String
-  type        NotificationType
-  title       String
-  message     String
-  data        String?          // Données JSON supplémentaires
-  
-  isRead      Boolean          @default(false)
-  readAt      DateTime?
-  createdAt   DateTime         @default(now())
+  id      String           @id @default(cuid())
+  userId  String
+  type    NotificationType
+  title   String
+  message String
+  data    String? // Données JSON supplémentaires
+
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
 
   // Relations
-  user        User             @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([isRead])
@@ -527,24 +608,24 @@ model Notification {
 // ===== FICHIERS =====
 
 model File {
-  id          String   @id @default(cuid())
-  filename    String
+  id           String  @id @default(cuid())
+  filename     String
   originalName String
-  mimeType    String
-  size        Int
-  path        String
-  url         String?
-  
+  mimeType     String
+  size         Int
+  path         String
+  url          String?
+
   // Métadonnées
   uploadedBy  String
   packageId   String?
   description String?
-  
-  createdAt   DateTime @default(now())
+
+  createdAt DateTime @default(now())
 
   // Relations
-  user        User     @relation(fields: [uploadedBy], references: [id])
-  package     Package? @relation(fields: [packageId], references: [id])
+  user    User     @relation(fields: [uploadedBy], references: [id])
+  package Package? @relation(fields: [packageId], references: [id])
 
   @@index([packageId])
   @@index([uploadedBy])
@@ -556,10 +637,10 @@ model File {
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
-  action     String   // Action effectuée
-  resource   String   // Resource affectée (package, container, etc.)
-  resourceId String?  // ID de la resource
-  details    String?  // Détails supplémentaires en JSON
+  action     String // Action effectuée
+  resource   String // Resource affectée (package, container, etc.)
+  resourceId String? // ID de la resource
+  details    String? // Détails supplémentaires en JSON
   ipAddress  String?
   userAgent  String?
   createdAt  DateTime @default(now())
@@ -587,4 +668,49 @@ model Setting {
   createdAt   DateTime @default(now())
 
   @@map("settings")
+}
+
+model Shipment {
+  id             String  @id @default(cuid())
+  shipmentNumber String  @unique // ex: SHP2025xxxxx
+  clientId       String
+  containerId    String?
+  userId         String
+
+  // Agrégats / résumé
+  packagesCount     Int   @default(0)
+  totalQuantity     Int   @default(0)
+  subtotal          Float @default(0)
+  pickupFeeTotal    Float @default(0)
+  insuranceFeeTotal Float @default(0)
+  customsFeeTotal   Float @default(0)
+  discountTotal     Float @default(0)
+  totalAmount       Float @default(0)
+
+  // Paiement groupé
+  paymentStatus PaymentStatus  @default(PENDING)
+  paymentMethod PaymentMethod?
+  paidAmount    Float          @default(0)
+  paidAt        DateTime?
+
+  // Champs partagés (facultatifs)
+  pickupAddress       String?
+  pickupDate          DateTime?
+  pickupTime          String?
+  deliveryAddress     String?
+  specialInstructions String?
+  notes               String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  client    Client     @relation(fields: [clientId], references: [id])
+  container Container? @relation(fields: [containerId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+  packages  Package[]
+
+  @@index([shipmentNumber])
+  @@index([clientId])
+  @@map("shipments") // (optionnel, pour rester cohérent avec tes autres @@map)
 }

@@ -24,14 +24,6 @@ import {
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DataTablePagination } from "./data-table-pagination";
 
-/**
- * Props attendues :
- * - data, columns (TanStack)
- * - searchPlaceholder, searchKey
- * - filters: [{ key, title, options, values? }]
- * - onAdd, onExport, onImport, addButtonText
- * - title, customActions
- */
 export function CustomDataTable({
   data = [],
   columns = [],
@@ -44,6 +36,7 @@ export function CustomDataTable({
   addButtonText = "Ajouter",
   title,
   customActions = [],
+  initialHiddenColumns = [], 
 }) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState({});
@@ -67,20 +60,41 @@ export function CustomDataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
+  // Appliquer les colonnes masquées par défaut une seule fois
+  const appliedInitialRef = React.useRef(false);
+  React.useEffect(() => {
+    if (appliedInitialRef.current) return;
+
+    if (initialHiddenColumns && initialHiddenColumns.length > 0) {
+      const next = {};
+      initialHiddenColumns.forEach((id) => {
+        next[id] = false; // false => masqué
+      });
+      setColumnVisibility((prev) => ({ ...next, ...prev }));
+    }
+
+    appliedInitialRef.current = true;
+  }, [initialHiddenColumns]);
+
+  // Auto-hide mobile: n’appliquer que si aucune valeur n’a déjà été posée
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 640px)");
+
     const apply = () => {
-      const next = {};
-      table.getAllLeafColumns().forEach((col) => {
-        if (col.columnDef?.meta?.hiddenOnMobile) {
-          next[col.id] = !mq.matches; 
-        }
+      setColumnVisibility((prev) => {
+        const next = { ...prev };
+        table.getAllLeafColumns().forEach((col) => {
+          if (col.columnDef?.meta?.hiddenOnMobile) {
+            if (typeof prev[col.id] === "undefined") {
+              next[col.id] = !mq.matches; // mobile => false, desktop => true
+            }
+          }
+        });
+        return next;
       });
-      if (Object.keys(next).length) {
-        setColumnVisibility((prev) => ({ ...prev, ...next }));
-      }
     };
+
     apply();
     mq.addEventListener?.("change", apply);
     return () => mq.removeEventListener?.("change", apply);
@@ -117,10 +131,7 @@ export function CustomDataTable({
                   <TableHead key={header.id} colSpan={header.colSpan}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -137,10 +148,7 @@ export function CustomDataTable({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>

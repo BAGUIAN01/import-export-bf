@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -9,19 +8,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { 
+  Loader2, 
+  User, 
+  MapPin, 
+  FileText,
+  ChevronRight,
+  ChevronLeft
+} from "lucide-react";
+
+// Import des composants séparés
+import { StepIndicator } from "./stepper-indicator";
+import { 
+  PersonalInformationStep, 
+  RecipientInformationStep, 
+  FinalizationStep 
+} from "./client-form";
+import { validatePhoneNumber } from "@/lib/utils/phone-formatter-utils";
+
+const STEPS = [
+  {
+    id: 'personal',
+    title: 'Informations personnelles',
+    description: 'Renseignez vos coordonnées',
+    icon: User
+  },
+  {
+    id: 'recipient',
+    title: 'Destinataire',
+    description: 'Informations du destinataire',
+    icon: MapPin
+  },
+  {
+    id: 'additional',
+    title: 'Finalisation',
+    description: 'Informations complémentaires',
+    icon: FileText
+  }
+];
 
 export function ClientDialog({
   isOpen,
@@ -31,6 +56,8 @@ export function ClientDialog({
   loading = false,
 }) {
   const isEditing = !!client;
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState([]);
 
   const [formData, setFormData] = useState({
     // Informations personnelles
@@ -40,43 +67,24 @@ export function ClientDialog({
     email: "",
     address: "",
     city: "",
-    country: "France",
+    country: "",
     postalCode: "",
     
-    // Informations professionnelles
-    company: "",
-    siret: "",
-    
-    // Destinataire au Burkina Faso
+    // Destinataire
     recipientName: "",
     recipientPhone: "",
     recipientEmail: "",
     recipientAddress: "",
     recipientCity: "",
+    recipientCountry: "Burkina Faso", // Par défaut
     recipientRelation: "",
     
     // Métadonnées
     isVip: false,
-    creditLimit: "",
     notes: "",
   });
 
   const [errors, setErrors] = useState({});
-
-  const frenchCities = [
-    "Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Nantes", 
-    "Montpellier", "Strasbourg", "Bordeaux", "Lille", "Rennes", "Reims"
-  ];
-
-  const burkinaCities = [
-    "Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora", "Ouahigouya", 
-    "Pouytenga", "Dédougou", "Fada N'gourma", "Kaya", "Tenkodogo"
-  ];
-
-  const relations = [
-    "Famille", "Ami(e)", "Conjoint(e)", "Parent", "Enfant", "Frère/Sœur", 
-    "Cousin(e)", "Associé(e)", "Autre"
-  ];
 
   useEffect(() => {
     if (client) {
@@ -87,18 +95,16 @@ export function ClientDialog({
         email: client.email || "",
         address: client.address || "",
         city: client.city || "",
-        country: client.country || "France",
+        country: client.country || "",
         postalCode: client.postalCode || "",
-        company: client.company || "",
-        siret: client.siret || "",
         recipientName: client.recipientName || "",
         recipientPhone: client.recipientPhone || "",
         recipientEmail: client.recipientEmail || "",
         recipientAddress: client.recipientAddress || "",
         recipientCity: client.recipientCity || "",
+        recipientCountry: client.recipientCountry || "Burkina Faso",
         recipientRelation: client.recipientRelation || "",
         isVip: !!client.isVip,
-        creditLimit: client.creditLimit?.toString() || "",
         notes: client.notes || "",
       });
     } else {
@@ -109,22 +115,22 @@ export function ClientDialog({
         email: "",
         address: "",
         city: "",
-        country: "France",
+        country: "",
         postalCode: "",
-        company: "",
-        siret: "",
         recipientName: "",
         recipientPhone: "",
         recipientEmail: "",
         recipientAddress: "",
         recipientCity: "",
+        recipientCountry: "Burkina Faso",
         recipientRelation: "",
         isVip: false,
-        creditLimit: "",
         notes: "",
       });
     }
     setErrors({});
+    setCurrentStep(0);
+    setCompletedSteps([]);
   }, [client, isOpen]);
 
   const handleChange = (key, value) => {
@@ -132,50 +138,91 @@ export function ClientDialog({
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  const validate = () => {
+  const validateStep = (stepIndex) => {
     const newErrors = {};
     
-    // Champs obligatoires
-    if (!formData.firstName) newErrors.firstName = "Le prénom est requis";
-    if (!formData.lastName) newErrors.lastName = "Le nom est requis";
-    if (!formData.phone) newErrors.phone = "Le téléphone est requis";
-    if (!formData.address) newErrors.address = "L'adresse est requise";
-    if (!formData.city) newErrors.city = "La ville est requise";
-    
-    // Destinataire obligatoire
-    if (!formData.recipientName) newErrors.recipientName = "Le nom du destinataire est requis";
-    if (!formData.recipientPhone) newErrors.recipientPhone = "Le téléphone du destinataire est requis";
-    if (!formData.recipientAddress) newErrors.recipientAddress = "L'adresse du destinataire est requise";
-    if (!formData.recipientCity) newErrors.recipientCity = "La ville du destinataire est requise";
-    
-    // Validation email
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Email invalide";
-    }
-    if (formData.recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.recipientEmail)) {
-      newErrors.recipientEmail = "Email du destinataire invalide";
-    }
-    
-    // Validation téléphone
-    if (formData.phone && !/^\+?[0-9\s\-]{8,}$/.test(formData.phone)) {
-      newErrors.phone = "Numéro de téléphone invalide";
-    }
-    if (formData.recipientPhone && !/^\+?[0-9\s\-]{8,}$/.test(formData.recipientPhone)) {
-      newErrors.recipientPhone = "Numéro du destinataire invalide";
+    if (stepIndex === 0) {
+      // Validation étape 1: Informations personnelles
+      if (!formData.firstName) newErrors.firstName = "Le prénom est requis";
+      if (!formData.lastName) newErrors.lastName = "Le nom est requis";
+      if (!formData.phone) newErrors.phone = "Le téléphone est requis";
+      if (!formData.address) newErrors.address = "L'adresse est requise";
+      if (!formData.city) newErrors.city = "La ville est requise";
+      if (!formData.country) newErrors.country = "Le pays est requis";
+      
+      // Validation email
+      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = "Email invalide";
+      }
+      
+      // Validation téléphone avec formatage par pays
+      if (formData.phone && formData.country) {
+        if (!validatePhoneNumber(formData.phone, formData.country)) {
+          newErrors.phone = `Numéro de téléphone invalide pour ${formData.country}`;
+        }
+      } else if (formData.phone && !/^\+?[0-9\s\-]{8,}$/.test(formData.phone)) {
+        newErrors.phone = "Numéro de téléphone invalide";
+      }
     }
     
-    // Validation crédit
-    if (formData.creditLimit && (isNaN(parseFloat(formData.creditLimit)) || parseFloat(formData.creditLimit) < 0)) {
-      newErrors.creditLimit = "La limite de crédit doit être un nombre positif";
+    if (stepIndex === 1) {
+      // Validation étape 2: Destinataire
+      if (!formData.recipientName) newErrors.recipientName = "Le nom du destinataire est requis";
+      if (!formData.recipientPhone) newErrors.recipientPhone = "Le téléphone du destinataire est requis";
+      if (!formData.recipientAddress) newErrors.recipientAddress = "L'adresse du destinataire est requise";
+      if (!formData.recipientCity) newErrors.recipientCity = "La ville du destinataire est requise";
+      if (!formData.recipientCountry) newErrors.recipientCountry = "Le pays du destinataire est requis";
+      
+      if (formData.recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.recipientEmail)) {
+        newErrors.recipientEmail = "Email du destinataire invalide";
+      }
+      
+      // Validation téléphone destinataire avec formatage par pays
+      if (formData.recipientPhone && formData.recipientCountry) {
+        if (!validatePhoneNumber(formData.recipientPhone, formData.recipientCountry)) {
+          newErrors.recipientPhone = `Numéro de téléphone invalide pour ${formData.recipientCountry}`;
+        }
+      } else if (formData.recipientPhone && !/^\+?[0-9\s\-]{8,}$/.test(formData.recipientPhone)) {
+        newErrors.recipientPhone = "Numéro du destinataire invalide";
+      }
     }
+    
+    // Étape 3 n'a pas de validation obligatoire
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (ev) => {
-    ev.preventDefault();
-    if (!validate()) return;
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      // Marquer l'étape actuelle comme complétée
+      if (!completedSteps.includes(currentStep)) {
+        setCompletedSteps(prev => [...prev, currentStep]);
+      }
+      
+      if (currentStep < STEPS.length - 1) {
+        setCurrentStep(currentStep + 1);
+      }
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = () => {
+    // Valider toutes les étapes avant soumission
+    let allValid = true;
+    for (let i = 0; i < STEPS.length - 1; i++) {
+      if (!validateStep(i)) {
+        allValid = false;
+        break;
+      }
+    }
+    
+    if (!allValid) return;
 
     const payload = {
       firstName: formData.firstName,
@@ -186,313 +233,126 @@ export function ClientDialog({
       city: formData.city,
       country: formData.country,
       postalCode: formData.postalCode || null,
-      company: formData.company || null,
-      siret: formData.siret || null,
       recipientName: formData.recipientName,
       recipientPhone: formData.recipientPhone,
       recipientEmail: formData.recipientEmail || null,
       recipientAddress: formData.recipientAddress,
       recipientCity: formData.recipientCity,
+      recipientCountry: formData.recipientCountry,
       recipientRelation: formData.recipientRelation || null,
       isVip: formData.isVip,
-      creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : 0,
       notes: formData.notes || null,
     };
 
     onSave?.(payload);
   };
 
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <PersonalInformationStep
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+          />
+        );
+      case 1:
+        return (
+          <RecipientInformationStep
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+          />
+        );
+      case 2:
+        return (
+          <FinalizationStep
+            formData={formData}
+            handleChange={handleChange}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Modifier le client" : "Créer un nouveau client"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing ? "Modifiez les informations du client." : "Renseignez les informations du nouveau client et de son destinataire au Burkina Faso."}
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl">
+                {isEditing ? "Modifier le client" : "Nouveau client"}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {isEditing 
+                  ? "Modifiez les informations du client et de son destinataire." 
+                  : "Créez un nouveau client en suivant les étapes ci-dessous."
+                }
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informations personnelles */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-lg border-b pb-2">Informations personnelles</h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom *</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => handleChange("firstName", e.target.value)}
-                  className={errors.firstName ? "border-red-500" : ""}
-                />
-                {errors.firstName && <p className="text-sm text-red-500">{errors.firstName}</p>}
-              </div>
+        <div className="px-6">
+          <StepIndicator 
+            steps={STEPS} 
+            currentStep={currentStep} 
+            completedSteps={completedSteps} 
+          />
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Nom *</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => handleChange("lastName", e.target.value)}
-                  className={errors.lastName ? "border-red-500" : ""}
-                />
-                {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
-              </div>
-            </div>
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          {renderStepContent()}
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Téléphone *</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                  className={errors.phone ? "border-red-500" : ""}
-                  placeholder="+33123456789"
-                />
-                {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  className={errors.email ? "border-red-500" : ""}
-                  placeholder="client@email.com"
-                />
-                {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="address">Adresse *</Label>
-              <Textarea
-                id="address"
-                rows={2}
-                value={formData.address}
-                onChange={(e) => handleChange("address", e.target.value)}
-                className={`resize-none ${errors.address ? "border-red-500" : ""}`}
-                placeholder="Adresse complète..."
-              />
-              {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">Ville *</Label>
-                <Select value={formData.city} onValueChange={(v) => handleChange("city", v)}>
-                  <SelectTrigger className={errors.city ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Sélectionner une ville" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {frenchCities.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Code postal</Label>
-                <Input
-                  id="postalCode"
-                  value={formData.postalCode}
-                  onChange={(e) => handleChange("postalCode", e.target.value)}
-                  placeholder="75001"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="country">Pays</Label>
-                <Input
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => handleChange("country", e.target.value)}
-                  disabled
-                />
-              </div>
-            </div>
+        <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex justify-between">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={currentStep === 0 ? onClose : handlePrevious}
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            {currentStep === 0 ? (
+              "Annuler"
+            ) : (
+              <>
+                <ChevronLeft className="h-4 w-4" />
+                Précédent
+              </>
+            )}
+          </Button>
+          
+          <div className="flex gap-2">
+            {currentStep < STEPS.length - 1 ? (
+              <Button 
+                type="button"
+                onClick={handleNext}
+                disabled={loading}
+                className="flex items-center gap-2 min-w-[120px]"
+              >
+                Suivant
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="min-w-[120px] flex items-center gap-2"
+              >
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isEditing ? "Sauvegarder" : "Créer le client"}
+              </Button>
+            )}
           </div>
-
-          {/* Informations professionnelles */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-lg border-b pb-2">Informations professionnelles (optionnel)</h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="company">Entreprise</Label>
-                <Input
-                  id="company"
-                  value={formData.company}
-                  onChange={(e) => handleChange("company", e.target.value)}
-                  placeholder="Nom de l'entreprise"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="siret">SIRET</Label>
-                <Input
-                  id="siret"
-                  value={formData.siret}
-                  onChange={(e) => handleChange("siret", e.target.value)}
-                  placeholder="12345678901234"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Destinataire au Burkina Faso */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-lg border-b pb-2">Destinataire au Burkina Faso</h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="recipientName">Nom du destinataire *</Label>
-                <Input
-                  id="recipientName"
-                  value={formData.recipientName}
-                  onChange={(e) => handleChange("recipientName", e.target.value)}
-                  className={errors.recipientName ? "border-red-500" : ""}
-                  placeholder="Prénom Nom"
-                />
-                {errors.recipientName && <p className="text-sm text-red-500">{errors.recipientName}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="recipientPhone">Téléphone du destinataire *</Label>
-                <Input
-                  id="recipientPhone"
-                  value={formData.recipientPhone}
-                  onChange={(e) => handleChange("recipientPhone", e.target.value)}
-                  className={errors.recipientPhone ? "border-red-500" : ""}
-                  placeholder="+22670123456"
-                />
-                {errors.recipientPhone && <p className="text-sm text-red-500">{errors.recipientPhone}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="recipientEmail">Email du destinataire</Label>
-              <Input
-                id="recipientEmail"
-                type="email"
-                value={formData.recipientEmail}
-                onChange={(e) => handleChange("recipientEmail", e.target.value)}
-                className={errors.recipientEmail ? "border-red-500" : ""}
-                placeholder="destinataire@email.bf"
-              />
-              {errors.recipientEmail && <p className="text-sm text-red-500">{errors.recipientEmail}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="recipientAddress">Adresse du destinataire *</Label>
-              <Textarea
-                id="recipientAddress"
-                rows={2}
-                value={formData.recipientAddress}
-                onChange={(e) => handleChange("recipientAddress", e.target.value)}
-                className={`resize-none ${errors.recipientAddress ? "border-red-500" : ""}`}
-                placeholder="Secteur 15, Zone du Bois, Ouagadougou"
-              />
-              {errors.recipientAddress && <p className="text-sm text-red-500">{errors.recipientAddress}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="recipientCity">Ville du destinataire *</Label>
-                <Select value={formData.recipientCity} onValueChange={(v) => handleChange("recipientCity", v)}>
-                  <SelectTrigger className={errors.recipientCity ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Sélectionner une ville" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {burkinaCities.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.recipientCity && <p className="text-sm text-red-500">{errors.recipientCity}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="recipientRelation">Relation avec le destinataire</Label>
-                <Select value={formData.recipientRelation} onValueChange={(v) => handleChange("recipientRelation", v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une relation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {relations.map((relation) => (
-                      <SelectItem key={relation} value={relation}>
-                        {relation}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Métadonnées */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-lg border-b pb-2">Informations complémentaires</h4>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isVip"
-                checked={formData.isVip}
-                onCheckedChange={(v) => handleChange("isVip", !!v)}
-              />
-              <Label htmlFor="isVip">Client VIP</Label>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="creditLimit">Limite de crédit (€)</Label>
-              <Input
-                id="creditLimit"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.creditLimit}
-                onChange={(e) => handleChange("creditLimit", e.target.value)}
-                className={errors.creditLimit ? "border-red-500" : ""}
-                placeholder="0.00"
-              />
-              {errors.creditLimit && <p className="text-sm text-red-500">{errors.creditLimit}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                rows={3}
-                value={formData.notes}
-                onChange={(e) => handleChange("notes", e.target.value)}
-                className="resize-none"
-                placeholder="Notes internes sur le client..."
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? "Modifier" : "Créer"}
-            </Button>
-          </DialogFooter>
-        </form>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

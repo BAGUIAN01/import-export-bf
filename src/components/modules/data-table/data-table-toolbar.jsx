@@ -18,6 +18,7 @@ export function DataTableToolbar({
   onImport,
   addButtonText = "Ajouter",
   customActions = [],
+  defaultHiddenColumns = [], // Prop pour les colonnes masquées par défaut
 }) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
@@ -85,7 +86,10 @@ export function DataTableToolbar({
           )}
 
           <div className="hidden lg:block">
-            <DataTableViewOptions table={table} />
+            <DataTableViewOptions 
+              table={table} 
+              defaultHiddenColumns={defaultHiddenColumns}
+            />
           </div>
         </div>
       </div>

@@ -265,7 +265,7 @@ export default function SignUpMain() {
       } else if (result?.ok) {
         setStep(3);
         setSuccess("Compte créé avec succès !");
-        setTimeout(() => router.push("/dashboard"), 2000);
+        setTimeout(() => router.push("/admin/dashboard"), 2000);
       }
     } catch {
       setError("Erreur lors de la vérification");

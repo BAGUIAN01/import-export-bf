@@ -5,10 +5,7 @@ import { MixerHorizontalIcon } from "@radix-ui/react-icons";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-/**
- * Affiche la liste des colonnes visibles/invisibles
- */
-export function DataTableViewOptions({ table }) {
+export function DataTableViewOptions({ table, defaultHiddenColumns = [] }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -22,6 +19,9 @@ export function DataTableViewOptions({ table }) {
           .getAllLeafColumns()
           .filter((column) => column.getCanHide?.())
           .map((column) => {
+            // Déterminer si la colonne doit être cochée par défaut
+            const shouldBeVisible = !defaultHiddenColumns.includes(column.id);
+            
             return (
               <DropdownMenuCheckboxItem
                 key={column.id}
@@ -29,6 +29,7 @@ export function DataTableViewOptions({ table }) {
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
+                {/* Amélioration de l'affichage du nom de colonne */}
                 {column.id}
               </DropdownMenuCheckboxItem>
             );
@@ -37,3 +38,4 @@ export function DataTableViewOptions({ table }) {
     </DropdownMenu>
   );
 }
+
