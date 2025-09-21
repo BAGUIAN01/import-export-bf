@@ -63,9 +63,9 @@ export const navigationData = {
       url: "/admin/clients"
     },
     {
-      title: "Colis",
+      title: "Shipments",
       icon: Package,
-      url: "/admin/packages"
+      url: "/admin/shipments"
     },
     {
       title: "Conteneurs",

@@ -54,6 +54,7 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
         onCheckedChange={(v) => row.toggleSelected(!!v)}
         aria-label="Sélectionner la ligne"
         className="translate-y-[2px]"
+        onClick={(e) => e.stopPropagation()} // Empêche la navigation au clic sur la checkbox
       />
     ),
     enableSorting: false,
@@ -67,27 +68,29 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     cell: ({ row }) => {
       const c = row.original;
       return (
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 cursor-pointer">
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="text-xs">{initials(c)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <div className="font-medium truncate">{c.clientCode}</div>
+            <div className="font-medium truncate hover:text-blue-600 transition-colors">
+              {c.clientCode}
+            </div>
             <div className="text-xs text-muted-foreground truncate">{c.company || "Particulier"}</div>
 
             {/* Mobile: micro-infos */}
             <div className="sm:hidden mt-1 space-y-0.5">
               {c.phone ? (
-                <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                   <Phone className="h-3 w-3" />
                   <span className="truncate">{c.phone}</span>
-                </a>
+                </div>
               ) : null}
               {c.email ? (
-                <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                   <Mail className="h-3 w-3" />
                   <span className="truncate">{c.email}</span>
-                </a>
+                </div>
               ) : null}
               {c.recipientCity ? (
                 <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -109,10 +112,12 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     cell: ({ row }) => {
       const c = row.original;
       return (
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 cursor-pointer">
           <div className="p-2 rounded-full bg-blue-50"><User className="h-4 w-4 text-blue-600" /></div>
           <div className="min-w-0">
-            <div className="font-medium truncate">{c.firstName} {c.lastName}</div>
+            <div className="font-medium truncate hover:text-blue-600 transition-colors">
+              {c.firstName} {c.lastName}
+            </div>
             <div className="hidden sm:block text-xs text-muted-foreground truncate">{c.email || "Pas d'email"}</div>
           </div>
         </div>
@@ -128,10 +133,13 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     cell: ({ row }) => {
       const phone = row.getValue("phone");
       return phone ? (
-        <a href={`tel:${phone}`} className="flex items-center gap-1" title={`Appeler ${phone}`}>
+        <div 
+          className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors" 
+          title={`Voir le profil`}
+        >
           <Phone className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono text-sm">{phone}</span>
-        </a>
+        </div>
       ) : <span className="text-muted-foreground">-</span>;
     },
     enableSorting: false,
@@ -144,10 +152,13 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     cell: ({ row }) => {
       const email = row.getValue("email");
       return email ? (
-        <a href={`mailto:${email}`} className="flex items-center gap-1 truncate" title={email}>
+        <div 
+          className="flex items-center gap-1 truncate cursor-pointer hover:text-blue-600 transition-colors" 
+          title="Voir le profil"
+        >
           <Mail className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm truncate">{email}</span>
-        </a>
+        </div>
       ) : <span className="text-muted-foreground">-</span>;
     },
     enableSorting: true,
@@ -161,7 +172,7 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
       const city = row.getValue("city");
       const country = row.original.country;
       return (
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 cursor-pointer hover:text-blue-600 transition-colors">
           <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
           <div className="min-w-0">
             <div className="text-sm truncate">{city}</div>
@@ -179,7 +190,7 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     cell: ({ row }) => {
       const c = row.original;
       return (
-        <div className="min-w-0">
+        <div className="min-w-0 cursor-pointer hover:text-blue-600 transition-colors">
           <div className="text-sm font-medium truncate">{c.recipientName}</div>
           <div className="text-xs text-muted-foreground truncate">{c.recipientCity}</div>
           <div className="text-xs text-muted-foreground truncate">{c.recipientPhone}</div>
@@ -195,7 +206,11 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     header: ({ column }) => <DataTableColumnHeader column={column} title="Statut" />,
     cell: ({ row }) => {
       const c = row.original;
-      return <StatusBadge isActive={c.isActive} isVip={c.isVip} />;
+      return (
+        <div className="cursor-pointer">
+          <StatusBadge isActive={c.isActive} isVip={c.isVip} />
+        </div>
+      );
     },
     filterFn: (row, _id, value) => {
       const c = row.original;
@@ -210,7 +225,11 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
   {
     accessorKey: "country",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Pays" />,
-    cell: ({ row }) => <CountryBadge country={row.getValue("country")} />,
+    cell: ({ row }) => (
+      <div className="cursor-pointer">
+        <CountryBadge country={row.getValue("country")} />
+      </div>
+    ),
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     meta: { hiddenOnMobile: true },
@@ -222,7 +241,7 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     cell: ({ row }) => {
       const amount = row.getValue("totalSpent");
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 cursor-pointer hover:text-green-600 transition-colors">
           <Euro className="h-4 w-4 text-muted-foreground" />
           {formatCurrency(amount)}
         </div>
@@ -239,7 +258,7 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     cell: ({ row }) => {
       const count = Number(row.original.packagesCount || 0);
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 cursor-pointer hover:text-purple-600 transition-colors">
           <Package className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{count}</span>
         </div>
@@ -254,7 +273,7 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
     accessorFn: (r) => r.createdAt,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Date création" />,
     cell: ({ row }) => (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors">
         <Calendar className="h-4 w-4 text-muted-foreground" />
         {formatDate(row.original.createdAt)}
       </div>
@@ -268,20 +287,22 @@ export const clientsColumns = ({ onEdit, onDelete, onView, onCreatePackage }) =>
   {
     id: "actions",
     cell: ({ row }) => (
-      <DataTableRowActions
-        row={row}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onView={onView}
-        customActions={[
-          {
-            label: "Nouveau Colis",
-            onClick: () => onCreatePackage?.(row.original),
-            icon: "Package",
-          },
-        ]}
-        className="sm:gap-1 [&_button]:h-9 [&_button]:w-9 sm:[&_button]:w-auto"
-      />
+      <div onClick={(e) => e.stopPropagation()}> {/* Empêche la navigation au clic sur les actions */}
+        <DataTableRowActions
+          row={row}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onView={onView}
+          customActions={[
+            {
+              label: "Nouveau Colis",
+              onClick: () => onCreatePackage?.(row.original),
+              icon: "Package",
+            },
+          ]}
+          className="sm:gap-1 [&_button]:h-9 [&_button]:w-9 sm:[&_button]:w-auto"
+        />
+      </div>
     ),
     enableSorting: false,
   },

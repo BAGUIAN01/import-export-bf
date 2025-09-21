@@ -1,14 +1,8 @@
+// components/modules/admin/packages/package-dialog.jsx
 import React, { useState, useEffect } from "react";
 import {
-  X,
-  User,
-  Package as PackageIcon,
-  MapPin,
-  Euro,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
+  X, User, Package as PackageIcon, MapPin, Euro, Check,
+  ChevronLeft, ChevronRight, Plus, AlertTriangle
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -23,7 +17,7 @@ import {
 } from "./package-dialog-component";
 import { getTotal } from "@/lib/utils/package-helpers";
 
-// Composant principal PackageDialog
+// ⚠️ NOTE: on récupère la prop "package" mais on la renomme pour éviter les confusions
 const PackageDialog = ({
   isOpen,
   onClose,
@@ -31,6 +25,7 @@ const PackageDialog = ({
   containers = [],
   onSave,
   loading = false,
+  package: editingPackage, // <-- support édition
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [searchClient, setSearchClient] = useState("");
@@ -40,18 +35,6 @@ const PackageDialog = ({
   const [activePackageIndex, setActivePackageIndex] = useState(-1);
   const [errors, setErrors] = useState({});
 
-  // Données partagées entre tous les colis (niveau "expédition")
-  const [sharedData, setSharedData] = useState({
-    pickupAddress: "",
-    pickupDate: "",
-    pickupTime: "",
-    specialInstructions: "",
-    paidAmount: 0,
-    paymentMethod: "",
-    paidAt: "",
-  });
-
-  // Formulaire pour le colis actuel
   const emptyForm = {
     selectedTypes: [],
     description: "",
@@ -65,127 +48,212 @@ const PackageDialog = ({
     customsFee: 0,
     discount: 0,
   };
+
+  const [sharedData, setSharedData] = useState({
+    pickupAddress: "",
+    pickupDate: "",
+    pickupTime: "",
+    specialInstructions: "",
+    paidAmount: 0,
+    paymentMethod: "",
+    paidAt: "",
+  });
+
   const [form, setForm] = useState(emptyForm);
 
-  // Client sélectionné (utile pour l’étape 3/4 et le payload)
   const selectedClient = clients.find((c) => c.id === selectedClientId);
 
-  // Reset when dialog opens/closes
+  // ---------- RESET / PREFILL ----------
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    // MODE ÉDITION : préremplir à partir du colis reçu
+    if (editingPackage) {
+      let parsedTypes = [];
+      if (Array.isArray(editingPackage.selectedTypes)) {
+        parsedTypes = editingPackage.selectedTypes;
+      } else if (typeof editingPackage.types === "string") {
+        try { parsedTypes = JSON.parse(editingPackage.types) } catch { parsedTypes = [] }
+      } else if (Array.isArray(editingPackage.types)) {
+        parsedTypes = editingPackage.types;
+      }
+
+      const prefilled = {
+        ...emptyForm,
+        selectedTypes: parsedTypes,
+        description: editingPackage.description || "",
+        weight: editingPackage.weight ?? "",
+        value: editingPackage.value ?? "",
+        priority: editingPackage.priority || "NORMAL",
+        isFragile: !!editingPackage.isFragile,
+        isInsured: !!editingPackage.isInsured,
+        pickupFee: editingPackage.pickupFee ?? 0,
+        insuranceFee: editingPackage.insuranceFee ?? 0,
+        customsFee: editingPackage.customsFee ?? 0,
+        discount: editingPackage.discount ?? 0,
+      };
+
       setCurrentStep(1);
       setSearchClient("");
-      setSelectedClientId("");
-      setSelectedContainerId("");
-      setPackages([]);
-      setActivePackageIndex(-1);
+      setSelectedClientId(editingPackage.client?.id || editingPackage.clientId || "");
+      setSelectedContainerId(editingPackage.container?.id || editingPackage.containerId || "");
+      setPackages([prefilled]);
+      setActivePackageIndex(0);
       setErrors({});
       setSharedData({
-        pickupAddress: "",
-        pickupDate: "",
-        pickupTime: "",
-        specialInstructions: "",
-        paidAmount: 0,
-        paymentMethod: "",
-        paidAt: "",
+        pickupAddress: editingPackage.pickupAddress || "",
+        pickupDate: editingPackage.pickupDate ? new Date(editingPackage.pickupDate).toISOString().slice(0,10) : "",
+        pickupTime: editingPackage.pickupTime || "",
+        specialInstructions: editingPackage.specialInstructions || "",
+        paidAmount: editingPackage.paidAmount ?? 0,
+        paymentMethod: editingPackage.paymentMethod || "",
+        paidAt: editingPackage.paidAt ? new Date(editingPackage.paidAt).toISOString().slice(0,10) : "",
       });
-      setForm(emptyForm);
+      setForm(prefilled);
+      return;
     }
-  }, [isOpen]);
 
-  // Ajouter un nouveau colis
+    // MODE CRÉATION (wizard)
+    setCurrentStep(1);
+    setSearchClient("");
+    setSelectedClientId("");
+    setSelectedContainerId("");
+    setPackages([]);
+    setActivePackageIndex(-1);
+    setErrors({});
+    setSharedData({
+      pickupAddress: "",
+      pickupDate: "",
+      pickupTime: "",
+      specialInstructions: "",
+      paidAmount: 0,
+      paymentMethod: "",
+      paidAt: "",
+    });
+    setForm(emptyForm);
+  }, [isOpen, editingPackage]); // <-- tient compte de l’édition
+
+  // ---------- LISTE COLIS (sidebar) ----------
   const addNewPackage = () => {
     if (activePackageIndex >= 0) {
-      // Sauvegarder le colis actuel
-      const updatedPackages = [...packages];
-      updatedPackages[activePackageIndex] = { ...form };
-      setPackages(updatedPackages);
+      const updated = [...packages];
+      updated[activePackageIndex] = { ...form };
+      setPackages(updated);
     }
-
-    const newPackage = { ...emptyForm };
-    setPackages([...packages, newPackage]);
+    const newPkg = { ...emptyForm };
+    setPackages((prev) => [...prev, newPkg]);
     setActivePackageIndex(packages.length);
-    setForm(newPackage);
+    setForm(newPkg);
   };
 
-  // Supprimer un colis
   const removePackage = (index) => {
-    const updatedPackages = packages.filter((_, i) => i !== index);
-    setPackages(updatedPackages);
+    const updated = packages.filter((_, i) => i !== index);
+    setPackages(updated);
 
     if (activePackageIndex === index) {
-      const newActiveIndex = Math.max(
-        0,
-        Math.min(activePackageIndex, updatedPackages.length - 1)
-      );
-      setActivePackageIndex(updatedPackages.length > 0 ? newActiveIndex : -1);
-      if (updatedPackages.length > 0) {
-        setForm(updatedPackages[newActiveIndex]);
-      } else {
-        setForm(emptyForm);
-      }
+      const newActive = Math.max(0, Math.min(activePackageIndex, updated.length - 1));
+      setActivePackageIndex(updated.length > 0 ? newActive : -1);
+      setForm(updated.length > 0 ? updated[newActive] : emptyForm);
     } else if (activePackageIndex > index) {
       setActivePackageIndex(activePackageIndex - 1);
     }
   };
 
-  // Dupliquer un colis
   const duplicatePackage = (index) => {
-    const packageToDuplicate = packages[index];
-    const duplicated = {
-      ...packageToDuplicate,
-      description: (packageToDuplicate.description || "") + " (copie)",
-    };
-
-    const updatedPackages = [...packages];
-    updatedPackages.splice(index + 1, 0, duplicated);
-    setPackages(updatedPackages);
+    const src = packages[index];
+    const dup = { ...src, description: (src.description || "") + " (copie)" };
+    const updated = [...packages];
+    updated.splice(index + 1, 0, dup);
+    setPackages(updated);
     setActivePackageIndex(index + 1);
-    setForm(duplicated);
+    setForm(dup);
   };
 
-  // Sélectionner un colis
   const selectPackage = (index) => {
     if (activePackageIndex >= 0) {
-      // Sauvegarder le colis actuel
-      const updatedPackages = [...packages];
-      updatedPackages[activePackageIndex] = { ...form };
-      setPackages(updatedPackages);
+      const updated = [...packages];
+      updated[activePackageIndex] = { ...form };
+      setPackages(updated);
     }
-
     setActivePackageIndex(index);
     setForm(packages[index]);
   };
 
-  // Sauvegarder le colis actuel dans la liste
   const saveCurrentPackage = () => {
     if (activePackageIndex >= 0) {
-      const updatedPackages = [...packages];
-      updatedPackages[activePackageIndex] = { ...form };
-      setPackages(updatedPackages);
+      const updated = [...packages];
+      updated[activePackageIndex] = { ...form };
+      setPackages(updated);
     }
   };
 
+  // ---------- VALID/SUBMIT ----------
   const handleSubmit = async () => {
     saveCurrentPackage();
+
+    if (!selectedClientId) {
+      alert("Veuillez sélectionner un client.");
+      setCurrentStep(1);
+      return;
+    }
+    if (!selectedContainerId) {
+      alert("Veuillez sélectionner un conteneur (obligatoire).");
+      setCurrentStep(4);
+      return;
+    }
 
     // Valider tous les colis
     for (let i = 0; i < packages.length; i++) {
       const pkg = packages[i];
-      if (!pkg.selectedTypes || pkg.selectedTypes.length === 0 || !pkg.description) {
-        alert(`Le colis #${i + 1} est incomplet`);
+      if (!pkg.selectedTypes?.length || !pkg.description) {
+        alert(`Le colis #${i + 1} est incomplet (types + description)`);
+        setCurrentStep(1);
         return;
       }
     }
 
-    if (!selectedClientId) {
-      alert("Veuillez sélectionner un client");
+    // ----- MODE ÉDITION → envoi d’un seul objet -----
+    if (editingPackage) {
+      const singlePayload = {
+        clientId: selectedClientId,
+        containerId: selectedContainerId,
+        selectedTypes: form.selectedTypes,
+        description: form.description,
+        weight: form.weight,
+        value: form.value,
+        priority: form.priority,
+        isFragile: form.isFragile,
+        isInsured: form.isInsured,
+        pickupFee: form.pickupFee,
+        insuranceFee: form.insuranceFee,
+        customsFee: form.customsFee,
+        discount: form.discount,
+
+        // champs partagés (si tu veux autoriser la MAJ à l’édition)
+        pickupAddress: sharedData.pickupAddress || null,
+        pickupDate: sharedData.pickupDate || null,
+        pickupTime: sharedData.pickupTime || null,
+        deliveryAddress: selectedClient?.recipientAddress || null,
+        specialInstructions: sharedData.specialInstructions || null,
+
+        // paiement (facultatif pour la PUT)
+        paidAmount: sharedData.paidAmount || 0,
+        paymentMethod: sharedData.paymentMethod || null,
+        paidAt: sharedData.paidAt || null,
+      };
+
+      await onSave(singlePayload);
       return;
     }
 
-    // Préparer les données pour l'API (niveau expédition + liste de colis)
+    // ----- MODE CRÉATION (wizard batch) -----
+    if (packages.length === 0) {
+      alert("Ajoutez au moins un colis.");
+      setCurrentStep(1);
+      return;
+    }
+
     const packagesData = packages.map((pkg) => ({
-      // ⚠️ On ne colle PAS d’infos de paiement ni de statut ici : ils vivent au niveau expédition
       selectedTypes: pkg.selectedTypes,
       description: pkg.description,
       weight: pkg.weight,
@@ -197,15 +265,13 @@ const PackageDialog = ({
       insuranceFee: pkg.insuranceFee,
       customsFee: pkg.customsFee,
       discount: pkg.discount,
-      // hint: l’adresse de livraison peut être résolue côté API à partir du client
     }));
 
     await onSave({
       clientId: selectedClientId,
-      containerId: selectedContainerId || null,
+      containerId: selectedContainerId, // <-- OBLIGATOIRE
       sharedData: {
         ...sharedData,
-        // Si besoin : fournir la destination côté expédition
         deliveryAddress: selectedClient?.recipientAddress || "",
       },
       packages: packagesData,
@@ -215,22 +281,22 @@ const PackageDialog = ({
   const handleNextStep = () => {
     saveCurrentPackage();
 
-    // Validation par étape
-    if (currentStep === 1 && (!selectedClientId || packages.length === 0)) {
-      alert("Veuillez sélectionner un client et ajouter au moins un colis");
-      return;
-    }
-
     if (currentStep === 1) {
-      // Vérifier que tous les colis ont au moins un type sélectionné
+      if (!selectedClientId) {
+        alert("Veuillez sélectionner un client.");
+        return;
+      }
+      if (packages.length === 0) {
+        alert("Ajoutez au moins un colis.");
+        return;
+      }
       for (let i = 0; i < packages.length; i++) {
-        if (!packages[i].selectedTypes || packages[i].selectedTypes.length === 0) {
+        if (!packages[i].selectedTypes?.length) {
           alert(`Le colis #${i + 1} doit avoir au moins un type sélectionné`);
           return;
         }
       }
     }
-
     setCurrentStep((p) => Math.min(p + 1, 4));
   };
 
@@ -246,30 +312,10 @@ const PackageDialog = ({
   );
 
   const steps = [
-    {
-      number: 1,
-      title: "Client & Colis",
-      icon: User,
-      desc: "Sélection du client et ajout de colis",
-    },
-    {
-      number: 2,
-      title: "Détails",
-      icon: PackageIcon,
-      desc: "Informations détaillées des colis",
-    },
-    {
-      number: 3,
-      title: "Adresses",
-      icon: MapPin,
-      desc: "Ramassage et livraison",
-    },
-    {
-      number: 4,
-      title: "Conteneur & Total",
-      icon: Euro,
-      desc: "Conteneur et récapitulatif",
-    },
+    { number: 1, title: "Client & Colis", icon: User, desc: "Sélection du client et ajout de colis" },
+    { number: 2, title: "Détails", icon: PackageIcon, desc: "Informations détaillées des colis" },
+    { number: 3, title: "Adresses", icon: MapPin, desc: "Ramassage et livraison" },
+    { number: 4, title: "Conteneur & Total", icon: Euro, desc: "Conteneur et récapitulatif" },
   ];
 
   const totalAmount = packages.reduce((sum, pkg) => sum + getTotal(pkg), 0);
@@ -279,22 +325,29 @@ const PackageDialog = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-stretch justify-center p-0 sm:p-4">
       <div className="bg-white w-screen h-screen rounded-none shadow-none sm:w-full sm:max-w-7xl sm:h-[95vh] sm:rounded-xl sm:shadow-2xl overflow-hidden flex">
-        {/* Sidebar - Liste des colis */}
+        {/* Sidebar */}
         {currentStep <= 2 && (
           <div className="w-80 border-r bg-gray-50 flex flex-col">
             <div className="p-4 border-b bg-white">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">Colis à expédier</h3>
-                <span className="text-sm text-gray-500">{packages.length} colis</span>
+                <h3 className="font-semibold text-gray-900">
+                  {editingPackage ? "Modifier le colis" : "Colis à expédier"}
+                </h3>
+                {!editingPackage && (
+                  <span className="text-sm text-gray-500">{packages.length} colis</span>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={addNewPackage}
-                className="w-full flex items-center justify-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
-              >
-                <Plus size={16} className="mr-1" />
-                Ajouter un colis
-              </button>
+
+              {!editingPackage && (
+                <button
+                  type="button"
+                  onClick={addNewPackage}
+                  className="w-full flex items-center justify-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                >
+                  <Plus size={16} className="mr-1" />
+                  Ajouter un colis
+                </button>
+              )}
             </div>
 
             <ScrollArea className="flex-1 p-4">
@@ -315,9 +368,9 @@ const PackageDialog = ({
                   <div className="text-center py-8 text-gray-500">
                     <PackageIcon size={48} className="mx-auto mb-3 text-gray-300" />
                     <p className="text-sm">Aucun colis ajouté</p>
-                    <p className="text-xs mt-1">
-                      Cliquez sur "Ajouter un colis" pour commencer
-                    </p>
+                    {!editingPackage && (
+                      <p className="text-xs mt-1">Cliquez sur "Ajouter un colis" pour commencer</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -343,7 +396,7 @@ const PackageDialog = ({
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
-                  Nouvelle expédition multi-colis
+                  {editingPackage ? "Modifier un colis" : "Nouvelle expédition multi-colis"}
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
                   {steps[currentStep - 1]?.desc}
@@ -358,12 +411,7 @@ const PackageDialog = ({
             </div>
           </div>
 
-          {/* Steps Indicator */}
-          <StepIndicator
-            steps={steps}
-            currentStep={currentStep}
-            onStepClick={setCurrentStep}
-          />
+          <StepIndicator steps={steps} currentStep={currentStep} onStepClick={setCurrentStep} />
 
           {/* Body */}
           <div className="flex-1 min-h-0">
@@ -371,7 +419,6 @@ const PackageDialog = ({
               <div className="px-4 sm:px-6 py-6">
                 {currentStep === 1 && (
                   <div className="space-y-6 max-w-4xl mx-auto">
-                    {/* Sélection client */}
                     <ClientSelection
                       clients={clients}
                       searchClient={searchClient}
@@ -382,43 +429,19 @@ const PackageDialog = ({
                       selectedClient={selectedClient}
                     />
 
-                    {/* Sélection type pour le colis actuel */}
                     {activePackageIndex >= 0 && (
                       <PackageTypeSelection
                         form={form}
-                        setForm={(newForm) => {
-                          const nextForm =
-                            typeof newForm === "function" ? newForm(form) : newForm;
-                          setForm(nextForm);
-                          // Met à jour automatiquement dans la liste
-                          const updatedPackages = [...packages];
-                          updatedPackages[activePackageIndex] = nextForm;
-                          setPackages(updatedPackages);
+                        setForm={(next) => {
+                          const n = typeof next === "function" ? next(form) : next;
+                          setForm(n);
+                          const updated = [...packages];
+                          updated[activePackageIndex] = n;
+                          setPackages(updated);
                         }}
                         errors={errors}
                         setErrors={setErrors}
                       />
-                    )}
-
-                    {/* Message si aucun colis */}
-                    {packages.length === 0 && (
-                      <div className="text-center py-12 bg-gray-50 rounded-lg">
-                        <PackageIcon size={64} className="mx-auto mb-4 text-gray-300" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          Aucun colis ajouté
-                        </h3>
-                        <p className="text-gray-500 mb-4">
-                          Ajoutez au moins un colis pour continuer
-                        </p>
-                        <button
-                          type="button"
-                          onClick={addNewPackage}
-                          className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                        >
-                          <Plus size={16} className="mr-1" />
-                          Ajouter votre premier colis
-                        </button>
-                      </div>
                     )}
                   </div>
                 )}
@@ -426,14 +449,12 @@ const PackageDialog = ({
                 {currentStep === 2 && activePackageIndex >= 0 && (
                   <PackageDetails
                     form={form}
-                    setForm={(newForm) => {
-                      const nextForm =
-                        typeof newForm === "function" ? newForm(form) : newForm;
-                      setForm(nextForm);
-                      // Met à jour automatiquement dans la liste
-                      const updatedPackages = [...packages];
-                      updatedPackages[activePackageIndex] = nextForm;
-                      setPackages(updatedPackages);
+                    setForm={(next) => {
+                      const n = typeof next === "function" ? next(form) : next;
+                      setForm(n);
+                      const updated = [...packages];
+                      updated[activePackageIndex] = n;
+                      setPackages(updated);
                     }}
                     errors={errors}
                     setErrors={setErrors}
@@ -449,22 +470,30 @@ const PackageDialog = ({
                 )}
 
                 {currentStep === 4 && (
-                  <ContainerAndSummaryStep
-                    packages={packages}
-                    containers={containers}
-                    selectedContainerId={selectedContainerId}
-                    setSelectedContainerId={setSelectedContainerId}
-                    totalAmount={totalAmount}
-                    sharedData={sharedData}
-                    setSharedData={setSharedData}
-                  />
+                  <div className="space-y-2">
+                    <ContainerAndSummaryStep
+                      packages={packages}
+                      containers={containers}
+                      selectedContainerId={selectedContainerId}
+                      setSelectedContainerId={setSelectedContainerId}
+                      totalAmount={totalAmount}
+                      sharedData={sharedData}
+                      setSharedData={setSharedData}
+                    />
+
+                    {!selectedContainerId && (
+                      <p className="text-red-600 text-sm flex items-center mt-1 px-1">
+                        <AlertTriangle size={16} className="mr-1" />
+                        Le conteneur est obligatoire pour créer/enregistrer ce(s) colis.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="h-20 sm:h-0" />
             </ScrollArea>
           </div>
 
-          {/* Footer */}
           <DialogFooter
             currentStep={currentStep}
             onPrevStep={handlePrevStep}

@@ -1,19 +1,53 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const clientId = searchParams.get("clientId");
 
+    // Vérifier que le conteneur existe
+    const container = await prisma.container.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        containerNumber: true,
+        name: true,
+        destination: true,
+        departureDate: true,
+        status: true,
+      },
+    });
+
+    if (!container) {
+      return NextResponse.json(
+        { error: "Conteneur non trouvé" },
+        { status: 404 }
+      );
+    }
+
+    // Construction des filtres pour les colis
+    const where = {
+      containerId: id,
+    };
+
+    // Filtrer par client si spécifié
+    if (clientId) {
+      where.clientId = clientId;
+    }
+
+    // Récupération des colis du conteneur
     const packages = await prisma.package.findMany({
-      where: { containerId: id },
+      where,
       include: {
         client: {
           select: {
@@ -21,26 +55,48 @@ export async function GET(request, { params }) {
             firstName: true,
             lastName: true,
             clientCode: true,
+            recipientName: true,
+            recipientAddress: true,
+            recipientCity: true,
           },
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
-    return NextResponse.json({ data: packages });
+    // Calcul des statistiques
+    const stats = {
+      totalPackages: packages.length,
+      totalAmount: packages.reduce((sum, pkg) => sum + pkg.totalAmount, 0),
+      totalWeight: packages.reduce((sum, pkg) => sum + (pkg.weight || 0), 0),
+      statusBreakdown: packages.reduce((acc, pkg) => {
+        acc[pkg.status] = (acc[pkg.status] || 0) + 1;
+        return acc;
+      }, {}),
+      paymentBreakdown: packages.reduce((acc, pkg) => {
+        acc[pkg.paymentStatus] = (acc[pkg.paymentStatus] || 0) + 1;
+        return acc;
+      }, {}),
+    };
+
+    return NextResponse.json({
+      container,
+      packages,
+      stats,
+    });
   } catch (error) {
-    console.error('Erreur GET /api/containers/[id]/packages:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    console.error("Erreur GET /api/containers/[id]/packages:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
 export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !['ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    if (!session || !["ADMIN"].includes(session.user.role)) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -48,7 +104,7 @@ export async function POST(request, { params }) {
 
     if (!packageIds || !Array.isArray(packageIds)) {
       return NextResponse.json(
-        { error: 'Liste des IDs de colis requise' },
+        { error: "Liste des IDs de colis requise" },
         { status: 400 }
       );
     }
@@ -56,22 +112,28 @@ export async function POST(request, { params }) {
     // Vérifier que le conteneur existe et peut accueillir les colis
     const container = await prisma.container.findUnique({
       where: { id },
-      select: { 
-        id: true, 
-        capacity: true, 
-        currentLoad: true, 
+      select: {
+        id: true,
+        capacity: true,
+        currentLoad: true,
         status: true,
-        containerNumber: true 
+        containerNumber: true,
       },
     });
 
     if (!container) {
-      return NextResponse.json({ error: 'Conteneur non trouvé' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Conteneur non trouvé" },
+        { status: 404 }
+      );
     }
 
-    if (container.status !== 'PREPARATION') {
+    if (container.status !== "PREPARATION") {
       return NextResponse.json(
-        { error: 'Impossible d\'ajouter des colis à un conteneur qui n\'est pas en préparation' },
+        {
+          error:
+            "Impossible d'ajouter des colis à un conteneur qui n'est pas en préparation",
+        },
         { status: 400 }
       );
     }
@@ -79,7 +141,9 @@ export async function POST(request, { params }) {
     const availableSpace = container.capacity - container.currentLoad;
     if (packageIds.length > availableSpace) {
       return NextResponse.json(
-        { error: `Capacité insuffisante. Espace disponible: ${availableSpace} colis` },
+        {
+          error: `Capacité insuffisante. Espace disponible: ${availableSpace} colis`,
+        },
         { status: 400 }
       );
     }
@@ -89,13 +153,16 @@ export async function POST(request, { params }) {
       where: {
         id: { in: packageIds },
         containerId: null,
-        status: 'REGISTERED',
+        status: "REGISTERED",
       },
     });
 
     if (packages.length !== packageIds.length) {
       return NextResponse.json(
-        { error: 'Certains colis ne peuvent pas être assignés (déjà dans un conteneur ou statut incorrect)' },
+        {
+          error:
+            "Certains colis ne peuvent pas être assignés (déjà dans un conteneur ou statut incorrect)",
+        },
         { status: 400 }
       );
     }
@@ -105,9 +172,9 @@ export async function POST(request, { params }) {
       // Assigner les colis au conteneur
       await tx.package.updateMany({
         where: { id: { in: packageIds } },
-        data: { 
+        data: {
           containerId: id,
-          status: 'IN_CONTAINER',
+          status: "IN_CONTAINER",
           updatedAt: new Date(),
         },
       });
@@ -129,8 +196,8 @@ export async function POST(request, { params }) {
       await prisma.auditLog.create({
         data: {
           userId: session.user.id,
-          action: 'ASSIGN_PACKAGES_TO_CONTAINER',
-          resource: 'container',
+          action: "ASSIGN_PACKAGES_TO_CONTAINER",
+          resource: "container",
           resourceId: id,
           details: JSON.stringify({
             containerNumber: container.containerNumber,
@@ -140,18 +207,17 @@ export async function POST(request, { params }) {
         },
       });
     } catch (auditError) {
-      console.warn('Erreur audit log:', auditError);
+      console.warn("Erreur audit log:", auditError);
     }
 
     return NextResponse.json({
       message: `${packages.length} colis assignés au conteneur avec succès`,
       container: result,
     });
-
   } catch (error) {
-    console.error('Erreur POST /api/containers/[id]/packages:', error);
+    console.error("Erreur POST /api/containers/[id]/packages:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de l\'assignation des colis' },
+      { error: "Erreur lors de l'assignation des colis" },
       { status: 500 }
     );
   }

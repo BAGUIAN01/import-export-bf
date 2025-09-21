@@ -188,6 +188,15 @@ export async function POST(request) {
     // { clientId, containerId, sharedData, packages: [...] }
     if (Array.isArray(body.packages)) {
       const { clientId, containerId = null, sharedData = {} } = body;
+      if (!containerId) {
+        return NextResponse.json(
+          {
+            error:
+              "containerId manquant : un conteneur est obligatoire pour l'expédition.",
+          },
+          { status: 400 }
+        );
+      }
       if (!clientId) {
         return NextResponse.json(
           { error: "clientId manquant (format batch/wizard)" },
@@ -376,12 +385,12 @@ export async function POST(request) {
 }
 
 // ---------- createSinglePackageInternal ----------
+// ---------- createSinglePackageInternal (strict container required) ----------
 async function createSinglePackageInternal(body, session) {
   try {
-    // Détecter le format
+    // --------- 1) Détection de format + parsing types ----------
     const isLegacyFormat = body.type && !body.types && !body.selectedTypes;
-    const isMultiTypesFormat =
-      body.selectedTypes && Array.isArray(body.selectedTypes);
+    const isMultiTypesFormat = Array.isArray(body.selectedTypes);
     const isDirectTypesFormat = body.types !== undefined;
 
     let typesData = [];
@@ -389,59 +398,66 @@ async function createSinglePackageInternal(body, session) {
     let basePrice = 0;
 
     if (isLegacyFormat) {
+      // Ancien format: un seul type + quantity/basePrice
       if (!validTypes.includes(body.type)) {
         return { error: `Type invalide: ${body.type}`, status: 400 };
       }
+      const q = Math.max(1, parseInt(body.quantity ?? 1, 10) || 1);
+      const unit = Number(body.basePrice ?? 50) || 50;
+
       typesData = [
-        {
-          type: body.type,
-          quantity: body.quantity || 1,
-          unitPrice: body.basePrice || 50,
-          isQuoteOnly: false,
-        },
+        { type: body.type, quantity: q, unitPrice: unit, isQuoteOnly: false },
       ];
-      totalQuantity = body.quantity || 1;
-      basePrice = (body.basePrice || 50) * totalQuantity;
+      totalQuantity = q;
+      basePrice = unit * q;
     } else if (isMultiTypesFormat) {
-      if (body.selectedTypes.length === 0) {
+      // Nouveau format UI (plusieurs types)
+      if (!body.selectedTypes.length) {
         return { error: "Au moins un type doit être sélectionné", status: 400 };
       }
-      for (const typeItem of body.selectedTypes) {
-        if (!typeItem.type || !validTypes.includes(typeItem.type)) {
-          return { error: `Type invalide: ${typeItem.type}`, status: 400 };
+      for (const item of body.selectedTypes) {
+        if (!item?.type || !validTypes.includes(item.type)) {
+          return { error: `Type invalide: ${item?.type}`, status: 400 };
         }
-        if (!typeItem.quantity || typeItem.quantity < 1) {
-          return {
-            error: `Quantité invalide pour ${typeItem.type}`,
-            status: 400,
-          };
+        const q = Number(item.quantity || 0);
+        if (!Number.isFinite(q) || q < 1) {
+          return { error: `Quantité invalide pour ${item.type}`, status: 400 };
         }
       }
       typesData = body.selectedTypes;
-      totalQuantity = typesData.reduce((sum, it) => sum + it.quantity, 0);
+      totalQuantity = typesData.reduce(
+        (s, it) => s + Number(it.quantity || 0),
+        0
+      );
       basePrice = typesData.reduce(
-        (sum, it) =>
-          sum + (it.isQuoteOnly ? 0 : Number(it.unitPrice || 0) * it.quantity),
+        (s, it) =>
+          s +
+          (it.isQuoteOnly
+            ? 0
+            : Number(it.unitPrice || 0) * Number(it.quantity || 0)),
         0
       );
     } else if (isDirectTypesFormat) {
+      // Format "direct": body.types (string JSON ou array)
       try {
         typesData =
           typeof body.types === "string" ? JSON.parse(body.types) : body.types;
-        if (!Array.isArray(typesData) || typesData.length === 0) {
+        if (!Array.isArray(typesData) || !typesData.length) {
           throw new Error("Types doit être un array non vide");
         }
       } catch {
         return { error: "Format de types invalide", status: 400 };
       }
+
       totalQuantity =
-        body.totalQuantity ||
-        typesData.reduce((sum, it) => sum + Number(it.quantity || 0), 0);
+        Number(body.totalQuantity) ||
+        typesData.reduce((s, it) => s + Number(it.quantity || 0), 0);
+
       basePrice =
-        body.basePrice ||
+        Number(body.basePrice) ||
         typesData.reduce(
-          (sum, it) =>
-            sum +
+          (s, it) =>
+            s +
             (it.isQuoteOnly
               ? 0
               : Number(it.unitPrice || 0) * Number(it.quantity || 0)),
@@ -455,7 +471,7 @@ async function createSinglePackageInternal(body, session) {
       };
     }
 
-    // Champs requis minimaux
+    // --------- 2) Champs requis minimaux ----------
     if (!body.clientId || !body.description) {
       return {
         error: "Champs requis manquants (clientId, description)",
@@ -463,32 +479,28 @@ async function createSinglePackageInternal(body, session) {
       };
     }
 
-    // Vérifs existence
+    // ⚠️ Conteneur obligatoire (exigence stricte)
     const clientId = body.clientId?.trim?.() || body.clientId;
-    const containerId = body.containerId?.trim?.() || body.containerId || null;
+    const containerId = body.containerId?.trim?.() || body.containerId;
+    if (!containerId) {
+      return {
+        error: "Conteneur obligatoire (containerId manquant)",
+        status: 400,
+      };
+    }
 
-    const [client, user] = await Promise.all([
+    // --------- 3) Existence entités ----------
+    const [client, user, container] = await Promise.all([
       prisma.client.findUnique({ where: { id: clientId } }),
       prisma.user.findUnique({ where: { id: session.user.id } }),
+      prisma.container.findUnique({ where: { id: containerId } }),
     ]);
     if (!client) return { error: "Client introuvable", status: 400 };
     if (!user)
       return { error: "Utilisateur de session introuvable", status: 401 };
+    if (!container) return { error: "Conteneur introuvable", status: 400 };
 
-    let container = null;
-    if (containerId) {
-      container = await prisma.container.findUnique({
-        where: { id: containerId },
-      });
-      if (!container) return { error: "Conteneur introuvable", status: 400 };
-    }
-
-    // Génération du numéro de colis
-    const year = new Date().getFullYear();
-    const count = (await prisma.package.count()) + 1;
-    const packageNumber = `PKG${year}${String(count).padStart(5, "0")}`;
-
-    // Normalisations / calculs frais
+    // --------- 4) Calculs & normalisations ----------
     const normalizedValue = toNumOrNull(body.value);
     const normalizedWeight = toNumOrNull(body.weight);
     const normalizedPickupFee =
@@ -512,11 +524,14 @@ async function createSinglePackageInternal(body, session) {
     );
 
     // Paiement
-    const paidAmount = Math.max(0, toNumOrNull(body.paidAmount) ?? 0);
+    const paidAmountRaw = toNumOrNull(body.paidAmount);
+    const paidAmount = Math.max(0, paidAmountRaw ?? 0);
+
     const paymentStatus =
       body.paymentStatus && isValidPaymentStatus(body.paymentStatus)
         ? body.paymentStatus
         : derivePaymentStatus(totalAmount, paidAmount);
+
     const paidAt =
       paidAmount > 0
         ? body.paidAt
@@ -526,103 +541,162 @@ async function createSinglePackageInternal(body, session) {
 
     const paymentMethod =
       body.paymentMethod &&
-      body.paymentMethod.trim() !== "" &&
+      String(body.paymentMethod).trim() !== "" &&
       isValidPaymentMethod(body.paymentMethod)
         ? body.paymentMethod
         : null;
 
-    // Création du colis (⚠️ liaison shipment par relation)
-    // Création du colis (⚠️ liaison shipment par relation) avec numéro unique robuste
-    const include = {
-      client: {
-        select: {
-          id: true,
-          clientCode: true,
-          firstName: true,
-          lastName: true,
-          recipientCity: true,
-          recipientName: true,
-        },
-      },
-      container: {
-        select: { id: true, containerNumber: true, name: true, status: true },
-      },
-      shipment: { select: { id: true, shipmentNumber: true } },
-      user: { select: { id: true, firstName: true, lastName: true } },
+    // --------- 5) Génération packageNumber (retry si P2002) ----------
+    const genPackageNumber = () => {
+      const year = new Date().getFullYear();
+      // 5 chiffres pseudo-aléatoires pour éviter les collisions en concurrence
+      const suffix = String(Math.floor(Math.random() * 100000)).padStart(
+        5,
+        "0"
+      );
+      return `PKG${year}${suffix}`;
     };
 
-    const data = {
-      client: { connect: { id: client.id } },
-      user: { connect: { id: user.id } },
-      ...(container ? { container: { connect: { id: container.id } } } : {}),
-      ...(body.shipmentId
-        ? { shipment: { connect: { id: body.shipmentId } } }
-        : {}),
+    let packageNumber = genPackageNumber();
+    let lastErr = null;
 
-      // Multi-types JSON
-      types: JSON.stringify(typesData),
-      description: body.description,
-      totalQuantity,
-      weight: normalizedWeight,
-      dimensions: body.dimensions || null,
-      value: normalizedValue,
-      priority: body.priority ?? "NORMAL",
-      isFragile: !!body.isFragile,
-      isInsured,
-
-      pickupAddress: body.pickupAddress || null,
-      pickupDate: toDateOrNull(body.pickupDate),
-      pickupTime: body.pickupTime || null,
-      deliveryAddress: body.deliveryAddress || client.recipientAddress,
-      specialInstructions: body.specialInstructions || null,
-      notes: body.notes || null,
-
-      basePrice,
-      pickupFee: normalizedPickupFee,
-      insuranceFee,
-      customsFee: normalizedCustoms,
-      discount,
-      totalAmount,
-
-      paymentStatus,
-      paymentMethod,
-      paidAmount,
-      paidAt,
-
-      status: "REGISTERED",
-    };
-
-    const newPackage = await createPackageWithUniqueNumber(
-      prisma,
-      year,
-      data,
-      include
-    );
-
-    // Audit (best-effort)
-    try {
-      await prisma.auditLog.create({
-        data: {
-          userId: user.id,
-          action: "CREATE_PACKAGE",
-          resource: "package",
-          resourceId: newPackage.id,
-          details: JSON.stringify({
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        // --------- 6) Création du colis ----------
+        const newPackage = await prisma.package.create({
+          data: {
             packageNumber,
-            typesCount: typesData.length,
-            totalQuantity,
-            format: isLegacyFormat
-              ? "legacy"
-              : isMultiTypesFormat
-              ? "multi-types"
-              : "direct-types",
-            shipmentId: body.shipmentId ?? null,
-          }),
-        },
-      });
-    } catch {}
+            client: { connect: { id: client.id } },
+            user: { connect: { id: user.id } },
+            container: { connect: { id: container.id } }, // obligatoire
 
-    return { package: { ...newPackage, parsedTypes: typesData } };
+            // Lien à une expédition si fourni → via RELATION
+            ...(body.shipmentId
+              ? { shipment: { connect: { id: body.shipmentId } } }
+              : {}),
+
+            // Contenu multi-types
+            types: JSON.stringify(typesData),
+
+            // Infos colis
+            description: body.description,
+            totalQuantity,
+            weight: normalizedWeight,
+            dimensions: body.dimensions || null,
+            value: normalizedValue,
+            priority: body.priority ?? "NORMAL",
+            isFragile: !!body.isFragile,
+            isInsured,
+
+            // Logistique
+            pickupAddress: body.pickupAddress || null,
+            pickupDate: toDateOrNull(body.pickupDate),
+            pickupTime: body.pickupTime || null,
+            deliveryAddress:
+              body.deliveryAddress || client.recipientAddress || null,
+            specialInstructions: body.specialInstructions || null,
+            notes: body.notes || null,
+
+            // Tarifs
+            basePrice,
+            pickupFee: normalizedPickupFee,
+            insuranceFee,
+            customsFee: normalizedCustoms,
+            discount,
+            totalAmount,
+
+            // Paiement
+            paymentStatus,
+            paymentMethod,
+            paidAmount,
+            paidAt,
+
+            // Statut opérationnel par défaut
+            status:
+              body.status &&
+              [
+                "REGISTERED",
+                "COLLECTED",
+                "IN_CONTAINER",
+                "IN_TRANSIT",
+                "CUSTOMS",
+                "DELIVERED",
+                "RETURNED",
+                "CANCELLED",
+              ].includes(body.status)
+                ? body.status
+                : "REGISTERED",
+          },
+          include: {
+            client: {
+              select: {
+                id: true,
+                clientCode: true,
+                firstName: true,
+                lastName: true,
+                recipientCity: true,
+                recipientName: true,
+              },
+            },
+            container: {
+              select: {
+                id: true,
+                containerNumber: true,
+                name: true,
+                status: true,
+              },
+            },
+            shipment: { select: { id: true, shipmentNumber: true } },
+            user: { select: { id: true, firstName: true, lastName: true } },
+          },
+        });
+
+        // --------- 7) Audit (best-effort) ----------
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userId: user.id,
+              action: "CREATE_PACKAGE",
+              resource: "package",
+              resourceId: newPackage.id,
+              details: JSON.stringify({
+                packageNumber,
+                typesCount: typesData.length,
+                totalQuantity,
+                format: isLegacyFormat
+                  ? "legacy"
+                  : isMultiTypesFormat
+                  ? "multi-types"
+                  : "direct-types",
+                shipmentId: body.shipmentId ?? null,
+                containerId: container.id,
+              }),
+            },
+          });
+        } catch {}
+
+        // Succès
+        return { package: { ...newPackage, parsedTypes: typesData } };
+      } catch (e) {
+        lastErr = e;
+        // Conflit d’unicité sur packageNumber → on régénère et on ré-essaie
+        if (e?.code === "P2002") {
+          packageNumber = genPackageNumber();
+          continue;
+        }
+        // Autre erreur → on sort
+        throw e;
+      }
+    }
+
+    // Si on sort de la boucle → collision persistante ou autre
+    if (lastErr?.code === "P2002") {
+      return {
+        error: "Impossible de générer un numéro de colis unique. Réessayez.",
+        status: 500,
+      };
+    }
+    throw lastErr;
   } catch (e) {
     console.error("createSinglePackageInternal error:", e);
     return { error: "Erreur interne", status: 500 };

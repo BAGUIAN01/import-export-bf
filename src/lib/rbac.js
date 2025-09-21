@@ -30,14 +30,9 @@ export const accessMap = {
 
   // Colis (Admin peut tout voir, Client ses propres colis)
   "/admin/packages": ["ADMIN"],
-  "/admin/packages/new": ["ADMIN"],
-  "/admin/packages/pending": ["ADMIN"],
-  "/admin/packages/transit": ["ADMIN"],
-  "/admin/packages/delivered": ["ADMIN"],
-  "/admin/packages/pickup": ["ADMIN"],
-  "/client/packages": ["CLIENT"],
-  "/client/packages/transit": ["CLIENT"],
-  "/client/packages/delivered": ["CLIENT"],
+
+  "/admin/shipments": ["ADMIN"],
+
 
   // Conteneurs (Admin seulement)
   "/admin/containers": ["ADMIN"],

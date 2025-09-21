@@ -1,173 +1,302 @@
+// app/api/clients/[id]/route.js
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+const validateClientData = (data) => {
+  const errors = {};
+  
+  if (!data.firstName?.trim()) errors.firstName = "Le prénom est requis";
+  if (!data.lastName?.trim()) errors.lastName = "Le nom est requis";
+  if (!data.phone?.trim()) errors.phone = "Le téléphone est requis";
+  if (!data.address?.trim()) errors.address = "L'adresse est requise";
+  if (!data.city?.trim()) errors.city = "La ville est requise";
+  if (!data.country?.trim()) errors.country = "Le pays est requis";
+  
+  // Destinataire
+  if (!data.recipientName?.trim()) errors.recipientName = "Le nom du destinataire est requis";
+  if (!data.recipientPhone?.trim()) errors.recipientPhone = "Le téléphone du destinataire est requis";
+  if (!data.recipientAddress?.trim()) errors.recipientAddress = "L'adresse du destinataire est requise";
+  if (!data.recipientCity?.trim()) errors.recipientCity = "La ville du destinataire est requise";
+  
+  // Validation email
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    errors.email = "Email invalide";
+  }
+  if (data.recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.recipientEmail)) {
+    errors.recipientEmail = "Email du destinataire invalide";
+  }
+  
+  return errors;
+};
+
+// GET /api/clients/[id]
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session) {
-      return NextResponse.json({ message: "Non autorisé" }, { status: 401 });
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
+    const { id } = params;
+
+    // Récupération du client avec ses colis et statistiques
     const client = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         packages: {
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: "desc" },
+          include: {
+            container: {
+              select: {
+                id: true,
+                containerNumber: true,
+                name: true,
+                status: true,
+              }
+            }
+          }
         },
         _count: {
-          select: {
-            packages: true,
-          },
-        },
+          select: { packages: true }
+        }
       },
     });
 
     if (!client) {
-      return NextResponse.json({ message: "Client non trouvé" }, { status: 404 });
+      return NextResponse.json({ error: "Client introuvable" }, { status: 404 });
     }
 
-    return NextResponse.json({ client });
+    // Si c'est un client connecté, vérifier qu'il accède à ses propres données
+    if (session.user.role === "CLIENT") {
+      const userClient = await prisma.client.findFirst({
+        where: { userId: session.user.id },
+      });
+      if (!userClient || userClient.id !== client.id) {
+        return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });
+      }
+    }
+
+    // Calcul des statistiques du client
+    const packages = client.packages;
+    const totalSpent = packages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0);
+    const packagesCount = packages.length;
+    const avgOrderValue = packagesCount > 0 ? totalSpent / packagesCount : 0;
+    const lastOrderDate = packagesCount > 0 ? packages[0].createdAt : null;
+
+    // Statistiques par statut
+    const statusBreakdown = packages.reduce((acc, pkg) => {
+      acc[pkg.status] = (acc[pkg.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Statistiques par statut de paiement
+    const paymentBreakdown = packages.reduce((acc, pkg) => {
+      acc[pkg.paymentStatus] = (acc[pkg.paymentStatus] || 0) + 1;
+      return acc;
+    }, {});
+
+    const stats = {
+      totalSpent,
+      packagesCount,
+      avgOrderValue,
+      lastOrderDate,
+      statusBreakdown,
+      paymentBreakdown,
+    };
+
+    // Mise à jour du totalSpent si nécessaire
+    if (client.totalSpent !== totalSpent) {
+      await prisma.client.update({
+        where: { id },
+        data: { totalSpent },
+      });
+      client.totalSpent = totalSpent;
+    }
+
+    return NextResponse.json({
+      client: {
+        ...client,
+        packagesCount: client._count.packages,
+        _count: undefined,
+      },
+      packages,
+      stats,
+    });
+
   } catch (error) {
-    console.error("Erreur récupération client:", error);
-    return NextResponse.json(
-      { message: "Erreur lors de la récupération du client" },
-      { status: 500 }
-    );
+    console.error("Erreur GET /api/clients/[id]:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
+// PUT /api/clients/[id]
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ message: "Non autorisé" }, { status: 401 });
+    if (!session || !["ADMIN", "STAFF"].includes(session.user.role)) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    if (!['ADMIN', 'STAFF'].includes(session.user.role)) {
-      return NextResponse.json({ message: "Permissions insuffisantes" }, { status: 403 });
-    }
-
+    const { id } = params;
     const body = await request.json();
 
-    // Vérification que le client existe
+    // Vérification de l'existence du client
     const existingClient = await prisma.client.findUnique({
-      where: { id: params.id }
+      where: { id },
     });
 
     if (!existingClient) {
-      return NextResponse.json({ message: "Client non trouvé" }, { status: 404 });
+      return NextResponse.json({ error: "Client introuvable" }, { status: 404 });
     }
 
-    // Vérification unicité du téléphone (sauf pour le client actuel)
-    if (body.phone && body.phone !== existingClient.phone) {
+    // Validation des données
+    const errors = validateClientData(body);
+    if (Object.keys(errors).length > 0) {
+      return NextResponse.json({ error: "Données invalides", errors }, { status: 400 });
+    }
+
+    // Vérification de l'unicité du téléphone (sauf pour le client actuel)
+    if (body.phone !== existingClient.phone) {
       const phoneExists = await prisma.client.findFirst({
         where: { 
           phone: body.phone,
-          id: { not: params.id }
+          id: { not: id }
         }
       });
-
+      
       if (phoneExists) {
         return NextResponse.json(
-          { message: "Un autre client avec ce numéro de téléphone existe déjà" },
+          { error: "Un autre client avec ce numéro de téléphone existe déjà" },
           { status: 400 }
         );
       }
     }
 
     // Mise à jour du client
-    const client = await prisma.client.update({
-      where: { id: params.id },
+    const updatedClient = await prisma.client.update({
+      where: { id },
       data: {
-        firstName: body.firstName?.trim(),
-        lastName: body.lastName?.trim(),
-        phone: body.phone?.trim(),
+        firstName: body.firstName.trim(),
+        lastName: body.lastName.trim(),
+        phone: body.phone.trim(),
         email: body.email?.trim() || null,
-        address: body.address?.trim(),
-        city: body.city?.trim(),
-        country: body.country,
+        address: body.address.trim(),
+        city: body.city.trim(),
+        country: body.country.trim(),
         postalCode: body.postalCode?.trim() || null,
         company: body.company?.trim() || null,
-        siret: body.siret?.trim() || null,
-        recipientName: body.recipientName?.trim(),
-        recipientPhone: body.recipientPhone?.trim(),
+        recipientName: body.recipientName.trim(),
+        recipientPhone: body.recipientPhone.trim(),
         recipientEmail: body.recipientEmail?.trim() || null,
-        recipientAddress: body.recipientAddress?.trim(),
-        recipientCity: body.recipientCity?.trim(),
+        recipientAddress: body.recipientAddress.trim(),
+        recipientCity: body.recipientCity.trim(),
+        recipientCountry: body.recipientCountry || "Burkina Faso",
         recipientRelation: body.recipientRelation?.trim() || null,
-        isVip: body.isVip !== undefined ? !!body.isVip : undefined,
-        creditLimit: body.creditLimit !== undefined ? body.creditLimit : undefined,
+        isVip: !!body.isVip,
+        isActive: body.isActive !== undefined ? !!body.isActive : existingClient.isActive,
         notes: body.notes?.trim() || null,
-        updatedAt: new Date(),
+      },
+    });
+
+    // Log d'audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "UPDATE_CLIENT",
+        resource: "client",
+        resourceId: id,
+        details: JSON.stringify({
+          clientCode: existingClient.clientCode,
+          changes: Object.keys(body)
+        }),
       },
     });
 
     return NextResponse.json({
       message: "Client modifié avec succès",
-      client,
+      client: updatedClient,
     });
+
   } catch (error) {
-    console.error("Erreur modification client:", error);
+    console.error("Erreur PUT /api/clients/[id]:", error);
     return NextResponse.json(
-      { message: "Erreur lors de la modification du client" },
+      { error: "Erreur lors de la modification du client" },
       { status: 500 }
     );
   }
 }
 
+// DELETE /api/clients/[id]
 export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ message: "Non autorisé" }, { status: 401 });
+    if (!session || !["ADMIN", "STAFF"].includes(session.user.role)) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    if (!['ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ message: "Seuls les administrateurs peuvent supprimer des clients" }, { status: 403 });
-    }
+    const { id } = params;
 
-    const { id } = await params;
-
-    const existingClient = await prisma.client.findUnique({
+    // Vérification de l'existence du client
+    const client = await prisma.client.findUnique({
       where: { id },
       include: {
         _count: {
-          select: {
-            packages: true,
-          },
-        },
-      },
+          select: { packages: true }
+        }
+      }
     });
 
-    if (!existingClient) {
-      return NextResponse.json({ message: "Client non trouvé" }, { status: 404 });
+    if (!client) {
+      return NextResponse.json({ error: "Client introuvable" }, { status: 404 });
     }
 
-    if (existingClient._count.packages > 0) {
+    // Vérification s'il y a des colis associés
+    if (client._count.packages > 0) {
+      // Option 1: Empêcher la suppression
       return NextResponse.json(
         { 
-          message: `Impossible de supprimer le client. Il a ${existingClient._count.packages} colis associé(s). Supprimez d'abord les colis ou désactivez le client.` 
+          error: `Impossible de supprimer ce client car il a ${client._count.packages} colis associé(s). Supprimez d'abord tous ses colis.` 
         },
         { status: 400 }
       );
+
+      // Option 2: Supprimer en cascade (décommentez si vous préférez)
+      /*
+      await prisma.package.deleteMany({
+        where: { clientId: id }
+      });
+      */
     }
 
+    // Suppression du client
     await prisma.client.delete({
       where: { id },
+    });
+
+    // Log d'audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "DELETE_CLIENT",
+        resource: "client",
+        resourceId: id,
+        details: JSON.stringify({
+          clientCode: client.clientCode,
+          packagesCount: client._count.packages
+        }),
+      },
     });
 
     return NextResponse.json({
       message: "Client supprimé avec succès",
     });
+
   } catch (error) {
-    console.error("Erreur suppression client:", error);
+    console.error("Erreur DELETE /api/clients/[id]:", error);
     return NextResponse.json(
-      { message: "Erreur lors de la suppression du client" },
+      { error: "Erreur lors de la suppression du client" },
       { status: 500 }
     );
   }
