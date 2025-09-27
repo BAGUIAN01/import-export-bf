@@ -13,7 +13,10 @@ import {
   Plus,
   ArrowLeft,
   CheckCircle2,
-  Activity
+  Activity,
+  Edit2,
+  Trash2,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -26,7 +29,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 
 const statusOptions = [
   { value: 'PREPARATION', label: 'En préparation', variant: 'secondary' },
@@ -47,6 +49,7 @@ export function ContainerDetailView({ container, currentUser }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [trackingUpdates, setTrackingUpdates] = useState(container.trackingUpdates || []);
+  const [editingUpdate, setEditingUpdate] = useState(null);
   const [updateForm, setUpdateForm] = useState({
     location: '',
     description: '',
@@ -61,6 +64,50 @@ export function ContainerDetailView({ container, currentUser }) {
     }));
   };
 
+  const handleEditUpdate = (update) => {
+    setEditingUpdate(update.id);
+    setUpdateForm({
+      location: update.location,
+      description: update.description,
+      status: container.status,
+      isPublic: update.isPublic
+    });
+    setShowUpdateForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUpdate(null);
+    setUpdateForm({
+      location: '',
+      description: '',
+      status: container.status,
+      isPublic: true
+    });
+    setShowUpdateForm(false);
+  };
+
+  const handleDeleteUpdate = async (updateId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette mise à jour ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tracking/update/${updateId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression');
+      }
+
+      setTrackingUpdates(prev => prev.filter(u => u.id !== updateId));
+      toast.success('Mise à jour supprimée');
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   const handleSubmitUpdate = async () => {
     if (!updateForm.location || !updateForm.description) {
       toast.error('Localisation et description obligatoires');
@@ -70,57 +117,79 @@ export function ContainerDetailView({ container, currentUser }) {
     setIsUpdating(true);
 
     try {
-      const trackingResponse = await fetch(`/api/containers/${container.id}/status`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          location: updateForm.location,
-          description: updateForm.description,
-          isPublic: updateForm.isPublic,
-        }),
-      });
-
-      if (!trackingResponse.ok) {
-        const error = await trackingResponse.json();
-        throw new Error(error.message || 'Erreur lors de la mise à jour');
-      }
-
-      const trackingData = await trackingResponse.json();
-
-      if (updateForm.status !== container.status) {
-        const containerResponse = await fetch(`/api/containers/${container.id}`, {
+      // Modification d'une mise à jour existante
+      if (editingUpdate) {
+        const response = await fetch(`/api/tracking/update/${editingUpdate}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            status: updateForm.status,
-            currentLocation: updateForm.location,
+            location: updateForm.location,
+            description: updateForm.description,
+            isPublic: updateForm.isPublic,
           }),
         });
 
-        if (!containerResponse.ok) {
-          const error = await containerResponse.json();
-          throw new Error(error.message || 'Erreur lors de la mise à jour du statut');
+        if (!response.ok) {
+          throw new Error('Erreur lors de la modification');
         }
 
-        container.status = updateForm.status;
-        container.currentLocation = updateForm.location;
+        const updatedTracking = await response.json();
+
+        setTrackingUpdates(prev => 
+          prev.map(u => u.id === editingUpdate ? updatedTracking.trackingUpdate : u)
+        );
+
+        toast.success('Mise à jour modifiée');
+      } 
+      // Création d'une nouvelle mise à jour
+      else {
+        const trackingResponse = await fetch(`/api/containers/${container.id}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            location: updateForm.location,
+            description: updateForm.description,
+            isPublic: updateForm.isPublic,
+          }),
+        });
+
+        if (!trackingResponse.ok) {
+          const error = await trackingResponse.json();
+          throw new Error(error.message || 'Erreur lors de la mise à jour');
+        }
+
+        const trackingData = await trackingResponse.json();
+
+        // Mise à jour du statut du conteneur si changé
+        if (updateForm.status !== container.status) {
+          const containerResponse = await fetch(`/api/containers/${container.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              status: updateForm.status,
+              currentLocation: updateForm.location,
+            }),
+          });
+
+          if (!containerResponse.ok) {
+            throw new Error('Erreur lors de la mise à jour du statut');
+          }
+
+          container.status = updateForm.status;
+          container.currentLocation = updateForm.location;
+        }
+
+        setTrackingUpdates(prev => [trackingData.trackingUpdate, ...prev]);
+        toast.success('Mise à jour enregistrée');
       }
 
-      setTrackingUpdates(prev => [trackingData.trackingUpdate, ...prev]);
-
-      setUpdateForm({
-        location: '',
-        description: '',
-        status: container.status,
-        isPublic: true
-      });
-
-      setShowUpdateForm(false);
-      toast.success('Mise à jour enregistrée avec succès');
+      handleCancelEdit();
     } catch (error) {
       console.error('Erreur:', error);
       toast.error(error.message || 'Erreur de connexion');
@@ -171,11 +240,17 @@ export function ContainerDetailView({ container, currentUser }) {
             </div>
             
             <Button
-              onClick={() => setShowUpdateForm(!showUpdateForm)}
+              onClick={() => {
+                if (showUpdateForm && !editingUpdate) {
+                  handleCancelEdit();
+                } else {
+                  setShowUpdateForm(!showUpdateForm);
+                }
+              }}
               variant={showUpdateForm ? "outline" : "default"}
               className="gap-2"
             >
-              <Plus className="h-4 w-4" />
+              {showUpdateForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               {showUpdateForm ? 'Annuler' : 'Nouvelle mise à jour'}
             </Button>
           </div>
@@ -262,8 +337,8 @@ export function ContainerDetailView({ container, currentUser }) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Nouvelle mise à jour
+                {editingUpdate ? <Edit2 className="h-5 w-5" /> : <Activity className="h-5 w-5" />}
+                {editingUpdate ? 'Modifier la mise à jour' : 'Nouvelle mise à jour'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -278,24 +353,26 @@ export function ContainerDetailView({ container, currentUser }) {
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Nouveau statut</Label>
-                  <Select
-                    value={updateForm.status}
-                    onValueChange={(value) => handleInputChange('status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {!editingUpdate && (
+                  <div className="space-y-2">
+                    <Label>Nouveau statut</Label>
+                    <Select
+                      value={updateForm.status}
+                      onValueChange={(value) => handleInputChange('status', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -329,7 +406,7 @@ export function ContainerDetailView({ container, currentUser }) {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => setShowUpdateForm(false)}
+                    onClick={handleCancelEdit}
                     disabled={isUpdating}
                   >
                     Annuler
@@ -340,7 +417,7 @@ export function ContainerDetailView({ container, currentUser }) {
                   >
                     {isUpdating && <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>}
                     <Save className="h-4 w-4 mr-2" />
-                    {isUpdating ? 'Enregistrement...' : 'Enregistrer'}
+                    {isUpdating ? 'Enregistrement...' : editingUpdate ? 'Modifier' : 'Enregistrer'}
                   </Button>
                 </div>
               </div>
@@ -371,7 +448,6 @@ export function ContainerDetailView({ container, currentUser }) {
               <div className="space-y-6">
                 {trackingUpdates.map((update, index) => (
                   <div key={update.id} className="relative">
-                    {/* Ligne de connexion */}
                     {index < trackingUpdates.length - 1 && (
                       <div className="absolute left-6 top-12 w-0.5 h-16 bg-border"></div>
                     )}
@@ -404,6 +480,25 @@ export function ContainerDetailView({ container, currentUser }) {
                                 </div>
                               )}
                             </div>
+                          </div>
+                          
+                          <div className="flex gap-1 ml-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditUpdate(update)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteUpdate(update.id)}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
                       </div>
