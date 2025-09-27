@@ -33,7 +33,7 @@ export default function LogoutButton({
     
     try {
       await signOut({
-        callbackUrl: '/login',
+        callbackUrl: '/auth/signin',
         redirect: true
       })
       onLogoutComplete?.()

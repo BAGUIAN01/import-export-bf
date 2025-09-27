@@ -33,7 +33,7 @@ module.exports = {
       fontFamily: {
         // global body font -> Inter
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        // optional display/heading font -> Poppins
+        poppins: ['var(--font-poppins)', 'sans-serif'],
         display: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
         heading: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
         body: ['var(--font-inter)', 'system-ui', 'sans-serif'],

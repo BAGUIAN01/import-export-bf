@@ -56,14 +56,14 @@ export const metadata = {
     siteName: 'Import Export BF',
     images: [
       {
-        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ URL ABSOLUE
+        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg',
         width: 1200,
         height: 630,
         alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
         type: 'image/jpeg',
       },
       {
-        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ Image optimisée pour Open Graph
+        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg',
         width: 1200,
         height: 630,
         alt: 'Import Export BF - Transport et logistique',
@@ -77,7 +77,7 @@ export const metadata = {
     description: 'Service d\'envoi de colis vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
     images: [
       {
-        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ URL ABSOLUE
+        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg',
         alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
       }
     ],
@@ -98,7 +98,6 @@ export const metadata = {
   verification: {
     google: 'your-google-verification-code',
   },
-  // Favicons avec chemins relatifs (OK pour les favicons)
   icons: {
     icon: [
       { url: '/logo_short-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -117,7 +116,6 @@ export const metadata = {
     ],
   },
   manifest: '/site.webmanifest',
-  // JSON-LD pour le référencement (URLs absolues aussi)
   other: {
     'application/ld+json': JSON.stringify({
       '@context': 'https://schema.org',
@@ -125,8 +123,8 @@ export const metadata = {
       name: 'Import Export BF',
       description: 'Service d\'envoi de colis de la France vers le Burkina Faso',
       url: 'https://import-export-bf.vercel.app',
-      logo: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', // ✅ URL ABSOLUE
-      image: 'https://import-export-bf.vercel.app/og-image.jpg', // ✅ URL ABSOLUE
+      logo: 'https://import-export-bf.vercel.app/logo-1200x630.jpg',
+      image: 'https://import-export-bf.vercel.app/og-image.jpg',
       telephone: ['+33670699823', '+22676601981'],
       email: 'contact@ieBF.fr',
       address: {
@@ -147,7 +145,7 @@ export const metadata = {
             '@type': 'Offer',
             name: 'Colis Standard',
             description: 'Envoi de colis jusqu\'à 30kg',
-            price: '100', // ✅ Corrigé selon votre description
+            price: '100',
             priceCurrency: 'EUR',
           },
           {
@@ -167,7 +165,7 @@ export default function RootLayout({
   children,
 }) {
   return (
-    <html lang="fr" className={`${inter.variable} ${poppins.variable}`}>
+    <html lang="fr" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" sizes="16x16" href="/logo_short-16x16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/logo_short-32x32.png" />
@@ -178,8 +176,8 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#010066" />
         <meta name="msapplication-TileImage" content="/logo_short-144x144.png" />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <div className="min-h-screen flex flex-col">
+      <body suppressHydrationWarning>
+        <div className="min-h-screen flex flex-col font-sans bg-background antialiased">
           <Header />
           <main className="flex-1">
             {children}
