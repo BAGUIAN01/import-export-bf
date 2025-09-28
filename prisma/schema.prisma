@@ -1,11 +1,13 @@
-// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./db/dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") 
+  directUrl = env("DATABASE_URL_UNPOOLED")
+
 }
 
 // ===== AUTHENTIFICATION =====
@@ -46,7 +48,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String? // Ajout du champ password manquant
+  password      String?
   role          UserRole  @default(CLIENT)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
@@ -271,7 +273,7 @@ model Client {
   recipientEmail    String?
   recipientAddress  String
   recipientCity     String
-  recipientRelation String? // Relation avec le destinataire
+  recipientRelation String?
 
   // Métadonnées
   isActive    Boolean  @default(true)
@@ -303,17 +305,17 @@ model Container {
   name            String? // Nom du conteneur
 
   // Dates importantes
-  departureDate   DateTime? // Date de départ prévue
-  actualDeparture DateTime? // Date de départ réelle
-  arrivalDate     DateTime? // Date d'arrivée prévue
-  actualArrival   DateTime? // Date d'arrivée réelle
+  departureDate   DateTime?
+  actualDeparture DateTime?
+  arrivalDate     DateTime?
+  actualArrival   DateTime?
 
   // Statut et capacité
   status        ContainerStatus @default(PREPARATION)
-  capacity      Int             @default(100) // Capacité max
-  currentLoad   Int             @default(0) // Charge actuelle
-  maxWeight     Float? // Poids maximum autorisé
-  currentWeight Float           @default(0) // Poids actuel
+  capacity      Int             @default(100)
+  currentLoad   Int             @default(0)
+  maxWeight     Float?
+  currentWeight Float           @default(0)
 
   // Localisation
   origin          String  @default("France")
@@ -354,14 +356,14 @@ model Package {
   containerId   String?
   userId        String? // Utilisateur qui a créé l'entrée
 
-  // Détails du colis - MODIFIÉ pour supporter plusieurs types
-  types         String // JSON: [{"type": "CARTON", "quantity": 2}, {"type": "TV_55", "quantity": 1}]
+  // Détails du colis — JSON natif
+  types         Json    // [{"type":"CARTON","quantity":2}, {"type":"TV_55","quantity":1}]
   description   String
-  totalQuantity Int     @default(1) // Quantité totale tous types confondus
+  totalQuantity Int     @default(1)
   weight        Float?
   dimensions    String? // "LxlxH en cm"
-  value         Float? // Valeur déclarée
-  photos        String? // JSON string des URLs des photos
+  value         Float?
+  photos        Json?   // JSON string/obj des URLs des photos
 
   // Statut et suivi
   status    PackageStatus @default(REGISTERED)
@@ -370,11 +372,11 @@ model Package {
   isInsured Boolean       @default(false)
 
   // Adresses
-  pickupAddress   String? // Adresse de ramassage
-  pickupDate      DateTime? // Date de ramassage
-  pickupTime      String? // Créneau horaire
-  deliveryAddress String // Adresse de livraison au Burkina
-  deliveryDate    DateTime? // Date de livraison
+  pickupAddress   String?
+  pickupDate      DateTime?
+  pickupTime      String?
+  deliveryAddress String
+  deliveryDate    DateTime?
   deliveryTime    String?
 
   // Tarification
@@ -399,7 +401,7 @@ model Package {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  // Relations (inchangées)
+  // Relations
   client       Client        @relation(fields: [clientId], references: [id])
   container    Container?    @relation(fields: [containerId], references: [id])
   user         User?         @relation(fields: [userId], references: [id])
@@ -407,7 +409,7 @@ model Package {
   payments     Payment[]
   files        File[]
 
-  shipmentId String? // <--- NOUVEAU
+  shipmentId String?
   shipment   Shipment? @relation(fields: [shipmentId], references: [id])
 
   @@index([shipmentId])
@@ -425,15 +427,15 @@ model TrackingUpdate {
   userId      String // Utilisateur qui fait la mise à jour
 
   // Informations de localisation
-  location    String // Localisation actuelle
-  description String // Description de l'étape
-  latitude    Float? // Coordonnées GPS
+  location    String
+  description String
+  latitude    Float?
   longitude   Float?
 
   // Métadonnées
-  isPublic    Boolean  @default(true) // Visible par les clients
-  photos      String? // JSON string des URLs des photos (MODIFIÉ)
-  temperature Float? // Température si pertinent
+  isPublic    Boolean  @default(true)
+  photos      Json?    // JSON des URLs des photos
+  temperature Float?
   timestamp   DateTime @default(now())
   createdAt   DateTime @default(now())
 
@@ -449,15 +451,15 @@ model TrackingUpdate {
 model Pricing {
   id          String  @id @default(cuid())
   type        String  @unique // CARTON, BARRIQUE, etc.
-  name        String // Nom affiché
+  name        String
   description String?
 
   // Tarifs
   basePrice  Float
   pickupFee  Float  @default(20)
-  perKgPrice Float? // Prix par kg supplémentaire
-  minWeight  Float? // Poids minimum
-  maxWeight  Float? // Poids maximum
+  perKgPrice Float?
+  minWeight  Float?
+  maxWeight  Float?
 
   // Validité
   isActive   Boolean   @default(true)
@@ -539,8 +541,8 @@ model Payment {
   status String        @default("COMPLETED") // PENDING, COMPLETED, FAILED, CANCELLED
 
   // Détails paiement
-  reference     String? // Référence externe
-  transactionId String? // ID de transaction
+  reference     String?
+  transactionId String?
 
   paidAt    DateTime @default(now())
   createdAt DateTime @default(now())
@@ -559,20 +561,20 @@ model Payment {
 
 model WhatsAppMessage {
   id           String  @id @default(cuid())
-  to           String // Numéro de téléphone
-  message      String // Contenu du message
+  to           String
+  message      String
   messageType  String  @default("text") // text, template, media, document
-  templateName String? // Nom du template utilisé
+  templateName String?
 
   // Statut
   status     String  @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
-  messageId  String? // ID du message WhatsApp
-  error      String? // Erreur si échec
+  messageId  String?
+  error      String?
   retryCount Int     @default(0)
 
   // Métadonnées
-  packageId String? // Lié à un colis si applicable
-  clientId  String? // Lié à un client
+  packageId String?
+  clientId  String?
 
   sentAt      DateTime?
   deliveredAt DateTime?
@@ -591,7 +593,7 @@ model Notification {
   type    NotificationType
   title   String
   message String
-  data    String? // Données JSON supplémentaires
+  data    Json? // Données JSON supplémentaires
 
   isRead    Boolean   @default(false)
   readAt    DateTime?
@@ -637,10 +639,10 @@ model File {
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
-  action     String // Action effectuée
-  resource   String // Resource affectée (package, container, etc.)
-  resourceId String? // ID de la resource
-  details    String? // Détails supplémentaires en JSON
+  action     String
+  resource   String
+  resourceId String?
+  details    Json?    // Détails supplémentaires en JSON
   ipAddress  String?
   userAgent  String?
   createdAt  DateTime @default(now())
@@ -712,5 +714,5 @@ model Shipment {
 
   @@index([shipmentNumber])
   @@index([clientId])
-  @@map("shipments") // (optionnel, pour rester cohérent avec tes autres @@map)
+  @@map("shipments")
 }

@@ -16,6 +16,7 @@ import {
   EyeOff,
   ChevronDown,
   Shield,
+  Package,
 } from "lucide-react";
 import {
   AsYouType,
@@ -23,66 +24,18 @@ import {
   isValidPhoneNumber,
 } from "libphonenumber-js/min";
 
-// Countries supported with better coverage
+// Countries supported
 const COUNTRY_OPTIONS = [
-  {
-    iso2: "FR",
-    name: "France",
-    dial: "+33",
-    flag: "🇫🇷",
-    sample: "06 12 34 56 78",
-  },
-  {
-    iso2: "BF",
-    name: "Burkina Faso",
-    dial: "+226",
-    flag: "🇧🇫",
-    sample: "70 12 34 56",
-  },
-  {
-    iso2: "CI",
-    name: "Côte d'Ivoire",
-    dial: "+225",
-    flag: "🇨🇮",
-    sample: "01 23 45 67",
-  },
+  { iso2: "FR", name: "France", dial: "+33", flag: "🇫🇷", sample: "06 12 34 56 78" },
+  { iso2: "BF", name: "Burkina Faso", dial: "+226", flag: "🇧🇫", sample: "70 12 34 56" },
+  { iso2: "CI", name: "Côte d'Ivoire", dial: "+225", flag: "🇨🇮", sample: "01 23 45 67" },
   { iso2: "ML", name: "Mali", dial: "+223", flag: "🇲🇱", sample: "65 12 34 56" },
-  {
-    iso2: "SN",
-    name: "Sénégal",
-    dial: "+221",
-    flag: "🇸🇳",
-    sample: "70 123 45 67",
-  },
-  {
-    iso2: "NE",
-    name: "Niger",
-    dial: "+227",
-    flag: "🇳🇪",
-    sample: "90 12 34 56",
-  },
+  { iso2: "SN", name: "Sénégal", dial: "+221", flag: "🇸🇳", sample: "70 123 45 67" },
+  { iso2: "NE", name: "Niger", dial: "+227", flag: "🇳🇪", sample: "90 12 34 56" },
   { iso2: "TG", name: "Togo", dial: "+228", flag: "🇹🇬", sample: "90 12 34 56" },
-  {
-    iso2: "BJ",
-    name: "Bénin",
-    dial: "+229",
-    flag: "🇧🇯",
-    sample: "90 12 34 56",
-  },
-  {
-    iso2: "GH",
-    name: "Ghana",
-    dial: "+233",
-    flag: "🇬🇭",
-    sample: "024 123 4567",
-  },
-  {
-    iso2: "GN",
-    name: "Guinée",
-    dial: "+224",
-    flag: "🇬🇳",
-    sample: "620 12 34 56",
-  },
+  { iso2: "BJ", name: "Bénin", dial: "+229", flag: "🇧🇯", sample: "90 12 34 56" },
+  { iso2: "GH", name: "Ghana", dial: "+233", flag: "🇬🇭", sample: "024 123 4567" },
+  { iso2: "GN", name: "Guinée", dial: "+224", flag: "🇬🇳", sample: "620 12 34 56" },
 ];
 
 const ISO2_TO_OPTION = COUNTRY_OPTIONS.reduce((acc, c) => {
@@ -93,7 +46,7 @@ const ISO2_TO_OPTION = COUNTRY_OPTIONS.reduce((acc, c) => {
 export default function SignUpMain() {
   const router = useRouter();
 
-  const [selectedIso2, setSelectedIso2] = useState("BF"); // Burkina Faso par défaut
+  const [selectedIso2, setSelectedIso2] = useState("BF");
   const selectedCountry = useMemo(
     () => ISO2_TO_OPTION[selectedIso2] ?? COUNTRY_OPTIONS[0],
     [selectedIso2]
@@ -111,7 +64,7 @@ export default function SignUpMain() {
   const [code, setCode] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
-  const [step, setStep] = useState(1); // 1: form, 2: verify, 3: success
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -121,7 +74,6 @@ export default function SignUpMain() {
 
   const timerRef = useRef(null);
 
-  // Countdown timer cleanup
   useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown((p) => p - 1), 1000);
@@ -140,7 +92,6 @@ export default function SignUpMain() {
     };
   }, []);
 
-  // Phone helpers with libphonenumber-js
   function computePhoneState(raw, preferredIso2) {
     const parsedIntl = parsePhoneNumberFromString(raw);
     let iso2 = preferredIso2;
@@ -151,18 +102,14 @@ export default function SignUpMain() {
 
     const parsed = parsePhoneNumberFromString(formatted, iso2);
     const e164 = parsed?.number ?? parsedIntl?.number ?? "";
-    const valid =
-      parsed?.isValid?.() || (e164 ? isValidPhoneNumber(e164) : false);
+    const valid = parsed?.isValid?.() || (e164 ? isValidPhoneNumber(e164) : false);
 
     return { iso2, formatted, e164, valid };
   }
 
   const handlePhoneChange = (e) => {
     const raw = e.target.value;
-    const { iso2, formatted, e164, valid } = computePhoneState(
-      raw,
-      selectedIso2
-    );
+    const { iso2, formatted, e164, valid } = computePhoneState(raw, selectedIso2);
     if (iso2 !== selectedIso2) setSelectedIso2(iso2);
     setPhone(formatted);
     setPhoneE164(e164 ?? "");
@@ -214,7 +161,6 @@ export default function SignUpMain() {
 
     setLoading(true);
     try {
-      // Créer le compte et envoyer le SMS automatiquement
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -274,7 +220,6 @@ export default function SignUpMain() {
     }
   };
 
-  // Auto-verify when 6 digits typed
   useEffect(() => {
     if (step === 2 && code.length === 6) {
       const t = setTimeout(() => verifyCode(), 300);
@@ -318,23 +263,18 @@ export default function SignUpMain() {
     return `${c.sample}`;
   }, [selectedCountry]);
 
-  // Success step
   if (step === 3) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
         <div className="w-full max-w-md">
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8 text-center">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-8 text-center">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
               <CheckCircle className="w-12 h-12 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Bienvenue !
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Votre compte a été créé avec succès
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenue !</h2>
+            <p className="text-gray-600 mb-6">Votre compte a été créé avec succès</p>
             <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
               <span>Redirection vers votre tableau de bord...</span>
             </div>
           </div>
@@ -344,14 +284,14 @@ export default function SignUpMain() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 my-12">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-            <User className="w-10 h-10 text-white" />
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+            <Package className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-3">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
             Rejoignez Import Export BF
           </h1>
           <p className="text-gray-600 text-lg">
@@ -362,19 +302,19 @@ export default function SignUpMain() {
         </div>
 
         {/* Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8">
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-8">
           {/* Progress Stepper */}
           <div className="flex items-center justify-center mb-8">
             <div
               className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                 step >= 1
-                  ? "bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg"
+                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg"
                   : "bg-gray-200 text-gray-500"
               }`}
             >
               <User className="w-6 h-6" />
               {step > 1 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-3 h-3 text-white" />
                 </div>
               )}
@@ -382,20 +322,20 @@ export default function SignUpMain() {
             <div
               className={`w-20 h-1 mx-4 rounded-full transition-all duration-500 ${
                 step >= 2
-                  ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600"
                   : "bg-gray-200"
               }`}
             />
             <div
               className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                 step >= 2
-                  ? "bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg"
+                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg"
                   : "bg-gray-200 text-gray-500"
               }`}
             >
               <MessageCircle className="w-6 h-6" />
               {step > 2 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-3 h-3 text-white" />
                 </div>
               )}
@@ -410,11 +350,9 @@ export default function SignUpMain() {
             </div>
           )}
           {success && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <p className="text-emerald-700 text-sm leading-relaxed">
-                {success}
-              </p>
+            <div className="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+              <p className="text-orange-700 text-sm leading-relaxed">{success}</p>
             </div>
           )}
 
@@ -431,7 +369,7 @@ export default function SignUpMain() {
                     <input
                       type="text"
                       autoComplete="given-name"
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white/50"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
                       placeholder="Votre prénom"
                       value={firstName}
                       onChange={(e) => {
@@ -450,7 +388,7 @@ export default function SignUpMain() {
                     <input
                       type="text"
                       autoComplete="family-name"
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white/50"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
                       placeholder="Votre nom"
                       value={lastName}
                       onChange={(e) => {
@@ -468,8 +406,7 @@ export default function SignUpMain() {
                 <label className="block text-sm font-medium text-gray-700">
                   Numéro de téléphone <span className="text-red-500">*</span>
                 </label>
-                <div className="flex rounded-xl shadow-sm overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all duration-200">
-                  {/* Country Selector */}
+                <div className="flex rounded-xl shadow-sm overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500 transition-all duration-200">
                   <div className="relative">
                     <select
                       className="appearance-none h-full pl-4 pr-8 py-3 bg-gray-50 border-0 focus:ring-0 text-sm font-medium text-gray-700 cursor-pointer"
@@ -486,13 +423,12 @@ export default function SignUpMain() {
                     <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
 
-                  {/* Phone Input */}
                   <div className="relative flex-1">
                     <input
                       type="tel"
                       inputMode="tel"
                       autoComplete="tel"
-                      className="w-full pl-12 pr-4 py-3 border-0 focus:ring-0 bg-white/50"
+                      className="w-full pl-12 pr-4 py-3 border-0 focus:ring-0 bg-white"
                       placeholder={phonePlaceholder}
                       value={phone}
                       onChange={handlePhoneChange}
@@ -510,7 +446,7 @@ export default function SignUpMain() {
                       </span>
                     </span>
                     {phoneValid && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         Valide
                       </span>
@@ -522,14 +458,13 @@ export default function SignUpMain() {
               {/* Email */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Email{" "}
-                  <span className="text-gray-400 text-xs">(optionnel)</span>
+                  Email <span className="text-gray-400 text-xs">(optionnel)</span>
                 </label>
                 <div className="relative">
                   <input
                     type="email"
                     autoComplete="email"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white/50"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
                     placeholder="votre.email@exemple.com"
                     value={email}
                     onChange={(e) => {
@@ -551,7 +486,7 @@ export default function SignUpMain() {
                     <input
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white/50"
+                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
                       placeholder="Minimum 6 caractères"
                       value={password}
                       onChange={(e) => {
@@ -564,17 +499,8 @@ export default function SignUpMain() {
                       type="button"
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
-                      aria-label={
-                        showPassword
-                          ? "Masquer le mot de passe"
-                          : "Afficher le mot de passe"
-                      }
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
@@ -587,7 +513,7 @@ export default function SignUpMain() {
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white/50"
+                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
                       placeholder="Répétez le mot de passe"
                       value={confirmPassword}
                       onChange={(e) => {
@@ -599,20 +525,9 @@ export default function SignUpMain() {
                     <button
                       type="button"
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      aria-label={
-                        showConfirmPassword
-                          ? "Masquer le mot de passe"
-                          : "Afficher le mot de passe"
-                      }
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
@@ -628,40 +543,28 @@ export default function SignUpMain() {
                     setAcceptTerms(e.target.checked);
                     setError("");
                   }}
-                  className="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                  className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                 />
-                <label
-                  htmlFor="acceptTerms"
-                  className="text-sm text-gray-700 leading-relaxed"
-                >
+                <label htmlFor="acceptTerms" className="text-sm text-gray-700 leading-relaxed">
                   J'accepte les{" "}
-                  <a
-                    href="/terms"
-                    className="text-emerald-600 hover:text-emerald-500 font-medium underline underline-offset-2"
-                  >
+                  <a href="/terms" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2">
                     conditions d'utilisation
                   </a>{" "}
                   et la{" "}
-                  <a
-                    href="/privacy"
-                    className="text-emerald-600 hover:text-emerald-500 font-medium underline underline-offset-2"
-                  >
+                  <a href="/privacy" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2">
                     politique de confidentialité
                   </a>
                 </label>
               </div>
 
               {/* Info Box */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
                 <div className="flex items-start">
-                  <MessageCircle className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <MessageCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
                   <div>
-                    <h3 className="text-sm font-semibold text-blue-900 mb-1">
-                      Information
-                    </h3>
+                    <h3 className="text-sm font-semibold text-blue-900 mb-1">Information</h3>
                     <p className="text-sm text-blue-700 leading-relaxed">
-                      Les informations de livraison seront demandées lors de
-                      l'enregistrement de votre premier colis.
+                      Les informations de livraison seront demandées lors de l'enregistrement de votre premier colis.
                     </p>
                   </div>
                 </div>
@@ -671,7 +574,7 @@ export default function SignUpMain() {
               <button
                 onClick={sendCode}
                 disabled={loading}
-                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <>
@@ -690,10 +593,7 @@ export default function SignUpMain() {
               <div className="text-center pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600">
                   Déjà un compte ?{" "}
-                  <a
-                    href="/auth/signin"
-                    className="text-emerald-600 hover:text-emerald-500 font-medium underline underline-offset-2 transition-colors"
-                  >
+                  <a href="/auth/signin" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors">
                     Se connecter
                   </a>
                 </p>
@@ -706,20 +606,18 @@ export default function SignUpMain() {
             <div className="space-y-6">
               <button
                 onClick={() => setStep(1)}
-                className="flex items-center text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors group"
+                className="flex items-center text-orange-600 hover:text-orange-700 text-sm font-medium transition-colors group"
               >
                 <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                 Modifier les informations
               </button>
 
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <MessageCircle className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Vérification SMS
-                  </h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Vérification SMS</h3>
                   <p className="text-gray-600">Code envoyé au {phone}</p>
                 </div>
               </div>
@@ -732,7 +630,7 @@ export default function SignUpMain() {
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
-                  className="block w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-center text-3xl font-mono tracking-[0.5em] bg-white/50 transition-all duration-200"
+                  className="block w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-center text-3xl font-mono tracking-[0.5em] bg-white transition-all duration-200"
                   placeholder="000000"
                   value={code}
                   onChange={handleCodeInput}
@@ -742,7 +640,7 @@ export default function SignUpMain() {
               <button
                 onClick={verifyCode}
                 disabled={loading || code.length !== 6}
-                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <>
@@ -761,7 +659,7 @@ export default function SignUpMain() {
                 <button
                   onClick={resendCode}
                   disabled={countdown > 0 || loading}
-                  className="text-sm text-emerald-600 hover:text-emerald-700 font-medium disabled:text-gray-400 disabled:cursor-not-allowed transition-colors underline underline-offset-2"
+                  className="text-sm text-orange-600 hover:text-orange-700 font-medium disabled:text-gray-400 disabled:cursor-not-allowed transition-colors underline underline-offset-2"
                 >
                   {countdown > 0 ? (
                     <span className="flex items-center justify-center space-x-2">
@@ -779,12 +677,9 @@ export default function SignUpMain() {
                 <div className="flex items-start">
                   <Shield className="h-5 w-5 text-amber-500 mt-0.5 mr-3 flex-shrink-0" />
                   <div>
-                    <h3 className="text-sm font-semibold text-amber-900 mb-1">
-                      Sécurité
-                    </h3>
+                    <h3 className="text-sm font-semibold text-amber-900 mb-1">Sécurité</h3>
                     <p className="text-sm text-amber-700 leading-relaxed">
-                      Ce code expire dans 10 minutes. Ne le partagez jamais avec
-                      quelqu'un d'autre.
+                      Ce code expire dans 10 minutes. Ne le partagez jamais avec quelqu'un d'autre.
                     </p>
                   </div>
                 </div>
@@ -795,12 +690,9 @@ export default function SignUpMain() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-600">
             Besoin d'aide ?{" "}
-            <a
-              href="/contact"
-              className="text-emerald-600 hover:text-emerald-500 font-medium underline underline-offset-2 transition-colors"
-            >
+            <a href="/contact" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors">
               Contactez notre support
             </a>
           </p>

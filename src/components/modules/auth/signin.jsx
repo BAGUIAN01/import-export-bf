@@ -11,7 +11,8 @@ import {
   EyeOff, 
   Lock,
   User,
-  Shield
+  Shield,
+  Package
 } from 'lucide-react'
 
 export default function SignInMain() {
@@ -19,12 +20,10 @@ export default function SignInMain() {
   const [error, setError] = useState('')
   const router = useRouter()
 
-  // Form states
-  const [login, setLogin] = useState('') // Email ou téléphone
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  // Simple login with credentials
   const handleLogin = async (e) => {
     e.preventDefault()
     
@@ -56,23 +55,29 @@ export default function SignInMain() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] p-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 right-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#010066]/20 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-            <Lock className="w-10 h-10 text-white" />
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+            <Package className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-3">
+          <h1 className="text-3xl font-bold text-white mb-3">
             Connexion
           </h1>
-          <p className="text-gray-600">
-            Connectez-vous à votre compte
+          <p className="text-blue-200">
+            Accédez à votre espace Import Export BF
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8">
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8">
           {/* Error Alert */}
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
@@ -100,7 +105,7 @@ export default function SignInMain() {
                     setLogin(e.target.value)
                     setError('')
                   }}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white/50"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
                   placeholder="email@exemple.com ou +226 70 12 34 56"
                 />
                 <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -124,7 +129,7 @@ export default function SignInMain() {
                     setPassword(e.target.value)
                     setError('')
                   }}
-                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white/50"
+                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
                   placeholder="Votre mot de passe"
                 />
                 <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -144,7 +149,7 @@ export default function SignInMain() {
               <div className="text-sm">
                 <a 
                   href="/auth/forgot-password" 
-                  className="text-emerald-600 hover:text-emerald-500 font-medium underline underline-offset-2 transition-colors"
+                  className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors"
                 >
                   Mot de passe oublié ?
                 </a>
@@ -155,7 +160,7 @@ export default function SignInMain() {
             <button
               type="submit"
               disabled={loading || !login || !password}
-              className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <>
@@ -177,7 +182,7 @@ export default function SignInMain() {
               Pas encore de compte ?{' '}
               <a 
                 href="/auth/signup" 
-                className="text-emerald-600 hover:text-emerald-500 font-medium underline underline-offset-2 transition-colors"
+                className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors"
               >
                 Créer un compte
               </a>
@@ -187,11 +192,11 @@ export default function SignInMain() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-blue-200">
             Besoin d'aide ?{' '}
             <a 
               href="/contact" 
-              className="text-emerald-600 hover:text-emerald-500 font-medium underline underline-offset-2 transition-colors"
+              className="text-orange-400 hover:text-orange-300 font-medium underline underline-offset-2 transition-colors"
             >
               Contactez notre support
             </a>
