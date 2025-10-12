@@ -42,9 +42,12 @@ export default function SignInMain() {
         redirect: false,
       })
 
+      console.log(" Login result:", result)
+
       if (result?.error) {
         setError('Identifiants incorrects')
       } else if (result?.ok) {
+        console.log('Connexion réussie')
         router.push('/admin/dashboard')
       }
     } catch (err) {

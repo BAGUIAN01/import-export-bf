@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { CustomDataTable } from "@/components/modules/data-table/data-table";
 import { containersColumns } from "@/components/modules/admin/containers/containers-columns";
 import { ContainerDialog } from "@/components/modules/admin/containers/container-dialog";
 import { toast } from "sonner";
 import { ContainersStats } from "@/components/modules/admin/containers/containers-stats";
+import { useContainers, useContainerMutations } from "@/hooks/use-containers";
 
 const statusOptions = [
   { label: "Préparation", value: "PREPARATION" },
@@ -19,145 +20,101 @@ export function ContainersTable({
   initialContainers,
   initialStats,
 }) {
-  const [containers, setContainers] = useState(initialContainers);
-  const [stats, setStats] = useState(initialStats);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContainer, setEditingContainer] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [showStats, setShowStats] = useState(true);
 
-  const refreshStats = (list = containers) => {
-    const statusCounts = list.reduce((acc, container) => {
+  // Hook SWR pour les conteneurs avec cache
+  const { 
+    containers: serverContainers, 
+    isLoading, 
+    mutate 
+  } = useContainers();
+
+  // Hook pour les mutations
+  const { 
+    createContainer,
+    updateContainer,
+    deleteContainer,
+    isLoading: isMutating 
+  } = useContainerMutations();
+
+  // Utiliser les données du cache ou fallback sur les données initiales
+  const containers = useMemo(() => {
+    return serverContainers.length > 0 
+      ? serverContainers 
+      : (initialContainers || []);
+  }, [serverContainers, initialContainers]);
+
+  // Calculer les stats en temps réel
+  const stats = useMemo(() => {
+    const statusCounts = containers.reduce((acc, container) => {
       acc[container.status] = (acc[container.status] || 0) + 1;
       return acc;
     }, {});
 
-    const totalPackages = list.reduce((sum, container) => sum + (container.currentLoad || 0), 0);
-    const issuesCount = list.filter(container => 
+    const totalPackages = containers.reduce((sum, container) => sum + (container.currentLoad || 0), 0);
+    const issuesCount = containers.filter(container => 
       container.status === 'CANCELLED'
     ).length;
 
-    setStats({
-      total: list.length,
+    return {
+      total: containers.length,
       inTransit: statusCounts.IN_TRANSIT || 0,
       delivered: statusCounts.DELIVERED || 0,
       preparation: statusCounts.PREPARATION || 0,
       totalPackages,
       issues: issuesCount,
-    });
-  };
+    };
+  }, [containers]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingContainer(null);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleEdit = (container) => {
+  const handleEdit = useCallback((container) => {
     setEditingContainer(container);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleSave = async (form) => {
-    try {
-      setLoading(true);
-      let response;
-
-      if (editingContainer) {
-        // API PUT /api/containers/{id}
-        response = await fetch(`/api/containers/${editingContainer.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setContainers((prev) => {
-            const next = prev.map((container) =>
-              container.id === editingContainer.id
-                ? (data.container ?? { ...container, ...form })
-                : container
-            );
-            refreshStats(next);
-            return next;
-          });
-          toast.success(data.message || 'Conteneur modifié avec succès');
-          setIsDialogOpen(false);
-        } else {
-          const error = await response.json();
-          toast.error(error.message || 'Erreur lors de la modification');
-        }
-      } else {
-        // API POST /api/containers
-        response = await fetch('/api/containers', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(form),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const created = data.container ?? { 
-            ...form, 
-            id: Date.now(), 
-            containerNumber: `CNT${Date.now()}`,
-            currentLoad: 0,
-            currentWeight: 0
-          };
-          setContainers((prev) => {
-            const next = [...prev, created];
-            refreshStats(next);
-            return next;
-          });
-          toast.success(data.message || 'Conteneur créé avec succès');
-          setIsDialogOpen(false);
-        } else {
-          const error = await response.json();
-          toast.error(error.message || 'Erreur lors de la création');
-        }
-      }
-    } catch (err) {
-      console.error('Erreur lors de la sauvegarde:', err);
-      toast.error('Erreur de connexion');
-    } finally {
-      setLoading(false);
+  const handleSave = useCallback(async (form) => {
+    let result;
+    
+    if (editingContainer) {
+      result = await updateContainer(editingContainer.id, form);
+    } else {
+      result = await createContainer(form);
     }
-  };
 
-  const handleDelete = async (container) => {
+    if (result.success) {
+      setIsDialogOpen(false);
+      setEditingContainer(null);
+      await mutate(); // Rafraîchir le cache
+    }
+  }, [editingContainer, createContainer, updateContainer, mutate]);
+
+  const handleDelete = useCallback(async (container) => {
     if (!window.confirm(
       `Supprimer le conteneur ${container.containerNumber} ? Cette action supprimera aussi tous les colis associés.`
     )) return;
 
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/containers/${container.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setContainers((prev) => {
-          const next = prev.filter((c) => c.id !== container.id);
-          refreshStats(next);
-          return next;
-        });
-        toast.success(data.message || 'Conteneur supprimé avec succès');
-      } else {
-        const error = await response.json();
-        toast.error(error.message || 'Erreur lors de la suppression');
-      }
-    } catch (err) {
-      console.error('Erreur suppression:', err);
-      toast.error('Erreur de connexion');
-    } finally {
-      setLoading(false);
+    const result = await deleteContainer(container.id);
+    if (result.success) {
+      await mutate(); // Rafraîchir le cache
     }
-  };
+  }, [deleteContainer, mutate]);
+
+  const handleRefresh = useCallback(async () => {
+    toast.promise(
+      mutate(),
+      {
+        loading: "Actualisation en cours...",
+        success: "Données actualisées avec succès",
+        error: "Erreur lors de l'actualisation",
+      }
+    );
+  }, [mutate]);
 
   const handleView = (container) => {
     toast.info(
@@ -265,7 +222,9 @@ export function ContainersTable({
         onAdd={handleAdd}
         onExport={handleExport}
         onImport={handleImport}
+        onRefresh={handleRefresh}
         addButtonText="Nouveau Conteneur"
+        loading={isLoading}
         customActions={[
           {
             label: showStats ? "Masquer Stats" : "Voir Stats",
@@ -281,7 +240,7 @@ export function ContainersTable({
         onClose={() => setIsDialogOpen(false)}
         container={editingContainer}
         onSave={handleSave}
-        loading={loading}
+        loading={isMutating}
       />
     </div>
   );

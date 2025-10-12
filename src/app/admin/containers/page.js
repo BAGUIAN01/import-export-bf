@@ -17,14 +17,11 @@ import { PageTitle } from "@/components/layout/admin/page-title";
 
 async function getContainersData(session) {
   try {
-
+    // Récupérer les conteneurs avec le compte de packages
     const containers = await prisma.container.findMany({
       include: {
-        packages: {
-          select: {
-            id: true,
-            status: true,
-          },
+        _count: {
+          select: { packages: true },
         },
       },
       orderBy: {
@@ -32,6 +29,12 @@ async function getContainersData(session) {
       },
     });
 
+    // Ajouter le comptage réel des packages à chaque conteneur
+    const containersWithCount = containers.map((container) => ({
+      ...container,
+      currentLoad: container._count.packages, // Mettre à jour avec le vrai compte
+      packagesCount: container._count.packages,
+    }));
 
     const [total, statusCounts] = await Promise.all([
       prisma.container.count(),
@@ -43,9 +46,9 @@ async function getContainersData(session) {
       }),
     ]);
 
-
-    const totalPackages = containers.reduce((sum, container) => {
-      return sum + (container.currentLoad || 0);
+    // Calculer le total de packages avec le vrai compte
+    const totalPackages = containersWithCount.reduce((sum, container) => {
+      return sum + (container.packagesCount || 0);
     }, 0);
 
     const statusMap = statusCounts.reduce((acc, item) => {
@@ -63,7 +66,7 @@ async function getContainersData(session) {
       byStatus: statusMap,
     };
 
-    return { containers, stats };
+    return { containers: containersWithCount, stats };
   } catch (error) {
     console.error('Erreur lors de la récupération des données:', error);
     throw error;

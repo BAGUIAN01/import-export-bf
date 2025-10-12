@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params; // Await params
 
     const container = await prisma.container.findUnique({
       where: { id },
@@ -91,6 +91,8 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       container: {
         ...container,
+        currentLoad: container.packages.length, // Mettre à jour avec le vrai compte
+        packagesCount: container.packages.length,
         _count: undefined,
       },
       stats,
@@ -107,7 +109,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params; // Await params
     const body = await request.json();
 
     // Vérifier que le conteneur existe

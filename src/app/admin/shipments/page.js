@@ -18,7 +18,35 @@ import { ShipmentsTable } from "@/components/modules/admin/shipments/shipments-t
 async function getShipmentsData(session) {
   // Shipments + relations minimales pour listing
   const shipments = await prisma.shipment.findMany({
-    include: {
+    select: {
+      id: true,
+      shipmentNumber: true,
+      createdAt: true,
+      updatedAt: true,
+      
+      // Champs agrégés importants pour les stats
+      packagesCount: true,
+      totalQuantity: true,
+      subtotal: true,
+      pickupFeeTotal: true,
+      insuranceFeeTotal: true,
+      customsFeeTotal: true,
+      discountTotal: true,
+      totalAmount: true,
+      paidAmount: true,
+      paymentStatus: true,
+      paymentMethod: true,
+      paidAt: true,
+      
+      // Autres infos
+      pickupAddress: true,
+      pickupDate: true,
+      pickupTime: true,
+      deliveryAddress: true,
+      specialInstructions: true,
+      notes: true,
+      
+      // Relations
       client: {
         select: {
           id: true, firstName: true, lastName: true, clientCode: true,

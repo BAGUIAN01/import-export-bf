@@ -81,7 +81,7 @@ export default async function ShipmentPage({ params }) {
   if (!session) redirect("/auth/signin");
   if (!["ADMIN", "STAFF", "AGENT"].includes(session.user.role)) redirect("/unauthorized");
 
-  const { id } = params || {};
+  const { id } = await params; // Await params
   const data = await getShipmentData(id);
   if (!data) return notFound();
 

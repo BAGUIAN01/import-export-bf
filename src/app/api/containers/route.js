@@ -51,6 +51,7 @@ export async function GET(request) {
     const containersWithCount = containers.map((container) => ({
       ...container,
       packagesCount: container._count.packages,
+      currentLoad: container._count.packages, // Synchroniser avec le vrai compte
       _count: undefined,
     }));
 
@@ -71,6 +72,12 @@ export async function GET(request) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+      // Calculer le total de packages
+      const totalPackages = allContainers.reduce(
+        (sum, c) => sum + (c._count.packages || 0), 
+        0
+      );
+
       stats = {
         total: allContainers.length,
         preparation: allContainers.filter((c) => c.status === "PREPARATION")
@@ -79,6 +86,8 @@ export async function GET(request) {
         inTransit: allContainers.filter((c) => c.status === "IN_TRANSIT")
           .length,
         delivered: allContainers.filter((c) => c.status === "DELIVERED").length,
+        issues: allContainers.filter((c) => c.status === "CANCELLED").length,
+        totalPackages,
         newThisMonth: allContainers.filter(
           (c) => new Date(c.createdAt) >= thirtyDaysAgo
         ).length,

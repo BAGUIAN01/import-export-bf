@@ -23,6 +23,89 @@ const derivePaymentStatus = (totalAmount, paidAmount) => {
   return "PAID";
 };
 
+// Fonction pour recalculer les agrégats d'un shipment
+async function recalcShipmentAggregates(shipmentId) {
+  if (!shipmentId) return;
+
+  const pkgs = await prisma.package.findMany({
+    where: { shipmentId },
+    select: {
+      totalQuantity: true,
+      basePrice: true,
+      pickupFee: true,
+      insuranceFee: true,
+      customsFee: true,
+      discount: true,
+      totalAmount: true,
+      paidAmount: true,
+      paidAt: true,
+      paymentMethod: true,
+    },
+  });
+
+  const packagesCount = pkgs.length;
+  const totalQuantity = pkgs.reduce((s, p) => s + (p.totalQuantity || 0), 0);
+  const subtotal = pkgs.reduce((s, p) => s + (p.basePrice || 0), 0);
+  const pickupFeeTotal = pkgs.reduce((s, p) => s + (p.pickupFee || 0), 0);
+  const insuranceFeeTotal = pkgs.reduce((s, p) => s + (p.insuranceFee || 0), 0);
+  const customsFeeTotal = pkgs.reduce((s, p) => s + (p.customsFee || 0), 0);
+  const discountTotal = pkgs.reduce((s, p) => s + (p.discount || 0), 0);
+  const totalAmount = pkgs.reduce((s, p) => s + (p.totalAmount || 0), 0);
+  
+  // IMPORTANT: Calculer aussi le montant total payé à partir des colis
+  const paidAmount = pkgs.reduce((s, p) => s + (p.paidAmount || 0), 0);
+  
+  const paymentStatus = derivePaymentStatus(totalAmount, paidAmount);
+  
+  // Trouver la date de paiement la plus récente et le dernier moyen de paiement utilisé
+  const paidPackages = pkgs.filter(p => p.paidAt);
+  let paidAt = null;
+  let paymentMethod = null;
+  
+  if (paidPackages.length > 0) {
+    // Trier par date de paiement décroissante
+    const sortedByDate = paidPackages.sort((a, b) => 
+      new Date(b.paidAt) - new Date(a.paidAt)
+    );
+    paidAt = sortedByDate[0].paidAt;
+    paymentMethod = sortedByDate[0].paymentMethod;
+  }
+
+  console.log(`🔄 Recalcul agrégats shipment ${shipmentId}:`, {
+    packagesCount,
+    totalAmount,
+    paidAmount,
+    paymentStatus,
+    paidAt,
+    paymentMethod,
+    packages: pkgs.map(p => ({ 
+      totalAmount: p.totalAmount, 
+      paidAmount: p.paidAmount, 
+      paidAt: p.paidAt 
+    }))
+  });
+
+  await prisma.shipment.update({
+    where: { id: shipmentId },
+    data: {
+      packagesCount,
+      totalQuantity,
+      subtotal,
+      pickupFeeTotal,
+      insuranceFeeTotal,
+      customsFeeTotal,
+      discountTotal,
+      totalAmount,
+      paidAmount,
+      paymentStatus,
+      paidAt,
+      paymentMethod,
+    },
+  });
+  
+  console.log(`✅ Shipment ${shipmentId} mis à jour avec succès`);
+}
+
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -273,8 +356,16 @@ export async function PUT(request, { params }) {
         client: true,
         container: true,
         user: true,
+        shipment: {
+          select: { id: true },
+        },
       },
     });
+
+    // Recalculer les agrégats du shipment si le colis est lié à une expédition
+    if (updatedPackage.shipmentId) {
+      await recalcShipmentAggregates(updatedPackage.shipmentId);
+    }
 
     // Audit non bloquant
     try {
@@ -331,11 +422,22 @@ export async function DELETE(request, { params }) {
         invoiceItems: true,
         payments: true,
       },
+      select: {
+        id: true,
+        packageNumber: true,
+        clientId: true,
+        shipmentId: true,
+        invoiceItems: true,
+        payments: true,
+      },
     });
 
     if (!packageToDelete) {
       return NextResponse.json({ error: "Colis non trouvé" }, { status: 404 });
     }
+    
+    // Sauvegarder le shipmentId avant suppression
+    const shipmentId = packageToDelete.shipmentId;
 
     // Empêcher la suppression si des paiements existent
     if (packageToDelete.payments.length > 0) {
@@ -381,13 +483,18 @@ export async function DELETE(request, { params }) {
             details: JSON.stringify({
               packageNumber: packageToDelete.packageNumber,
               clientId: packageToDelete.clientId,
+              shipmentId,
             }),
           },
         });
       } catch (auditError) {
         console.warn("Erreur lors de la création du log d'audit:", auditError);
-        // Continue sans bloquer la réponse
       }
+    }
+
+    // Recalculer les agrégats du shipment si le colis était lié à une expédition
+    if (shipmentId) {
+      await recalcShipmentAggregates(shipmentId);
     }
 
     return NextResponse.json({

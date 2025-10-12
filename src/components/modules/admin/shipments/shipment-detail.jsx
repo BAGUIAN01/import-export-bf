@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useShipmentDetails, useShipmentMutations } from "@/hooks/use-shipments";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -152,80 +154,79 @@ export default function ShipmentDetail({
   initialClients,
 }) {
   const router = useRouter();
-  const [shipment, setShipment] = useState(initialShipment);
   const [containers] = useState(initialContainers || []);
   const [clients] = useState(initialClients || []);
-  const [loading, setLoading] = useState(false);
 
   // Dialogs
   const [isPkgDialogOpen, setPkgDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState(null);
   const [addingMode, setAddingMode] = useState(false);
 
-  const refresh = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/shipments/${shipment.id}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setShipment(data.shipment);
-      toast.success("Données actualisées");
-    } catch {
-      toast.error("Impossible d'actualiser l'expédition");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Hook SWR pour les détails du shipment avec cache
+  const { 
+    shipment, 
+    packages, 
+    isLoading, 
+    refresh 
+  } = useShipmentDetails(initialShipment?.id);
 
-  const handleDeleteShipment = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/shipments/${shipment.id}`, { method: "DELETE" });
-      if (res.ok) {
-        toast.success("Expédition supprimée");
-        router.push("/admin/shipments");
-      } else {
-        const e = await res.json().catch(() => ({}));
-        toast.error(e?.error || "Erreur lors de la suppression");
+  // Hook pour les mutations
+  const { 
+    deleteShipment, 
+    isLoading: isMutating 
+  } = useShipmentMutations();
+
+  // Utiliser les données du cache ou fallback sur les données initiales
+  const currentShipment = shipment || initialShipment;
+  const currentPackages = packages.length > 0 ? packages : initialShipment?.packages || [];
+
+  const handleRefresh = useCallback(async () => {
+    toast.promise(
+      refresh(),
+      {
+        loading: "Actualisation en cours...",
+        success: "Données actualisées avec succès",
+        error: "Erreur lors de l'actualisation",
       }
-    } catch {
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
-    }
-  };
+    );
+  }, [refresh]);
 
-  const openAddPackages = () => {
+  const handleDeleteShipment = useCallback(async () => {
+    const result = await deleteShipment(currentShipment.id);
+    if (result.success) {
+      router.push("/admin/shipments");
+    }
+  }, [deleteShipment, currentShipment.id, router]);
+
+  const openAddPackages = useCallback(() => {
     setAddingMode(true);
     setEditingPackage(null);
     setPkgDialogOpen(true);
-  };
+  }, []);
 
-  const openEditPackage = (pkg) => {
+  const openEditPackage = useCallback((pkg) => {
     setAddingMode(false);
     setEditingPackage(pkg);
     setPkgDialogOpen(true);
-  };
+  }, []);
 
-  const handleSavePackage = async (payload) => {
+  const handleSavePackage = useCallback(async (payload) => {
     try {
-      setLoading(true);
-
       if (addingMode) {
         const arrayBody = (payload.packages || []).map((p) => ({
           ...p,
-          clientId: shipment.client.id,
-          containerId: payload.containerId || shipment.containerId || null,
-          pickupAddress: payload.sharedData?.pickupAddress || shipment.pickupAddress || null,
-          pickupDate: payload.sharedData?.pickupDate || shipment.pickupDate || null,
-          pickupTime: payload.sharedData?.pickupTime || shipment.pickupTime || null,
-          deliveryAddress: payload.sharedData?.deliveryAddress || shipment.deliveryAddress || null,
+          clientId: currentShipment.client.id,
+          containerId: payload.containerId || currentShipment.containerId || null,
+          pickupAddress: payload.sharedData?.pickupAddress || currentShipment.pickupAddress || null,
+          pickupDate: payload.sharedData?.pickupDate || currentShipment.pickupDate || null,
+          pickupTime: payload.sharedData?.pickupTime || currentShipment.pickupTime || null,
+          deliveryAddress: payload.sharedData?.deliveryAddress || currentShipment.deliveryAddress || null,
           specialInstructions:
-            payload.sharedData?.specialInstructions || shipment.specialInstructions || null,
+            payload.sharedData?.specialInstructions || currentShipment.specialInstructions || null,
           paidAmount: Number(payload.sharedData?.paidAmount || 0),
           paymentMethod: payload.sharedData?.paymentMethod || null,
           paidAt: payload.sharedData?.paidAt || null,
-          shipmentId: shipment.id,
+          shipmentId: currentShipment.id,
         }));
 
         const res = await fetch("/api/packages", {
@@ -237,11 +238,17 @@ export default function ShipmentDetail({
         if (!res.ok) {
           const e = await res.json().catch(() => ({}));
           toast.error(e?.error || "Erreur création colis");
-        } else {
-          toast.success("Colis ajouté(s) à l'expédition");
-          setPkgDialogOpen(false);
-          await refresh();
+          return;
         }
+        
+        toast.success("Colis ajouté(s) à l'expédition");
+        setPkgDialogOpen(false);
+        
+        // Attendre un peu pour que le serveur termine le recalcul
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Forcer le rafraîchissement COMPLET du cache (pas de cache, force refetch)
+        await refresh();
       } else if (editingPackage) {
         const res = await fetch(`/api/packages/${editingPackage.id}`, {
           method: "PUT",
@@ -251,37 +258,44 @@ export default function ShipmentDetail({
         if (!res.ok) {
           const e = await res.json().catch(() => ({}));
           toast.error(e?.error || "Erreur modification colis");
-        } else {
-          toast.success("Colis modifié");
-          setPkgDialogOpen(false);
-          setEditingPackage(null);
-          await refresh();
+          return;
         }
-      }
-    } catch {
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeletePackage = async (pkg) => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/packages/${pkg.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        toast.error(e?.error || "Erreur suppression colis");
-      } else {
-        toast.success("Colis supprimé");
+        
+        toast.success("Colis modifié");
+        setPkgDialogOpen(false);
+        setEditingPackage(null);
+        
+        // Attendre un peu pour que le serveur termine le recalcul
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Rafraîchir le cache
         await refresh();
       }
     } catch {
       toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [addingMode, editingPackage, currentShipment, refresh]);
+
+  const handleDeletePackage = useCallback(async (pkg) => {
+    try {
+      const res = await fetch(`/api/packages/${pkg.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        toast.error(e?.error || "Erreur suppression colis");
+        return;
+      }
+      
+      toast.success("Colis supprimé");
+      
+      // Attendre un peu pour que le serveur termine le recalcul
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Rafraîchir le cache
+      await refresh();
+    } catch {
+      toast.error("Erreur de connexion");
+    }
+  }, [refresh]);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -289,21 +303,37 @@ export default function ShipmentDetail({
   };
 
   const headerStats = useMemo(() => {
-    const count = shipment.packages?.length || shipment.packagesCount || 0;
+    const count = currentPackages.length || currentShipment.packagesCount || 0;
     const qty =
-      shipment.totalQuantity ??
-      shipment.packages?.reduce((s, p) => s + (p.totalQuantity || 0), 0) ??
+      currentShipment.totalQuantity ??
+      currentPackages.reduce((s, p) => s + (p.totalQuantity || 0), 0) ??
       0;
-    const weight = shipment.packages?.reduce((s, p) => s + (parseFloat(p.weight) || 0), 0) ?? 0;
+    const weight = currentPackages.reduce((s, p) => s + (parseFloat(p.weight) || 0), 0) ?? 0;
     return { count, qty, weight };
-  }, [shipment]);
+  }, [currentShipment, currentPackages]);
 
   const paymentProgress = useMemo(() => {
-    const total = Number(shipment.totalAmount || 0);
-    const paid = Number(shipment.paidAmount || 0);
+    const total = Number(currentShipment.totalAmount || 0);
+    const paid = Number(currentShipment.paidAmount || 0);
     const percentage = total > 0 ? (paid / total) * 100 : 0;
     return { total, paid, percentage, remaining: total - paid };
-  }, [shipment.totalAmount, shipment.paidAmount]);
+  }, [currentShipment.totalAmount, currentShipment.paidAmount]);
+
+  // Affichage du loading skeleton si pas de shipment
+  if (!currentShipment) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50/50">
+        <div className="max-w-7xl mx-auto p-6 space-y-8">
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, idx) => (
+              <Skeleton key={idx} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50/50">
@@ -325,11 +355,11 @@ export default function ShipmentDetail({
               <div className="flex items-center gap-3">
                 <Button 
                   variant="secondary" 
-                  onClick={refresh} 
-                  disabled={loading}
+                  onClick={handleRefresh} 
+                  disabled={isLoading}
                   className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                   Actualiser
                 </Button>
                 
@@ -340,7 +370,7 @@ export default function ShipmentDetail({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => copyToClipboard(shipment.shipmentNumber)}>
+                    <DropdownMenuItem onClick={() => copyToClipboard(currentShipment.shipmentNumber)}>
                       <Copy className="h-4 w-4 mr-2" />
                       Copier le numéro
                     </DropdownMenuItem>
@@ -364,12 +394,12 @@ export default function ShipmentDetail({
                         <AlertDialogHeader>
                           <AlertDialogTitle>Supprimer l'expédition</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Êtes-vous sûr de vouloir supprimer l'expédition <strong>{shipment.shipmentNumber}</strong> et tous ses colis ? Cette action est irréversible.
+                            Êtes-vous sûr de vouloir supprimer l'expédition <strong>{currentShipment.shipmentNumber}</strong> et tous ses colis ? Cette action est irréversible.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeleteShipment} className="bg-red-600 hover:bg-red-700">
+                          <AlertDialogAction onClick={handleDeleteShipment} className="bg-red-600 hover:bg-red-700" disabled={isMutating}>
                             Supprimer définitivement
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -381,20 +411,20 @@ export default function ShipmentDetail({
             </div>
 
             <div className="text-white">
-              <h1 className="text-4xl font-bold mb-2">{shipment.shipmentNumber}</h1>
+              <h1 className="text-4xl font-bold mb-2">{currentShipment.shipmentNumber}</h1>
               <p className="text-white/80 text-lg">
-                Créée le {formatDateTime(shipment.createdAt)}
+                Créée le {formatDateTime(currentShipment.createdAt)}
               </p>
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
                   <User className="h-4 w-4" />
                   <span className="font-medium">
-                    {shipment.client?.firstName} {shipment.client?.lastName}
+                    {currentShipment.client?.firstName} {currentShipment.client?.lastName}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
                   <Target className="h-4 w-4" />
-                  <span>{shipment.client?.recipientCity || '—'}</span>
+                  <span>{currentShipment.client?.recipientCity || '—'}</span>
                 </div>
               </div>
             </div>
@@ -422,7 +452,7 @@ export default function ShipmentDetail({
           <StatCard
             icon={Euro}
             title="Montant"
-            value={currency(shipment.totalAmount)}
+            value={currency(currentShipment.totalAmount)}
             subtitle={paymentProgress.remaining > 0 ? `Reste ${currency(paymentProgress.remaining)}` : 'Soldé'}
             color="from-green-500 to-green-600"
           />
@@ -431,7 +461,7 @@ export default function ShipmentDetail({
             icon={CreditCard}
             title="Paiement"
             value={`${Math.round(paymentProgress.percentage)}%`}
-            subtitle={<PaymentBadge status={shipment.paymentStatus} />}
+            subtitle={<PaymentBadge status={currentShipment.paymentStatus} />}
             color="from-purple-500 to-purple-600"
             progress={paymentProgress.percentage}
           />
@@ -454,20 +484,20 @@ export default function ShipmentDetail({
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Client</p>
                   <p className="text-lg font-bold text-gray-900">
-                    {shipment.client?.firstName} {shipment.client?.lastName}
+                    {currentShipment.client?.firstName} {currentShipment.client?.lastName}
                   </p>
-                  <p className="text-sm text-gray-500">{shipment.client?.clientCode}</p>
+                  <p className="text-sm text-gray-500">{currentShipment.client?.clientCode}</p>
                 </div>
 
                 <div className="flex flex-col space-y-3">
                   <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100">
                     <Phone className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm font-medium">{shipment.client?.phone}</span>
+                    <span className="text-sm font-medium">{currentShipment.client?.phone}</span>
                   </div>
-                  {shipment.client?.email && (
+                  {currentShipment.client?.email && (
                     <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100">
                       <Mail className="h-4 w-4 text-green-500" />
-                      <span className="text-sm font-medium">{shipment.client.email}</span>
+                      <span className="text-sm font-medium">{currentShipment.client.email}</span>
                     </div>
                   )}
                 </div>
@@ -481,16 +511,16 @@ export default function ShipmentDetail({
                   Destinataire au Burkina Faso
                 </p>
                 <div className="space-y-3">
-                  <p className="font-semibold text-gray-900">{shipment.client?.recipientName}</p>
+                  <p className="font-semibold text-gray-900">{currentShipment.client?.recipientName}</p>
                   <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100">
                     <Phone className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm font-medium">{shipment.client?.recipientPhone}</span>
+                    <span className="text-sm font-medium">{currentShipment.client?.recipientPhone}</span>
                   </div>
                   <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-100">
                     <MapPinIcon className="h-4 w-4 text-red-500 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium">{shipment.client?.recipientAddress}</p>
-                      <p className="text-gray-600">{shipment.client?.recipientCity}</p>
+                      <p className="font-medium">{currentShipment.client?.recipientAddress}</p>
+                      <p className="text-gray-600">{currentShipment.client?.recipientCity}</p>
                     </div>
                   </div>
                 </div>
@@ -518,44 +548,44 @@ export default function ShipmentDetail({
                       <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100">
                         <div>
                           <p className="font-semibold text-gray-900">
-                            {shipment.container?.name || shipment.container?.containerNumber || "Non assigné"}
+                            {currentShipment.container?.name || currentShipment.container?.containerNumber || "Non assigné"}
                           </p>
-                          {shipment.container?.status && (
+                          {currentShipment.container?.status && (
                             <div className="mt-2">
-                              <StatusBadge status={shipment.container.status} />
+                              <StatusBadge status={currentShipment.container.status} />
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {shipment.container?.departureDate && (
+                    {currentShipment.container?.departureDate && (
                       <div>
                         <p className="text-sm font-medium text-gray-600 mb-2">Date de départ</p>
                         <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100">
                           <Calendar className="h-4 w-4 text-indigo-500" />
-                          <span className="font-medium">{formatDate(shipment.container.departureDate)}</span>
+                          <span className="font-medium">{formatDate(currentShipment.container.departureDate)}</span>
                         </div>
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-4">
-                    {shipment.pickupAddress && (
+                    {currentShipment.pickupAddress && (
                       <div>
                         <p className="text-sm font-medium text-gray-600 mb-2">Ramassage</p>
                         <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-100">
                           <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
-                          <span className="text-sm font-medium">{shipment.pickupAddress}</span>
+                          <span className="text-sm font-medium">{currentShipment.pickupAddress}</span>
                         </div>
                       </div>
                     )}
 
-                    {shipment.specialInstructions && (
+                    {currentShipment.specialInstructions && (
                       <div>
                         <p className="text-sm font-medium text-gray-600 mb-2">Instructions</p>
                         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                          <p className="text-sm text-amber-800">{shipment.specialInstructions}</p>
+                          <p className="text-sm text-amber-800">{currentShipment.specialInstructions}</p>
                         </div>
                       </div>
                     )}
@@ -584,7 +614,21 @@ export default function ShipmentDetail({
                 </div>
               </CardHeader>
               <CardContent>
-                {(shipment.packages || []).length === 0 ? (
+                {isLoading && currentPackages.length === 0 ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, idx) => (
+                      <div key={idx} className="p-6 bg-white border rounded-xl">
+                        <div className="flex items-center gap-4">
+                          <Skeleton className="w-12 h-12 rounded-xl" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-6 w-48" />
+                            <Skeleton className="h-4 w-96" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : currentPackages.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                       <Package className="h-8 w-8 text-gray-400" />
@@ -597,7 +641,7 @@ export default function ShipmentDetail({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {shipment.packages.map((pkg, index) => (
+                    {currentPackages.map((pkg, index) => (
                       <div key={pkg.id} className="group p-6 bg-white border border-gray-100 rounded-xl hover:shadow-lg transition-all duration-200 hover:border-indigo-200">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
@@ -738,11 +782,11 @@ export default function ShipmentDetail({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-blue-800 font-medium">Statut conteneur</span>
-                  <StatusBadge status={shipment.container?.status || 'REGISTERED'} />
+                  <StatusBadge status={currentShipment.container?.status || 'REGISTERED'} />
                 </div>
                 <div className="mt-4 p-3 bg-blue-100 rounded-lg">
                   <p className="text-sm text-blue-800 font-medium">
-                    📦 Expédition prête pour {shipment.container?.status === 'PREPARATION' ? 'chargement' : 'transport'}
+                    📦 Expédition prête pour {currentShipment.container?.status === 'PREPARATION' ? 'chargement' : 'transport'}
                   </p>
                 </div>
               </div>
@@ -759,11 +803,22 @@ export default function ShipmentDetail({
           setEditingPackage(null);
           setAddingMode(false);
         }}
-        package={editingPackage || null}
+        package={editingPackage}
+        prefilledClient={addingMode ? currentShipment.client : null}
+        prefilledContainer={addingMode ? currentShipment.container : null}
+        prefilledSharedData={addingMode ? {
+          pickupAddress: currentShipment.pickupAddress || currentShipment.client?.address,
+          pickupDate: currentShipment.pickupDate,
+          pickupTime: currentShipment.pickupTime,
+          deliveryAddress: currentShipment.deliveryAddress || currentShipment.client?.recipientAddress,
+          specialInstructions: currentShipment.specialInstructions,
+          paymentMethod: currentShipment.paymentMethod,
+        } : null}
         clients={clients}
         containers={containers}
         onSave={handleSavePackage}
-        loading={loading}
+        loading={isLoading || isMutating}
+        isAddingToShipment={addingMode}
       />
     </div>
   );

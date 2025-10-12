@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useClientDetails, useClientMutations } from "@/hooks/use-clients";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -180,73 +182,57 @@ export default function ClientDetail({
   userId
 }) {
   const router = useRouter();
-  const [client, setClient] = useState(initialClient);
-  const [stats, setStats] = useState(initialStats);
   const [containers] = useState(initialContainers);
   const [activity] = useState(initialActivity);
-  const [loading, setLoading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isBordereauDialogOpen, setIsBordereauDialogOpen] = useState(false);
 
-  const refresh = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/clients/${client.id}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setClient(data.client);
-      setStats(data.stats || {});
-      toast.success("Données actualisées");
-    } catch {
-      toast.error("Impossible d'actualiser les données");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Hook SWR pour les détails du client avec cache
+  const { 
+    client, 
+    packages, 
+    stats, 
+    isLoading, 
+    refresh 
+  } = useClientDetails(initialClient?.id);
 
-  const handleDeleteClient = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
-      if (res.ok) {
-        toast.success("Client supprimé");
-        router.push("/admin/clients");
-      } else {
-        const e = await res.json().catch(() => ({}));
-        toast.error(e?.error || "Erreur lors de la suppression");
+  // Hook pour les mutations
+  const { 
+    updateClient, 
+    deleteClient, 
+    isLoading: isMutating 
+  } = useClientMutations();
+
+  // Utiliser les données du cache ou fallback sur les données initiales
+  const currentClient = client || initialClient;
+  const currentStats = stats || initialStats;
+  const currentPackages = packages.length > 0 ? packages : initialClient?.packages || [];
+
+  const handleRefresh = useCallback(async () => {
+    toast.promise(
+      refresh(),
+      {
+        loading: "Actualisation en cours...",
+        success: "Données actualisées avec succès",
+        error: "Erreur lors de l'actualisation",
       }
-    } catch {
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
-    }
-  };
+    );
+  }, [refresh]);
 
-  const handleEditClient = async (payload) => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/clients/${client.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setClient({ ...client, ...data.client });
-        toast.success("Client modifié avec succès");
-        setIsEditDialogOpen(false);
-        await refresh();
-      } else {
-        const e = await res.json().catch(() => ({}));
-        toast.error(e?.error || "Erreur lors de la modification");
-      }
-    } catch {
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
+  const handleDeleteClient = useCallback(async () => {
+    const result = await deleteClient(currentClient.id);
+    if (result.success) {
+      router.push("/admin/clients");
     }
-  };
+  }, [deleteClient, currentClient.id, router]);
+
+  const handleEditClient = useCallback(async (payload) => {
+    const result = await updateClient(currentClient.id, payload);
+    if (result.success) {
+      setIsEditDialogOpen(false);
+      await refresh(); // Rafraîchir le cache
+    }
+  }, [updateClient, currentClient.id, refresh]);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -255,17 +241,33 @@ export default function ClientDetail({
 
   const clientStats = useMemo(() => {
     return {
-      totalSpent: stats.totalSpent || 0,
-      packagesCount: stats.packagesCount || 0,
-      avgOrderValue: stats.avgOrderValue || 0,
-      lastOrderDate: stats.lastOrderDate
+      totalSpent: currentStats.totalSpent || 0,
+      packagesCount: currentStats.packagesCount || 0,
+      avgOrderValue: currentStats.avgOrderValue || 0,
+      lastOrderDate: currentStats.lastOrderDate
     };
-  }, [stats]);
+  }, [currentStats]);
 
   // Vérification des permissions pour les actions
   const canEdit = ["ADMIN", "STAFF"].includes(userRole);
   const canDelete = userRole === "ADMIN";
   const canCreatePackage = ["ADMIN", "STAFF", "AGENT"].includes(userRole);
+
+  // Affichage du loading skeleton si pas de client
+  if (!currentClient) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50/50">
+        <div className="max-w-7xl mx-auto p-6 space-y-8">
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, idx) => (
+              <Skeleton key={idx} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50/50">
@@ -287,11 +289,11 @@ export default function ClientDetail({
               <div className="flex items-center gap-3">
                 <Button 
                   variant="secondary" 
-                  onClick={refresh} 
-                  disabled={loading}
+                  onClick={handleRefresh} 
+                  disabled={isLoading}
                   className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                   Actualiser
                 </Button>
                 
@@ -312,7 +314,7 @@ export default function ClientDetail({
                       <FileText className="h-4 w-4 mr-2" />
                       Créer un bordereau
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => copyToClipboard(client.clientCode)}>
+                    <DropdownMenuItem onClick={() => copyToClipboard(currentClient.clientCode)}>
                       <Copy className="h-4 w-4 mr-2" />
                       Copier le code client
                     </DropdownMenuItem>
@@ -334,13 +336,13 @@ export default function ClientDetail({
                             <AlertDialogHeader>
                               <AlertDialogTitle>Supprimer le client</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Êtes-vous sûr de vouloir supprimer le client <strong>{client.firstName} {client.lastName}</strong> ? 
+                                Êtes-vous sûr de vouloir supprimer le client <strong>{currentClient.firstName} {currentClient.lastName}</strong> ? 
                                 Cette action supprimera également tous ses colis associés et est irréversible.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleDeleteClient} className="bg-red-600 hover:bg-red-700">
+                              <AlertDialogAction onClick={handleDeleteClient} className="bg-red-600 hover:bg-red-700" disabled={isMutating}>
                                 Supprimer définitivement
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -356,29 +358,29 @@ export default function ClientDetail({
             <div className="text-white">
               <div className="flex items-center gap-4 mb-2">
                 <h1 className="text-4xl font-bold">
-                  {client.firstName} {client.lastName}
+                  {currentClient.firstName} {currentClient.lastName}
                 </h1>
-                <StatusBadge isActive={client.isActive} isVip={client.isVip} />
+                <StatusBadge isActive={currentClient.isActive} isVip={currentClient.isVip} />
               </div>
               <p className="text-white/80 text-lg mb-2">
-                Code client: {client.clientCode}
+                Code client: {currentClient.clientCode}
               </p>
               <p className="text-white/70">
-                Client depuis le {formatDate(client.createdAt)}
+                Client depuis le {formatDate(currentClient.createdAt)}
               </p>
               <div className="flex items-center gap-4 mt-4">
                 <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
                   <Phone className="h-4 w-4" />
-                  <span className="font-medium">{client.phone}</span>
+                  <span className="font-medium">{currentClient.phone}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
                   <MapPin className="h-4 w-4" />
-                  <span>{client.city}, {client.country}</span>
+                  <span>{currentClient.city}, {currentClient.country}</span>
                 </div>
-                {client.company && (
+                {currentClient.company && (
                   <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
                     <Building className="h-4 w-4" />
-                    <span>{client.company}</span>
+                    <span>{currentClient.company}</span>
                   </div>
                 )}
               </div>
@@ -426,7 +428,7 @@ export default function ClientDetail({
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="packages">Colis ({client.packages?.length || 0})</TabsTrigger>
+            <TabsTrigger value="packages">Colis ({currentPackages.length || 0})</TabsTrigger>
             <TabsTrigger value="recipient">Destinataire</TabsTrigger>
             <TabsTrigger value="activity">Activité</TabsTrigger>
           </TabsList>
@@ -445,41 +447,41 @@ export default function ClientDetail({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Prénom</p>
-                      <p className="font-semibold">{client.firstName}</p>
+                      <p className="font-semibold">{currentClient.firstName}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-600">Nom</p>
-                      <p className="font-semibold">{client.lastName}</p>
+                      <p className="font-semibold">{currentClient.lastName}</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <Phone className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">{client.phone}</span>
+                      <span className="font-medium">{currentClient.phone}</span>
                     </div>
-                    {client.email && (
+                    {currentClient.email && (
                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <Mail className="h-4 w-4 text-green-500" />
-                        <span className="font-medium">{client.email}</span>
+                        <span className="font-medium">{currentClient.email}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <MapPin className="h-4 w-4 text-red-500" />
                       <div>
-                        <p className="font-medium">{client.address}</p>
-                        <p className="text-sm text-gray-600">{client.city}, {client.country}</p>
-                        {client.postalCode && (
-                          <p className="text-sm text-gray-500">{client.postalCode}</p>
+                        <p className="font-medium">{currentClient.address}</p>
+                        <p className="text-sm text-gray-600">{currentClient.city}, {currentClient.country}</p>
+                        {currentClient.postalCode && (
+                          <p className="text-sm text-gray-500">{currentClient.postalCode}</p>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {client.notes && (
+                  {currentClient.notes && (
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                       <p className="text-sm font-medium text-amber-800 mb-1">Notes internes</p>
-                      <p className="text-sm text-amber-700">{client.notes}</p>
+                      <p className="text-sm text-amber-700">{currentClient.notes}</p>
                     </div>
                   )}
                 </CardContent>
@@ -496,33 +498,33 @@ export default function ClientDetail({
                 <CardContent className="space-y-4">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Nom complet</p>
-                    <p className="text-lg font-bold text-gray-900">{client.recipientName}</p>
+                    <p className="text-lg font-bold text-gray-900">{currentClient.recipientName}</p>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <Phone className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">{client.recipientPhone}</span>
+                      <span className="font-medium">{currentClient.recipientPhone}</span>
                     </div>
-                    {client.recipientEmail && (
+                    {currentClient.recipientEmail && (
                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <Mail className="h-4 w-4 text-green-500" />
-                        <span className="font-medium">{client.recipientEmail}</span>
+                        <span className="font-medium">{currentClient.recipientEmail}</span>
                       </div>
                     )}
                     <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                       <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
                       <div>
-                        <p className="font-medium">{client.recipientAddress}</p>
-                        <p className="text-sm text-gray-600">{client.recipientCity}</p>
+                        <p className="font-medium">{currentClient.recipientAddress}</p>
+                        <p className="text-sm text-gray-600">{currentClient.recipientCity}</p>
                       </div>
                     </div>
                   </div>
 
-                  {client.recipientRelation && (
+                  {currentClient.recipientRelation && (
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm font-medium text-blue-800">Relation</p>
-                      <p className="text-blue-700">{client.recipientRelation}</p>
+                      <p className="text-blue-700">{currentClient.recipientRelation}</p>
                     </div>
                   )}
                 </CardContent>
@@ -534,21 +536,37 @@ export default function ClientDetail({
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold">Historique des colis</h3>
               {canCreatePackage && (
-                <Button onClick={() => router.push(`/admin/packages/new?clientId=${client.id}`)}>
+                <Button onClick={() => router.push(`/admin/packages/new?clientId=${currentClient.id}`)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nouveau colis
                 </Button>
               )}
             </div>
 
-            {(!client.packages || client.packages.length === 0) ? (
+            {isLoading && currentPackages.length === 0 ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, idx) => (
+                  <Card key={idx} className="border-0 shadow-sm">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="w-12 h-12 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-6 w-48" />
+                          <Skeleton className="h-4 w-96" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : currentPackages.length === 0 ? (
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-12 text-center">
                   <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun colis</h3>
                   <p className="text-gray-500 mb-6">Ce client n'a encore envoyé aucun colis</p>
                   {canCreatePackage && (
-                    <Button onClick={() => router.push(`/admin/packages/new?clientId=${client.id}`)}>
+                    <Button onClick={() => router.push(`/admin/packages/new?clientId=${currentClient.id}`)}>
                       <Plus className="h-4 w-4 mr-2" />
                       Créer le premier colis
                     </Button>
@@ -557,7 +575,7 @@ export default function ClientDetail({
               </Card>
             ) : (
               <div className="space-y-4">
-                {client.packages.map((pkg) => (
+                {currentPackages.map((pkg) => (
                   <Card key={pkg.id} className="border-0 shadow-sm hover:shadow-lg transition-all duration-200">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -610,12 +628,12 @@ export default function ClientDetail({
                     <div className="space-y-3">
                       <div>
                         <p className="text-sm text-gray-600">Nom complet</p>
-                        <p className="font-medium text-lg">{client.recipientName}</p>
+                        <p className="font-medium text-lg">{currentClient.recipientName}</p>
                       </div>
-                      {client.recipientRelation && (
+                      {currentClient.recipientRelation && (
                         <div>
                           <p className="text-sm text-gray-600">Relation avec l'expéditeur</p>
-                          <p className="font-medium">{client.recipientRelation}</p>
+                          <p className="font-medium">{currentClient.recipientRelation}</p>
                         </div>
                       )}
                     </div>
@@ -628,15 +646,15 @@ export default function ClientDetail({
                         <Phone className="h-4 w-4 text-blue-500" />
                         <div>
                           <p className="text-sm text-gray-600">Téléphone</p>
-                          <p className="font-medium">{client.recipientPhone}</p>
+                          <p className="font-medium">{currentClient.recipientPhone}</p>
                         </div>
                       </div>
-                      {client.recipientEmail && (
+                      {currentClient.recipientEmail && (
                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                           <Mail className="h-4 w-4 text-green-500" />
                           <div>
                             <p className="text-sm text-gray-600">Email</p>
-                            <p className="font-medium">{client.recipientEmail}</p>
+                            <p className="font-medium">{currentClient.recipientEmail}</p>
                           </div>
                         </div>
                       )}
@@ -650,30 +668,30 @@ export default function ClientDetail({
                     <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
                       <div>
-                        <p className="font-medium text-blue-900">{client.recipientAddress}</p>
-                        <p className="text-blue-700 mt-1">{client.recipientCity}, Burkina Faso</p>
+                        <p className="font-medium text-blue-900">{currentClient.recipientAddress}</p>
+                        <p className="text-blue-700 mt-1">{currentClient.recipientCity}, Burkina Faso</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {stats.packagesCount > 0 && (
+                {currentStats.packagesCount > 0 && (
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-3">Historique des livraisons</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="p-4 bg-green-50 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-green-700">{stats.packagesCount}</p>
+                        <p className="text-2xl font-bold text-green-700">{currentStats.packagesCount}</p>
                         <p className="text-sm text-green-600">Colis reçus</p>
                       </div>
                       <div className="p-4 bg-blue-50 rounded-lg text-center">
                         <p className="text-2xl font-bold text-blue-700">
-                          {stats.lastOrderDate ? formatDate(stats.lastOrderDate) : "—"}
+                          {currentStats.lastOrderDate ? formatDate(currentStats.lastOrderDate) : "—"}
                         </p>
                         <p className="text-sm text-blue-600">Dernière livraison</p>
                       </div>
                       <div className="p-4 bg-purple-50 rounded-lg text-center">
                         <p className="text-2xl font-bold text-purple-700">
-                          {currency(stats.avgOrderValue)}
+                          {currency(currentStats.avgOrderValue)}
                         </p>
                         <p className="text-sm text-purple-600">Valeur moyenne</p>
                       </div>
@@ -735,16 +753,16 @@ export default function ClientDetail({
       <ClientDialog
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
-        client={client}
+        client={currentClient}
         onSave={handleEditClient}
-        loading={loading}
+        loading={isMutating}
       />
 
       {/* Dialog du bordereau */}
       <BordereauDialog
         isOpen={isBordereauDialogOpen}
         onClose={() => setIsBordereauDialogOpen(false)}
-        client={client}
+        client={currentClient}
       />
     </div>
   );

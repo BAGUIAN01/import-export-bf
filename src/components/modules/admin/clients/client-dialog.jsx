@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,15 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { 
   Loader2, 
-  User, 
-  MapPin, 
-  FileText,
   ChevronRight,
   ChevronLeft
 } from "lucide-react";
 
 // Import des composants séparés
-import { StepIndicator } from "./stepper-indicator";
 import { 
   PersonalInformationStep, 
   RecipientInformationStep, 
@@ -28,24 +24,9 @@ import {
 import { validatePhoneNumber } from "@/lib/utils/phone-formatter-utils";
 
 const STEPS = [
-  {
-    id: 'personal',
-    title: 'Informations personnelles',
-    description: 'Renseignez vos coordonnées',
-    icon: User
-  },
-  {
-    id: 'recipient',
-    title: 'Destinataire',
-    description: 'Informations du destinataire',
-    icon: MapPin
-  },
-  {
-    id: 'additional',
-    title: 'Finalisation',
-    description: 'Informations complémentaires',
-    icon: FileText
-  }
+  { id: 'personal', title: 'Informations personnelles' },
+  { id: 'recipient', title: 'Destinataire' },
+  { id: 'finalization', title: 'Finalisation' }
 ];
 
 export function ClientDialog({
@@ -57,7 +38,6 @@ export function ClientDialog({
 }) {
   const isEditing = !!client;
   const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState([]);
 
   const [formData, setFormData] = useState({
     // Informations personnelles
@@ -71,7 +51,8 @@ export function ClientDialog({
     postalCode: "",
     
     // Destinataire
-    recipientName: "",
+    recipientFirstName: "",
+    recipientLastName: "",
     recipientPhone: "",
     recipientEmail: "",
     recipientAddress: "",
@@ -87,165 +68,161 @@ export function ClientDialog({
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (client) {
-      setFormData({
-        firstName: client.firstName || "",
-        lastName: client.lastName || "",
-        phone: client.phone || "",
-        email: client.email || "",
-        address: client.address || "",
-        city: client.city || "",
-        country: client.country || "",
-        postalCode: client.postalCode || "",
-        recipientName: client.recipientName || "",
-        recipientPhone: client.recipientPhone || "",
-        recipientEmail: client.recipientEmail || "",
-        recipientAddress: client.recipientAddress || "",
-        recipientCity: client.recipientCity || "",
-        recipientCountry: client.recipientCountry || "Burkina Faso",
-        recipientRelation: client.recipientRelation || "",
-        isVip: !!client.isVip,
-        notes: client.notes || "",
-      });
-    } else {
-      setFormData({
-        firstName: "",
-        lastName: "",
-        phone: "",
-        email: "",
-        address: "",
-        city: "",
-        country: "",
-        postalCode: "",
-        recipientName: "",
-        recipientPhone: "",
-        recipientEmail: "",
-        recipientAddress: "",
-        recipientCity: "",
-        recipientCountry: "Burkina Faso",
-        recipientRelation: "",
-        isVip: false,
-        notes: "",
-      });
+    if (isOpen) {
+      if (client) {
+        // Si l'ancien client a recipientName, le séparer en prénom/nom
+        let recipientFirstName = client.recipientFirstName || "";
+        let recipientLastName = client.recipientLastName || "";
+        
+        if (!recipientFirstName && !recipientLastName && client.recipientName) {
+          const parts = client.recipientName.trim().split(" ");
+          recipientFirstName = parts[0] || "";
+          recipientLastName = parts.slice(1).join(" ") || "";
+        }
+        
+        setFormData({
+          firstName: client.firstName || "",
+          lastName: client.lastName || "",
+          phone: client.phone || "",
+          email: client.email || "",
+          address: client.address || "",
+          city: client.city || "",
+          country: client.country || "",
+          postalCode: client.postalCode || "",
+          recipientFirstName,
+          recipientLastName,
+          recipientPhone: client.recipientPhone || "",
+          recipientEmail: client.recipientEmail || "",
+          recipientAddress: client.recipientAddress || "",
+          recipientCity: client.recipientCity || "",
+          recipientCountry: client.recipientCountry || "Burkina Faso",
+          recipientRelation: client.recipientRelation || "",
+          isVip: !!client.isVip,
+          notes: client.notes || "",
+        });
+      } else {
+        setFormData({
+          firstName: "",
+          lastName: "",
+          phone: "",
+          email: "",
+          address: "",
+          city: "",
+          country: "",
+          postalCode: "",
+          recipientFirstName: "",
+          recipientLastName: "",
+          recipientPhone: "",
+          recipientEmail: "",
+          recipientAddress: "",
+          recipientCity: "",
+          recipientCountry: "Burkina Faso",
+          recipientRelation: "",
+          isVip: false,
+          notes: "",
+        });
+      }
+      setErrors({});
+      setCurrentStep(0);
     }
-    setErrors({});
-    setCurrentStep(0);
-    setCompletedSteps([]);
   }, [client, isOpen]);
 
-  const handleChange = (key, value) => {
+  const handleChange = useCallback((key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
+    if (errors[key]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[key];
+        return newErrors;
+      });
+    }
+  }, [errors]);
 
-  const validateStep = (stepIndex) => {
+  const validateStep = useCallback((stepIndex) => {
     const newErrors = {};
     
     if (stepIndex === 0) {
-      // Validation étape 1: Informations personnelles
-      if (!formData.firstName) newErrors.firstName = "Le prénom est requis";
-      if (!formData.lastName) newErrors.lastName = "Le nom est requis";
-      if (!formData.phone) newErrors.phone = "Le téléphone est requis";
-      if (!formData.address) newErrors.address = "L'adresse est requise";
-      if (!formData.city) newErrors.city = "La ville est requise";
-      if (!formData.country) newErrors.country = "Le pays est requis";
+      if (!formData.firstName?.trim()) newErrors.firstName = "Le prénom est requis";
+      if (!formData.lastName?.trim()) newErrors.lastName = "Le nom est requis";
+      if (!formData.phone?.trim()) newErrors.phone = "Le téléphone est requis";
+      if (!formData.address?.trim()) newErrors.address = "L'adresse est requise";
+      if (!formData.city?.trim()) newErrors.city = "La ville est requise";
+      if (!formData.country?.trim()) newErrors.country = "Le pays est requis";
       
-      // Validation email
       if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         newErrors.email = "Email invalide";
       }
       
-      // Validation téléphone avec formatage par pays
       if (formData.phone && formData.country) {
         if (!validatePhoneNumber(formData.phone, formData.country)) {
           newErrors.phone = `Numéro de téléphone invalide pour ${formData.country}`;
         }
-      } else if (formData.phone && !/^\+?[0-9\s\-]{8,}$/.test(formData.phone)) {
-        newErrors.phone = "Numéro de téléphone invalide";
       }
     }
     
     if (stepIndex === 1) {
-      // Validation étape 2: Destinataire
-      if (!formData.recipientName) newErrors.recipientName = "Le nom du destinataire est requis";
-      if (!formData.recipientPhone) newErrors.recipientPhone = "Le téléphone du destinataire est requis";
-      if (!formData.recipientAddress) newErrors.recipientAddress = "L'adresse du destinataire est requise";
-      if (!formData.recipientCity) newErrors.recipientCity = "La ville du destinataire est requise";
-      if (!formData.recipientCountry) newErrors.recipientCountry = "Le pays du destinataire est requis";
+      if (!formData.recipientFirstName?.trim()) newErrors.recipientFirstName = "Le prénom du destinataire est requis";
+      if (!formData.recipientLastName?.trim()) newErrors.recipientLastName = "Le nom du destinataire est requis";
+      if (!formData.recipientPhone?.trim()) newErrors.recipientPhone = "Le téléphone du destinataire est requis";
+      if (!formData.recipientAddress?.trim()) newErrors.recipientAddress = "L'adresse du destinataire est requise";
+      if (!formData.recipientCity?.trim()) newErrors.recipientCity = "La ville du destinataire est requise";
       
       if (formData.recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.recipientEmail)) {
         newErrors.recipientEmail = "Email du destinataire invalide";
       }
       
-      // Validation téléphone destinataire avec formatage par pays
       if (formData.recipientPhone && formData.recipientCountry) {
         if (!validatePhoneNumber(formData.recipientPhone, formData.recipientCountry)) {
           newErrors.recipientPhone = `Numéro de téléphone invalide pour ${formData.recipientCountry}`;
         }
-      } else if (formData.recipientPhone && !/^\+?[0-9\s\-]{8,}$/.test(formData.recipientPhone)) {
-        newErrors.recipientPhone = "Numéro du destinataire invalide";
       }
     }
-    
-    // Étape 3 n'a pas de validation obligatoire
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (validateStep(currentStep)) {
-      // Marquer l'étape actuelle comme complétée
-      if (!completedSteps.includes(currentStep)) {
-        setCompletedSteps(prev => [...prev, currentStep]);
-      }
-      
-      if (currentStep < STEPS.length - 1) {
-        setCurrentStep(currentStep + 1);
-      }
+      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
     }
-  };
+  }, [currentStep, validateStep]);
 
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+  const handlePrevious = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    setErrors({});
+  }, []);
 
-  const handleSubmit = () => {
-    // Valider toutes les étapes avant soumission
-    let allValid = true;
-    for (let i = 0; i < STEPS.length - 1; i++) {
-      if (!validateStep(i)) {
-        allValid = false;
-        break;
-      }
+  const handleSubmit = useCallback(() => {
+    // Valider les deux premières étapes
+    if (!validateStep(0) || !validateStep(1)) {
+      return;
     }
-    
-    if (!allValid) return;
 
     const payload = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      phone: formData.phone,
-      email: formData.email || null,
-      address: formData.address,
-      city: formData.city,
-      country: formData.country,
-      postalCode: formData.postalCode || null,
-      recipientName: formData.recipientName,
-      recipientPhone: formData.recipientPhone,
-      recipientEmail: formData.recipientEmail || null,
-      recipientAddress: formData.recipientAddress,
-      recipientCity: formData.recipientCity,
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email?.trim() || null,
+      address: formData.address.trim(),
+      city: formData.city.trim(),
+      country: formData.country.trim(),
+      postalCode: formData.postalCode?.trim() || null,
+      recipientFirstName: formData.recipientFirstName.trim(),
+      recipientLastName: formData.recipientLastName.trim(),
+      recipientName: `${formData.recipientFirstName.trim()} ${formData.recipientLastName.trim()}`, // Pour compatibilité
+      recipientPhone: formData.recipientPhone.trim(),
+      recipientEmail: formData.recipientEmail?.trim() || null,
+      recipientAddress: formData.recipientAddress.trim(),
+      recipientCity: formData.recipientCity.trim(),
       recipientCountry: formData.recipientCountry,
-      recipientRelation: formData.recipientRelation || null,
+      recipientRelation: formData.recipientRelation?.trim() || null,
       isVip: formData.isVip,
-      notes: formData.notes || null,
+      notes: formData.notes?.trim() || null,
     };
 
     onSave?.(payload);
-  };
+  }, [formData, onSave, validateStep]);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -279,79 +256,56 @@ export function ClientDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <User className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <DialogTitle className="text-xl">
-                {isEditing ? "Modifier le client" : "Nouveau client"}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                {isEditing 
-                  ? "Modifiez les informations du client et de son destinataire." 
-                  : "Créez un nouveau client en suivant les étapes ci-dessous."
-                }
-              </DialogDescription>
-            </div>
-          </div>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? "Modifier le client" : "Nouveau client"}
+          </DialogTitle>
+          <DialogDescription>
+            Étape {currentStep + 1} sur {STEPS.length} : {STEPS[currentStep].title}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6">
-          <StepIndicator 
-            steps={STEPS} 
-            currentStep={currentStep} 
-            completedSteps={completedSteps} 
-          />
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="overflow-y-auto max-h-[60vh] px-1">
           {renderStepContent()}
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex justify-between">
+        <DialogFooter className="flex-row items-center justify-between gap-3">
           <Button 
             type="button" 
             variant="outline" 
             onClick={currentStep === 0 ? onClose : handlePrevious}
             disabled={loading}
-            className="flex items-center gap-2"
           >
             {currentStep === 0 ? (
               "Annuler"
             ) : (
               <>
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 mr-2" />
                 Précédent
               </>
             )}
           </Button>
           
-          <div className="flex gap-2">
-            {currentStep < STEPS.length - 1 ? (
-              <Button 
-                type="button"
-                onClick={handleNext}
-                disabled={loading}
-                className="flex items-center gap-2 min-w-[120px]"
-              >
-                Suivant
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button 
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="min-w-[120px] flex items-center gap-2"
-              >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isEditing ? "Sauvegarder" : "Créer le client"}
-              </Button>
-            )}
-          </div>
+          {currentStep < STEPS.length - 1 ? (
+            <Button 
+              type="button"
+              onClick={handleNext}
+              disabled={loading}
+            >
+              Suivant
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          ) : (
+            <Button 
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isEditing ? "Sauvegarder" : "Créer le client"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

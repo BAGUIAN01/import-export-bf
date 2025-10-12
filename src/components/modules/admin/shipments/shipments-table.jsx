@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CustomDataTable } from "@/components/modules/data-table/data-table";
 import { shipmentsColumns } from "@/components/modules/admin/shipments/shipments-columns";
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { ShipmentsStats } from "@/components/modules/admin/shipments/shipments-stats";
+import { useShipments, useShipmentMutations, usePackageBatch } from "@/hooks/use-shipments";
 
 /* ----------------------------- Helpers ----------------------------- */
 
@@ -100,13 +101,15 @@ function computeShipmentsStats(list) {
   const issues =
     (paymentBreakdown.CANCELLED || 0) + (paymentBreakdown.REFUNDED || 0);
 
-  // Encaissements du mois en cours (somme paidAmount pour shipments payées et payées ce mois)
+  // Encaissements du mois en cours (somme de TOUS les paidAmount avec paiement ce mois)
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthlyRevenue = list.reduce((sum, sh) => {
-    if (sh.paymentStatus === "PAID" && sh.paidAt) {
+    // Compter tous les paiements effectués ce mois (PAID, PARTIAL, etc.)
+    const paid = Number(sh.paidAmount || 0);
+    if (paid > 0 && sh.paidAt) {
       const dt = new Date(sh.paidAt);
-      if (dt >= monthStart) return sum + Number(sh.paidAmount || 0);
+      if (dt >= monthStart) return sum + paid;
     }
     return sum;
   }, 0);
@@ -132,41 +135,64 @@ export function ShipmentsTable({
 }) {
   const router = useRouter();
 
-  const [shipments, setShipments] = useState(
-    (initialShipments || []).map(normalizeShipment)
-  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [showStats, setShowStats] = useState(true);
+
+  // Hook SWR pour les shipments avec cache
+  const { 
+    shipments: serverShipments, 
+    isLoading, 
+    mutate 
+  } = useShipments();
+
+  // Hook pour les mutations
+  const { 
+    deleteShipment, 
+    isLoading: isMutating 
+  } = useShipmentMutations();
+
+  // Hook pour créer des packages en batch
+  const { 
+    createPackageBatch, 
+    isLoading: isCreating 
+  } = usePackageBatch();
+
+  // Utiliser les données du cache ou fallback sur les données initiales
+  const shipments = useMemo(() => {
+    const data = serverShipments.length > 0 
+      ? serverShipments 
+      : (initialShipments || []);
+    return data.map(normalizeShipment);
+  }, [serverShipments, initialShipments]);
 
   const stats = useMemo(() => computeShipmentsStats(shipments), [shipments]);
 
-  const handleCreate = () => setIsDialogOpen(true);
+  const handleCreate = useCallback(() => setIsDialogOpen(true), []);
 
-  const handleRowOpen = (shipment) => {
+  const handleRowOpen = useCallback((shipment) => {
     if (!shipment?.id) return;
     router.push(`/admin/shipments/${shipment.id}`);
-  };
+  }, [router]);
 
-  const handleDelete = async (shipment) => {
+  const handleDelete = useCallback(async (shipment) => {
     if (!window.confirm(`Supprimer l'expédition ${shipment.shipmentNumber} ?`)) return;
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/shipments/${shipment.id}`, { method: "DELETE" });
-      if (res.ok) {
-        setShipments((prev) => prev.filter((s) => s.id !== shipment.id));
-        toast.success("Expédition supprimée");
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err?.error || "Erreur lors de la suppression");
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
+    
+    const result = await deleteShipment(shipment.id);
+    if (result.success) {
+      await mutate(); // Rafraîchir le cache
     }
-  };
+  }, [deleteShipment, mutate]);
+
+  const handleRefresh = useCallback(async () => {
+    toast.promise(
+      mutate(),
+      {
+        loading: "Actualisation en cours...",
+        success: "Données actualisées avec succès",
+        error: "Erreur lors de l'actualisation",
+      }
+    );
+  }, [mutate]);
 
   const handleExport = () => {
     try {
@@ -230,43 +256,19 @@ export function ShipmentsTable({
   };
 
   // Création via PackageDialog (wizard)
-  const handleSaveFromWizard = async (payload) => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/packages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err?.error || "Erreur lors de la création");
-        return;
-      }
-
-      const data = await res.json();
-      const newShipment = buildShipmentFromResponse(data, payload.sharedData);
-
-      setShipments((prev) => [newShipment, ...prev]);
-      toast.success(
-        data?.message ||
-          `Expédition ${newShipment.shipmentNumber} créée (${newShipment.packagesCount} colis)`
-      );
-
+  const handleSaveFromWizard = useCallback(async (payload) => {
+    const result = await createPackageBatch(payload);
+    if (result.success) {
+      await mutate(); // Rafraîchir le cache
+      setIsDialogOpen(false);
+      
+      // Navigation vers le shipment créé si disponible
+      const newShipment = result.data?.shipment;
       if (newShipment?.id) {
-        setIsDialogOpen(false);
-        setTimeout(() => handleRowOpen(newShipment), 100);
-      } else {
-        setIsDialogOpen(false);
+        setTimeout(() => router.push(`/admin/shipments/${newShipment.id}`), 100);
       }
-    } catch (e) {
-      console.error("Création shipment:", e);
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [createPackageBatch, mutate, router]);
 
   /* ------------------------ Filtres & colonnes ------------------------ */
 
@@ -297,7 +299,7 @@ export function ShipmentsTable({
         onOpen: handleRowOpen,
         onDelete: handleDelete,
       }),
-    [] // eslint-disable-line react-hooks/exhaustive-deps
+    [handleRowOpen, handleDelete]
   );
 
   return (
@@ -322,7 +324,14 @@ export function ShipmentsTable({
         onExport={handleExport}
         onImport={handleImport}
         addButtonText="Nouvelle expédition"
+        loading={isLoading}
         customActions={[
+          {
+            label: "Actualiser",
+            onClick: handleRefresh,
+            icon: "RefreshCw",
+            variant: "outline",
+          },
           {
             label: showStats ? "Masquer Stats" : "Voir Stats",
             onClick: () => setShowStats((v) => !v),
@@ -345,9 +354,9 @@ export function ShipmentsTable({
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         clients={initialClients}        
-        containers={initialContainers}  
+        containers={initialContainers}
         onSave={handleSaveFromWizard}
-        loading={loading}
+        loading={isCreating || isMutating}
       />
     </div>
   );

@@ -30,10 +30,60 @@ export async function GET(request) {
     const [data, total] = await Promise.all([
       prisma.shipment.findMany({
         where,
-        include: {
-          client: { select: { id: true, clientCode: true, firstName: true, lastName: true } },
-          container: { select: { id: true, containerNumber: true, name: true, status: true } },
-          user: { select: { id: true, firstName: true, lastName: true } },
+        select: {
+          id: true,
+          shipmentNumber: true,
+          createdAt: true,
+          updatedAt: true,
+          
+          // Champs agrégés pour les stats
+          packagesCount: true,
+          totalQuantity: true,
+          subtotal: true,
+          pickupFeeTotal: true,
+          insuranceFeeTotal: true,
+          customsFeeTotal: true,
+          discountTotal: true,
+          totalAmount: true,
+          paidAmount: true,
+          paymentStatus: true,
+          paymentMethod: true,
+          paidAt: true,
+          
+          // Autres infos
+          pickupAddress: true,
+          pickupDate: true,
+          pickupTime: true,
+          deliveryAddress: true,
+          specialInstructions: true,
+          notes: true,
+          clientId: true,
+          containerId: true,
+          
+          // Relations
+          client: { 
+            select: { 
+              id: true, 
+              clientCode: true, 
+              firstName: true, 
+              lastName: true 
+            } 
+          },
+          container: { 
+            select: { 
+              id: true, 
+              containerNumber: true, 
+              name: true, 
+              status: true 
+            } 
+          },
+          user: { 
+            select: { 
+              id: true, 
+              firstName: true, 
+              lastName: true 
+            } 
+          },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,

@@ -192,7 +192,6 @@ export async function PUT(request, { params }) {
         recipientEmail: body.recipientEmail?.trim() || null,
         recipientAddress: body.recipientAddress.trim(),
         recipientCity: body.recipientCity.trim(),
-        recipientCountry: body.recipientCountry || "Burkina Faso",
         recipientRelation: body.recipientRelation?.trim() || null,
         isVip: !!body.isVip,
         isActive: body.isActive !== undefined ? !!body.isActive : existingClient.isActive,
@@ -200,17 +199,21 @@ export async function PUT(request, { params }) {
       },
     });
 
-    // Log d'audit
+    // Log d'audit — details en OBJET JSON + clientId
     await prisma.auditLog.create({
       data: {
         userId: session.user.id,
         action: "UPDATE_CLIENT",
         resource: "client",
         resourceId: id,
-        details: JSON.stringify({
+        details: {
+          clientId: id,
           clientCode: existingClient.clientCode,
-          changes: Object.keys(body)
-        }),
+          changes: Object.keys(body),
+        },
+        // Optionnel si tu veux tracer le contexte :
+        ipAddress: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? undefined,
+        userAgent: request.headers.get("user-agent") ?? undefined,
       },
     });
 
@@ -254,20 +257,12 @@ export async function DELETE(request, { params }) {
 
     // Vérification s'il y a des colis associés
     if (client._count.packages > 0) {
-      // Option 1: Empêcher la suppression
       return NextResponse.json(
         { 
           error: `Impossible de supprimer ce client car il a ${client._count.packages} colis associé(s). Supprimez d'abord tous ses colis.` 
         },
         { status: 400 }
       );
-
-      // Option 2: Supprimer en cascade (décommentez si vous préférez)
-      /*
-      await prisma.package.deleteMany({
-        where: { clientId: id }
-      });
-      */
     }
 
     // Suppression du client
@@ -275,17 +270,20 @@ export async function DELETE(request, { params }) {
       where: { id },
     });
 
-    // Log d'audit
+    // Log d'audit — details en OBJET JSON + clientId
     await prisma.auditLog.create({
       data: {
         userId: session.user.id,
         action: "DELETE_CLIENT",
         resource: "client",
         resourceId: id,
-        details: JSON.stringify({
+        details: {
+          clientId: id,
           clientCode: client.clientCode,
-          packagesCount: client._count.packages
-        }),
+          packagesCount: client._count.packages,
+        },
+        ipAddress: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? undefined,
+        userAgent: request.headers.get("user-agent") ?? undefined,
       },
     });
 

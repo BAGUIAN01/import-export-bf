@@ -31,6 +31,89 @@ const derivePaymentStatus = (totalAmount, paidAmount) => {
   return "PAID";
 };
 
+// Fonction pour recalculer les agrégats d'un shipment
+async function recalcShipmentAggregates(shipmentId) {
+  if (!shipmentId) return;
+
+  const pkgs = await prisma.package.findMany({
+    where: { shipmentId },
+    select: {
+      totalQuantity: true,
+      basePrice: true,
+      pickupFee: true,
+      insuranceFee: true,
+      customsFee: true,
+      discount: true,
+      totalAmount: true,
+      paidAmount: true,
+      paidAt: true,
+      paymentMethod: true,
+    },
+  });
+
+  const packagesCount = pkgs.length;
+  const totalQuantity = pkgs.reduce((s, p) => s + (p.totalQuantity || 0), 0);
+  const subtotal = pkgs.reduce((s, p) => s + (p.basePrice || 0), 0);
+  const pickupFeeTotal = pkgs.reduce((s, p) => s + (p.pickupFee || 0), 0);
+  const insuranceFeeTotal = pkgs.reduce((s, p) => s + (p.insuranceFee || 0), 0);
+  const customsFeeTotal = pkgs.reduce((s, p) => s + (p.customsFee || 0), 0);
+  const discountTotal = pkgs.reduce((s, p) => s + (p.discount || 0), 0);
+  const totalAmount = pkgs.reduce((s, p) => s + (p.totalAmount || 0), 0);
+  
+  // IMPORTANT: Calculer aussi le montant total payé à partir des colis
+  const paidAmount = pkgs.reduce((s, p) => s + (p.paidAmount || 0), 0);
+  
+  const paymentStatus = derivePaymentStatus(totalAmount, paidAmount);
+  
+  // Trouver la date de paiement la plus récente et le dernier moyen de paiement utilisé
+  const paidPackages = pkgs.filter(p => p.paidAt);
+  let paidAt = null;
+  let paymentMethod = null;
+  
+  if (paidPackages.length > 0) {
+    // Trier par date de paiement décroissante
+    const sortedByDate = paidPackages.sort((a, b) => 
+      new Date(b.paidAt) - new Date(a.paidAt)
+    );
+    paidAt = sortedByDate[0].paidAt;
+    paymentMethod = sortedByDate[0].paymentMethod;
+  }
+
+  console.log(`🔄 Recalcul agrégats shipment ${shipmentId}:`, {
+    packagesCount,
+    totalAmount,
+    paidAmount,
+    paymentStatus,
+    paidAt,
+    paymentMethod,
+    packages: pkgs.map(p => ({ 
+      totalAmount: p.totalAmount, 
+      paidAmount: p.paidAmount, 
+      paidAt: p.paidAt 
+    }))
+  });
+
+  await prisma.shipment.update({
+    where: { id: shipmentId },
+    data: {
+      packagesCount,
+      totalQuantity,
+      subtotal,
+      pickupFeeTotal,
+      insuranceFeeTotal,
+      customsFeeTotal,
+      discountTotal,
+      totalAmount,
+      paidAmount,
+      paymentStatus,
+      paidAt,
+      paymentMethod,
+    },
+  });
+  
+  console.log(`✅ Shipment ${shipmentId} mis à jour avec succès`);
+}
+
 // Tous les types permis (doivent correspondre au schema.prisma)
 const validTypes = [
   "CARTON",
@@ -347,6 +430,8 @@ export async function POST(request) {
     // ====== CAS 2: batch simple (array d'objets colis) ======
     if (Array.isArray(body)) {
       const results = [];
+      const shipmentIds = new Set();
+      
       for (const item of body) {
         const res = await createSinglePackageInternal(item, session);
         if (res.error) {
@@ -356,7 +441,18 @@ export async function POST(request) {
           );
         }
         results.push(res.package);
+        
+        // Collecter les shipmentIds pour recalculer les agrégats après
+        if (res.package.shipmentId) {
+          shipmentIds.add(res.package.shipmentId);
+        }
       }
+      
+      // Recalculer les agrégats pour tous les shipments concernés
+      for (const shipmentId of shipmentIds) {
+        await recalcShipmentAggregates(shipmentId);
+      }
+      
       return NextResponse.json(
         { message: "Colis créés", count: results.length, packages: results },
         { status: 201 }
@@ -371,6 +467,12 @@ export async function POST(request) {
         { status: single.status || 400 }
       );
     }
+    
+    // Recalculer les agrégats si le colis est lié à un shipment
+    if (single.package.shipmentId) {
+      await recalcShipmentAggregates(single.package.shipmentId);
+    }
+    
     return NextResponse.json(
       { message: "Colis créé avec succès", package: single.package },
       { status: 201 }
@@ -675,11 +777,11 @@ async function createSinglePackageInternal(body, session) {
           });
         } catch {}
 
-        // Succès
+        // Succès (le recalcul sera fait par l'appelant si nécessaire)
         return { package: { ...newPackage, parsedTypes: typesData } };
       } catch (e) {
         lastErr = e;
-        // Conflit d’unicité sur packageNumber → on régénère et on ré-essaie
+        // Conflit d'unicité sur packageNumber → on régénère et on ré-essaie
         if (e?.code === "P2002") {
           packageNumber = genPackageNumber();
           continue;

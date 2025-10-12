@@ -47,7 +47,7 @@ export const usePackageForm = (editingPackage, isOpen) => {
       totalAmount: total,
       paymentStatus: derivePaymentStatus(total, Number(prev.paidAmount || 0)),
     }));
-  }, [form.type, form.pickupFee, form.customsFee, form.discount, form.isInsured, form.value]);
+  }, [form.type, form.pickupFee, form.customsFee, form.discount, form.isInsured, form.value, form.paidAmount]);
 
   // Initialisation du formulaire
   useEffect(() => {

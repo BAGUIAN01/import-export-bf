@@ -186,7 +186,6 @@ export async function POST(request) {
         recipientEmail: body.recipientEmail?.trim() || null,
         recipientAddress: body.recipientAddress.trim(),
         recipientCity: body.recipientCity.trim(),
-        recipientCountry: body.recipientCountry || "Burkina Faso",
         recipientRelation: body.recipientRelation?.trim() || null,
         isVip: !!body.isVip,
         notes: body.notes?.trim() || null,

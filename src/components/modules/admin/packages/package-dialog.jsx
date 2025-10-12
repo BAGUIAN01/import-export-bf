@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import {
   X, User, Package as PackageIcon, MapPin, Euro, Check,
-  ChevronLeft, ChevronRight, Plus, AlertTriangle
+  ChevronLeft, ChevronRight, Plus, AlertTriangle, CheckCircle2
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -26,6 +26,10 @@ const PackageDialog = ({
   onSave,
   loading = false,
   package: editingPackage, // <-- support édition
+  prefilledClient = null, // <-- pré-remplissage client
+  prefilledContainer = null, // <-- pré-remplissage conteneur
+  prefilledSharedData = null, // <-- pré-remplissage données partagées
+  isAddingToShipment = false, // <-- indique si on ajoute à un shipment existant
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [searchClient, setSearchClient] = useState("");
@@ -68,7 +72,7 @@ const PackageDialog = ({
     if (!isOpen) return;
 
     // MODE ÉDITION : préremplir à partir du colis reçu
-    if (editingPackage) {
+    if (editingPackage && !isAddingToShipment) {
       let parsedTypes = [];
       if (Array.isArray(editingPackage.selectedTypes)) {
         parsedTypes = editingPackage.selectedTypes;
@@ -113,6 +117,38 @@ const PackageDialog = ({
       return;
     }
 
+    // MODE AJOUT À UN SHIPMENT : pré-remplir avec les données du shipment
+    if (isAddingToShipment && prefilledClient) {
+      setCurrentStep(1);
+      setSearchClient("");
+      setSelectedClientId(prefilledClient.id || "");
+      setSelectedContainerId(prefilledContainer?.id || "");
+      setPackages([]);
+      setActivePackageIndex(-1);
+      setErrors({});
+      
+      // Pré-remplir les données partagées du shipment
+      setSharedData({
+        pickupAddress: prefilledSharedData?.pickupAddress || prefilledClient.address || "",
+        pickupDate: prefilledSharedData?.pickupDate 
+          ? (typeof prefilledSharedData.pickupDate === 'string' 
+              ? prefilledSharedData.pickupDate.slice(0,10) 
+              : new Date(prefilledSharedData.pickupDate).toISOString().slice(0,10))
+          : "",
+        pickupTime: prefilledSharedData?.pickupTime || "",
+        specialInstructions: prefilledSharedData?.specialInstructions || "",
+        paidAmount: prefilledSharedData?.paidAmount ?? 0,
+        paymentMethod: prefilledSharedData?.paymentMethod || "",
+        paidAt: prefilledSharedData?.paidAt 
+          ? (typeof prefilledSharedData.paidAt === 'string' 
+              ? prefilledSharedData.paidAt.slice(0,10) 
+              : new Date(prefilledSharedData.paidAt).toISOString().slice(0,10))
+          : "",
+      });
+      setForm(emptyForm);
+      return;
+    }
+
     // MODE CRÉATION (wizard)
     setCurrentStep(1);
     setSearchClient("");
@@ -131,7 +167,7 @@ const PackageDialog = ({
       paidAt: "",
     });
     setForm(emptyForm);
-  }, [isOpen, editingPackage]); // <-- tient compte de l’édition
+  }, [isOpen, editingPackage, isAddingToShipment, prefilledClient, prefilledContainer, prefilledSharedData]);
 
   // ---------- LISTE COLIS (sidebar) ----------
   const addNewPackage = () => {
@@ -329,9 +365,22 @@ const PackageDialog = ({
         {currentStep <= 2 && (
           <div className="w-80 border-r bg-gray-50 flex flex-col">
             <div className="p-4 border-b bg-white">
+              {isAddingToShipment && (
+                <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700 text-xs">
+                    <Check size={14} />
+                    <span className="font-medium">Ajout à l'expédition</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-900">
-                  {editingPackage ? "Modifier le colis" : "Colis à expédier"}
+                  {editingPackage && !isAddingToShipment
+                    ? "Modifier le colis" 
+                    : isAddingToShipment
+                      ? "Nouveaux colis"
+                      : "Colis à expédier"}
                 </h3>
                 {!editingPackage && (
                   <span className="text-sm text-gray-500">{packages.length} colis</span>
@@ -394,12 +443,28 @@ const PackageDialog = ({
           {/* Header */}
           <div className="sticky top-0 z-10 border-b bg-gradient-to-r from-orange-50 to-blue-50 px-4 sm:px-6 py-3">
             <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
-                  {editingPackage ? "Modifier un colis" : "Nouvelle expédition multi-colis"}
-                </h2>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
+                    {editingPackage && !isAddingToShipment 
+                      ? "Modifier un colis" 
+                      : isAddingToShipment 
+                        ? "Ajouter des colis à l'expédition"
+                        : "Nouvelle expédition multi-colis"}
+                  </h2>
+                  {isAddingToShipment && prefilledClient && (
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg border border-blue-200">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        {prefilledClient.firstName} {prefilledClient.lastName}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
-                  {steps[currentStep - 1]?.desc}
+                  {isAddingToShipment 
+                    ? "Client et conteneur déjà sélectionnés - Ajoutez simplement vos colis"
+                    : steps[currentStep - 1]?.desc}
                 </p>
               </div>
               <button
@@ -427,6 +492,7 @@ const PackageDialog = ({
                       setSelectedClientId={setSelectedClientId}
                       filteredClients={filteredClients}
                       selectedClient={selectedClient}
+                      isLocked={isAddingToShipment}
                     />
 
                     {activePackageIndex >= 0 && (
@@ -466,6 +532,7 @@ const PackageDialog = ({
                     selectedClient={selectedClient}
                     sharedData={sharedData}
                     setSharedData={setSharedData}
+                    hasPrefilled={isAddingToShipment}
                   />
                 )}
 
@@ -479,6 +546,7 @@ const PackageDialog = ({
                       totalAmount={totalAmount}
                       sharedData={sharedData}
                       setSharedData={setSharedData}
+                      isContainerLocked={isAddingToShipment}
                     />
 
                     {!selectedContainerId && (

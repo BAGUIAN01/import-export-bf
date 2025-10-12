@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { 
   Package, 
   MapPin, 
@@ -16,10 +16,15 @@ import {
   Activity,
   Edit2,
   Trash2,
-  X
+  X,
+  RefreshCw,
+  Euro,
+  Weight,
+  Users
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useContainerDetails, useContainerMutations } from "@/hooks/use-containers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusOptions = [
   { value: 'PREPARATION', label: 'En préparation', variant: 'secondary' },
@@ -44,9 +50,33 @@ const getStatusInfo = (status) => {
     { value: status, label: status, variant: 'secondary' };
 };
 
-export function ContainerDetailView({ container, currentUser }) {
+export function ContainerDetailView({ container: initialContainer, currentUser }) {
   const router = useRouter();
-  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Hook SWR pour le cache et le rafraîchissement
+  const { 
+    container: serverContainer, 
+    packages: serverPackages,
+    stats: serverStats,
+    isLoading, 
+    refresh 
+  } = useContainerDetails(initialContainer?.id);
+  
+  // Hook pour les mutations
+  const { 
+    updateContainer, 
+    updateContainerStatus,
+    isLoading: isMutating 
+  } = useContainerMutations();
+  
+  // Utiliser les données du serveur ou fallback sur les données initiales
+  const container = serverContainer || initialContainer;
+  const packages = serverPackages || initialContainer?.packages || [];
+  const stats = serverStats || null;
+  
+  // Calculer le nombre réel de colis
+  const actualPackagesCount = packages.length;
+  
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [trackingUpdates, setTrackingUpdates] = useState(container.trackingUpdates || []);
   const [editingUpdate, setEditingUpdate] = useState(null);
@@ -108,13 +138,11 @@ export function ContainerDetailView({ container, currentUser }) {
     }
   };
 
-  const handleSubmitUpdate = async () => {
+  const handleSubmitUpdate = useCallback(async () => {
     if (!updateForm.location || !updateForm.description) {
       toast.error('Localisation et description obligatoires');
       return;
     }
-
-    setIsUpdating(true);
 
     try {
       // Modification d'une mise à jour existante
@@ -166,37 +194,29 @@ export function ContainerDetailView({ container, currentUser }) {
 
         // Mise à jour du statut du conteneur si changé
         if (updateForm.status !== container.status) {
-          const containerResponse = await fetch(`/api/containers/${container.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              status: updateForm.status,
-              currentLocation: updateForm.location,
-            }),
+          const result = await updateContainer(container.id, {
+            status: updateForm.status,
+            currentLocation: updateForm.location,
           });
 
-          if (!containerResponse.ok) {
+          if (!result.success) {
             throw new Error('Erreur lors de la mise à jour du statut');
           }
-
-          container.status = updateForm.status;
-          container.currentLocation = updateForm.location;
         }
 
         setTrackingUpdates(prev => [trackingData.trackingUpdate, ...prev]);
         toast.success('Mise à jour enregistrée');
+        
+        // Rafraîchir les données du conteneur
+        await refresh();
       }
 
       handleCancelEdit();
     } catch (error) {
       console.error('Erreur:', error);
       toast.error(error.message || 'Erreur de connexion');
-    } finally {
-      setIsUpdating(false);
     }
-  };
+  }, [updateForm, editingUpdate, container.id, updateContainer, refresh]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Non défini';
@@ -209,7 +229,8 @@ export function ContainerDetailView({ container, currentUser }) {
   };
 
   const statusInfo = getStatusInfo(container.status);
-  const loadPercentage = Math.min((container.currentLoad / container.capacity) * 100, 100);
+  // Utiliser le nombre réel de packages au lieu de currentLoad
+  const loadPercentage = Math.min((actualPackagesCount / container.capacity) * 100, 100);
 
   return (
     <div className="min-h-screen bg-background">
@@ -239,20 +260,41 @@ export function ContainerDetailView({ container, currentUser }) {
               </div>
             </div>
             
-            <Button
-              onClick={() => {
-                if (showUpdateForm && !editingUpdate) {
-                  handleCancelEdit();
-                } else {
-                  setShowUpdateForm(!showUpdateForm);
-                }
-              }}
-              variant={showUpdateForm ? "outline" : "default"}
-              className="gap-2"
-            >
-              {showUpdateForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {showUpdateForm ? 'Annuler' : 'Nouvelle mise à jour'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  toast.promise(
+                    refresh(),
+                    {
+                      loading: "Actualisation en cours...",
+                      success: "Données actualisées",
+                      error: "Erreur lors de l'actualisation",
+                    }
+                  );
+                }}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Actualiser
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  if (showUpdateForm && !editingUpdate) {
+                    handleCancelEdit();
+                  } else {
+                    setShowUpdateForm(!showUpdateForm);
+                  }
+                }}
+                variant={showUpdateForm ? "outline" : "default"}
+                className="gap-2"
+              >
+                {showUpdateForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                {showUpdateForm ? 'Annuler' : 'Nouvelle mise à jour'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -269,7 +311,7 @@ export function ContainerDetailView({ container, currentUser }) {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-muted-foreground">Charge</p>
-                    <p className="text-2xl font-bold">{container.currentLoad}/{container.capacity}</p>
+                    <p className="text-2xl font-bold">{actualPackagesCount}/{container.capacity}</p>
                   </div>
                   <Progress value={loadPercentage} className="h-2 mb-2" />
                   <p className="text-xs text-muted-foreground">{loadPercentage.toFixed(1)}% de capacité</p>
@@ -331,6 +373,97 @@ export function ContainerDetailView({ container, currentUser }) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Stats supplémentaires */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, idx) => (
+              <Card key={idx}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-emerald-50 rounded-lg">
+                    <Euro className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Valeur totale</p>
+                    <p className="text-2xl font-bold">{stats.totalAmount?.toFixed(2) || 0}€</p>
+                    {stats.avgPackageValue > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Moy: {stats.avgPackageValue.toFixed(2)}€/colis
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-orange-50 rounded-lg">
+                    <Weight className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Poids total</p>
+                    <p className="text-2xl font-bold">{stats.totalWeight?.toFixed(1) || 0} kg</p>
+                    {actualPackagesCount > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Moy: {(stats.totalWeight / actualPackagesCount).toFixed(1)}kg/colis
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-indigo-50 rounded-lg">
+                    <Users className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Clients</p>
+                    <p className="text-2xl font-bold">{stats.clientsCount || 0}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {actualPackagesCount} colis au total
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-cyan-50 rounded-lg">
+                    <Activity className="h-6 w-6 text-cyan-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Dernière MAJ</p>
+                    <p className="text-sm font-bold">
+                      {stats.lastUpdate ? formatDate(stats.lastUpdate) : 'Aucune'}
+                    </p>
+                    {stats.statusBreakdown && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {Object.keys(stats.statusBreakdown).length} statuts
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Formulaire de mise à jour */}
         {showUpdateForm && (
@@ -407,17 +540,17 @@ export function ContainerDetailView({ container, currentUser }) {
                   <Button
                     variant="outline"
                     onClick={handleCancelEdit}
-                    disabled={isUpdating}
+                    disabled={isMutating}
                   >
                     Annuler
                   </Button>
                   <Button
-                    onClick={handleSubmitUpdate}
-                    disabled={isUpdating || !updateForm.location || !updateForm.description}
+                  onClick={handleSubmitUpdate}
+                  disabled={isMutating || !updateForm.location || !updateForm.description}
                   >
-                    {isUpdating && <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>}
+                    {isMutating && <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>}
                     <Save className="h-4 w-4 mr-2" />
-                    {isUpdating ? 'Enregistrement...' : editingUpdate ? 'Modifier' : 'Enregistrer'}
+                    {isMutating ? 'Enregistrement...' : editingUpdate ? 'Modifier' : 'Enregistrer'}
                   </Button>
                 </div>
               </div>

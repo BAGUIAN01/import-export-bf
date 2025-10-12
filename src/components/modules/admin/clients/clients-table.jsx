@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useClients, useClientMutations } from "@/hooks/use-clients";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -117,8 +119,6 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, color }) => (
 
 export function ClientsTable({ initialClients, initialStats }) {
   const router = useRouter();
-  const [clients, setClients] = useState(initialClients);
-  const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   
@@ -130,26 +130,37 @@ export function ClientsTable({ initialClients, initialStats }) {
   const [sortOrder, setSortOrder] = useState("desc");
   const [showStats, setShowStats] = useState(true);
 
-  // Calcul des statistiques
-  const stats = useMemo(() => {
-    const activeCount = clients.filter((client) => client.isActive).length;
-    const vipCount = clients.filter((client) => client.isVip).length;
-    const withOrdersCount = clients.filter((client) => (client.packagesCount || 0) > 0).length;
-    
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const newThisMonth = clients.filter(
-      (client) => new Date(client.createdAt) >= thirtyDaysAgo
-    ).length;
+  // Utilisation du hook SWR pour le cache
+  const { 
+    clients, 
+    stats: serverStats, 
+    isLoading, 
+    mutate 
+  } = useClients({
+    search: searchTerm,
+    status: statusFilter,
+    country: countryFilter,
+    includeStats: true,
+  });
 
-    return {
+  // Mutations avec le hook personnalisé
+  const { 
+    createClient, 
+    updateClient, 
+    deleteClient, 
+    isLoading: isMutating 
+  } = useClientMutations();
+
+  // Utiliser les stats du serveur ou fallback sur initialStats
+  const stats = useMemo(() => {
+    return serverStats || initialStats || {
       total: clients.length,
-      active: activeCount,
-      newThisMonth,
-      withOrders: withOrdersCount,
-      vip: vipCount,
+      active: clients.filter((client) => client.isActive).length,
+      newThisMonth: 0,
+      withOrders: clients.filter((client) => (client.packagesCount || 0) > 0).length,
+      vip: clients.filter((client) => client.isVip).length,
     };
-  }, [clients]);
+  }, [serverStats, initialStats, clients]);
 
   // Filtrage et tri des clients
   const filteredAndSortedClients = useMemo(() => {
@@ -207,99 +218,59 @@ export function ClientsTable({ initialClients, initialStats }) {
     return filtered;
   }, [clients, searchTerm, statusFilter, countryFilter, sortBy, sortOrder]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingClient(null);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleEdit = (client) => {
+  const handleEdit = useCallback((client) => {
     setEditingClient(client);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleView = (client) => {
+  const handleView = useCallback((client) => {
     router.push(`/admin/clients/${client.id}`);
-  };
+  }, [router]);
 
-  const handleDelete = async (client) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
-
-      if (response.ok) {
-        setClients((prev) => prev.filter((c) => c.id !== client.id));
-        toast.success("Client supprimé avec succès");
-      } else {
-        const error = await response.json();
-        toast.error(error.message || "Erreur lors de la suppression");
-      }
-    } catch (err) {
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
+  const handleDelete = useCallback(async (client) => {
+    const result = await deleteClient(client.id);
+    if (result.success) {
+      // Rafraîchir le cache SWR
+      await mutate();
     }
-  };
+  }, [deleteClient, mutate]);
 
-  const handleSave = async (form) => {
-    try {
-      setLoading(true);
-      let response;
+  const handleSave = useCallback(async (form) => {
+    let result;
 
-      if (editingClient) {
-        response = await fetch(`/api/clients/${editingClient.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setClients((prev) =>
-            prev.map((client) =>
-              client.id === editingClient.id ? { ...client, ...data.client, ...form } : client
-            )
-          );
-          toast.success("Client modifié avec succès");
-          setIsDialogOpen(false);
-        } else {
-          const error = await response.json();
-          toast.error(error.message || "Erreur lors de la modification");
-        }
-      } else {
-        response = await fetch("/api/clients", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const created = {
-            ...data.client,
-            ...form,
-            id: data.client?.id || Date.now(),
-            clientCode: data.client?.clientCode || `CLI${Date.now()}`,
-            packagesCount: 0,
-            createdAt: new Date().toISOString(),
-          };
-          setClients((prev) => [...prev, created]);
-          toast.success("Client créé avec succès");
-          setIsDialogOpen(false);
-        } else {
-          const error = await response.json();
-          toast.error(error.message || "Erreur lors de la création");
-        }
-      }
-    } catch (err) {
-      toast.error("Erreur de connexion");
-    } finally {
-      setLoading(false);
+    if (editingClient) {
+      result = await updateClient(editingClient.id, form);
+    } else {
+      result = await createClient(form);
     }
-  };
 
-  const handleCreatePackage = (client) => {
+    if (result.success) {
+      // Rafraîchir le cache SWR
+      await mutate();
+      setIsDialogOpen(false);
+      setEditingClient(null);
+    }
+  }, [editingClient, createClient, updateClient, mutate]);
+
+  const handleCreatePackage = useCallback((client) => {
     router.push(`/admin/packages/new?clientId=${client.id}`);
-  };
+  }, [router]);
+
+  const handleRefresh = useCallback(async () => {
+    toast.promise(
+      mutate(),
+      {
+        loading: "Actualisation en cours...",
+        success: "Données actualisées avec succès",
+        error: "Erreur lors de l'actualisation",
+      }
+    );
+  }, [mutate]);
 
   const handleExport = () => {
     try {
@@ -374,10 +345,23 @@ export function ClientsTable({ initialClients, initialStats }) {
             </p> */}
           </div>
           <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+              Actualiser
+            </Button>
             <Button variant="outline" onClick={() => setShowStats(!showStats)}>
               {showStats ? "Masquer Stats" : "Voir Stats"}
             </Button>
-            <Button onClick={handleAdd} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+            <Button 
+              onClick={handleAdd} 
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all"
+              disabled={isMutating}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Nouveau Client
             </Button>
@@ -387,37 +371,51 @@ export function ClientsTable({ initialClients, initialStats }) {
         {/* Statistiques */}
         {showStats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            <StatsCard
-              icon={Users}
-              title="Total Clients"
-              value={stats.total}
-              color="from-blue-500 to-blue-600"
-            />
-            <StatsCard
-              icon={UserCheck}
-              title="Actifs"
-              value={stats.active}
-              subtitle={`${Math.round((stats.active / stats.total) * 100)}% du total`}
-              color="from-green-500 to-green-600"
-            />
-            <StatsCard
-              icon={UserPlus}
-              title="Nouveaux (30j)"
-              value={stats.newThisMonth}
-              color="from-purple-500 to-purple-600"
-            />
-            <StatsCard
-              icon={Package}
-              title="Avec Commandes"
-              value={stats.withOrders}
-              color="from-orange-500 to-orange-600"
-            />
-            <StatsCard
-              icon={Star}
-              title="Clients VIP"
-              value={stats.vip}
-              color="from-yellow-500 to-yellow-600"
-            />
+            {isLoading && !clients.length ? (
+              <>
+                {[...Array(5)].map((_, idx) => (
+                  <Card key={idx} className="border-0 shadow-lg">
+                    <CardContent className="p-6">
+                      <Skeleton className="h-16 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            ) : (
+              <>
+                <StatsCard
+                  icon={Users}
+                  title="Total Clients"
+                  value={stats.total}
+                  color="from-blue-500 to-blue-600"
+                />
+                <StatsCard
+                  icon={UserCheck}
+                  title="Actifs"
+                  value={stats.active}
+                  subtitle={stats.total > 0 ? `${Math.round((stats.active / stats.total) * 100)}% du total` : ""}
+                  color="from-green-500 to-green-600"
+                />
+                <StatsCard
+                  icon={UserPlus}
+                  title="Nouveaux (30j)"
+                  value={stats.newThisMonth}
+                  color="from-purple-500 to-purple-600"
+                />
+                <StatsCard
+                  icon={Package}
+                  title="Avec Commandes"
+                  value={stats.withOrders}
+                  color="from-orange-500 to-orange-600"
+                />
+                <StatsCard
+                  icon={Star}
+                  title="Clients VIP"
+                  value={stats.vip}
+                  color="from-yellow-500 to-yellow-600"
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -498,14 +496,33 @@ export function ClientsTable({ initialClients, initialStats }) {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Clients ({filteredAndSortedClients.length})</span>
-              <Button variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
                 Actualiser
               </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {filteredAndSortedClients.length === 0 ? (
+            {isLoading && !clients.length ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, idx) => (
+                  <div key={idx} className="p-6 border rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="w-12 h-12 rounded-xl" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-6 w-48" />
+                        <Skeleton className="h-4 w-96" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredAndSortedClients.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun client trouvé</h3>
@@ -648,10 +665,13 @@ export function ClientsTable({ initialClients, initialStats }) {
       {/* Dialog d'ajout/édition */}
       <ClientDialog
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setEditingClient(null);
+        }}
         client={editingClient}
         onSave={handleSave}
-        loading={loading}
+        loading={isMutating}
       />
     </div>
   );

@@ -56,7 +56,8 @@ export default async function ContainerDetailPage({ params }) {
       redirect('/unauthorized');
     }
 
-    const container = await getContainerData(params.id);
+    const { id } = await params; // Await params
+    const container = await getContainerData(id);
     
     if (!container) {
       notFound();

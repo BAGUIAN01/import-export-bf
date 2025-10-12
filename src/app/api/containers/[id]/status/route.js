@@ -12,8 +12,10 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
+    const { id } = await params; // Await params
+
     const trackingUpdates = await prisma.trackingUpdate.findMany({
-      where: { containerId: params.id },
+      where: { containerId: id },
       include: {
         user: {
           select: {
@@ -47,6 +49,8 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
+    const { id } = await params; // Await params
+
     const body = await request.json();
     const { 
       location, 
@@ -68,7 +72,7 @@ export async function POST(request, { params }) {
 
     // Vérifier que le conteneur existe
     const container = await prisma.container.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!container) {
@@ -81,7 +85,7 @@ export async function POST(request, { params }) {
     // Créer la mise à jour de suivi
     const trackingUpdate = await prisma.trackingUpdate.create({
       data: {
-        containerId: params.id,
+        containerId: id,
         userId: session.user.id,
         location,
         description,
@@ -105,7 +109,7 @@ export async function POST(request, { params }) {
 
     // Mettre à jour la localisation actuelle du conteneur
     await prisma.container.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         currentLocation: location,
         updatedAt: new Date(),
@@ -118,7 +122,7 @@ export async function POST(request, { params }) {
         userId: session.user.id,
         action: "CREATE_TRACKING_UPDATE",
         resource: "container",
-        resourceId: params.id,
+        resourceId: id,
         details: JSON.stringify({ location, description, isPublic }),
         ipAddress: request.headers.get("x-forwarded-for") || 
                    request.headers.get("x-real-ip") || 

@@ -129,28 +129,39 @@ export const ClientSelection = ({
   setSelectedClientId,
   filteredClients,
   selectedClient,
+  isLocked = false, // <-- nouveau : bloque la sélection
 }) => (
   <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-      <User className="mr-2 text-orange-600" size={18} />
-      Sélectionner un client
+    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center justify-between">
+      <span className="flex items-center">
+        <User className="mr-2 text-orange-600" size={18} />
+        {isLocked ? "Client de l'expédition" : "Sélectionner un client"}
+      </span>
+      {isLocked && (
+        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
+          <Check size={12} />
+          Pré-rempli
+        </span>
+      )}
     </h3>
 
-    <div className="relative mb-3 sm:mb-4">
-      <Search
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-        size={18}
-      />
-      <input
-        type="text"
-        placeholder="Rechercher par nom, téléphone, email..."
-        value={searchClient}
-        onChange={(e) => setSearchClient(e.target.value)}
-        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-      />
-    </div>
+    {!isLocked && (
+      <div className="relative mb-3 sm:mb-4">
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          size={18}
+        />
+        <input
+          type="text"
+          placeholder="Rechercher par nom, téléphone, email..."
+          value={searchClient}
+          onChange={(e) => setSearchClient(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+        />
+      </div>
+    )}
 
-    {searchClient && filteredClients.length > 0 && (
+    {!isLocked && searchClient && filteredClients.length > 0 && (
       <div className="max-h-64 overflow-y-auto -mx-1">
         {filteredClients.map((client) => (
           <button
@@ -184,10 +195,10 @@ export const ClientSelection = ({
     )}
 
     {selectedClient && (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+      <div className={`${isLocked ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-3 sm:p-4`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-blue-900 text-sm sm:text-base truncate">
+            <div className={`font-medium ${isLocked ? 'text-green-900' : 'text-blue-900'} text-sm sm:text-base truncate`}>
               {selectedClient.firstName} {selectedClient.lastName}
               {selectedClient.isVip && (
                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800">
@@ -195,23 +206,30 @@ export const ClientSelection = ({
                 </span>
               )}
             </div>
-            <div className="text-xs text-blue-700 truncate mt-0.5">
-              {selectedClient.phone} • {selectedClient.email}
+            <div className={`text-xs ${isLocked ? 'text-green-700' : 'text-blue-700'} truncate mt-0.5`}>
+              {selectedClient.phone} {selectedClient.email && `• ${selectedClient.email}`}
             </div>
-            <div className="text-xs text-blue-600 mt-0.5 truncate">
+            <div className={`text-xs ${isLocked ? 'text-green-600' : 'text-blue-600'} mt-0.5 truncate`}>
               {selectedClient.city}, {selectedClient.country}
             </div>
+            {isLocked && (
+              <div className="mt-2 text-xs text-green-700 font-medium">
+                ✓ Client automatiquement sélectionné de l'expédition
+              </div>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedClientId("");
-              setSearchClient("");
-            }}
-            className="text-orange-600 hover:text-orange-800 text-xs font-medium shrink-0"
-          >
-            Changer
-          </button>
+          {!isLocked && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedClientId("");
+                setSearchClient("");
+              }}
+              className="text-orange-600 hover:text-orange-800 text-xs font-medium shrink-0"
+            >
+              Changer
+            </button>
+          )}
         </div>
       </div>
     )}
@@ -561,8 +579,19 @@ export const PackageDetails = ({ form, setForm, errors, setErrors }) => (
 /* ============================
    Adresses (ramassage + livraison)
 ============================= */
-export const AddressStep = ({ selectedClient, sharedData, setSharedData }) => (
+export const AddressStep = ({ selectedClient, sharedData, setSharedData, hasPrefilled = false }) => (
   <div className="space-y-6 max-w-3xl mx-auto">
+    {hasPrefilled && sharedData.pickupAddress && (
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-green-700">
+          <Check size={18} />
+          <span className="font-medium text-sm">
+            Les informations de l'expédition ont été automatiquement pré-remplies
+          </span>
+        </div>
+      </div>
+    )}
+    
     <section className="rounded-xl p-4 sm:p-6 border border-orange-200 bg-orange-50/60 space-y-4">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
         <MapPin className="mr-2 text-orange-600" size={18} />
@@ -706,57 +735,102 @@ export const ContainerAndSummaryStep = ({
   selectedContainerId,
   setSelectedContainerId,
   totalAmount,
+  isContainerLocked = false, // <-- nouveau : bloque la sélection du conteneur
   sharedData,
   setSharedData,
 }) => (
   <div className="space-y-6 max-w-4xl mx-auto">
     {/* Conteneur */}
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-        <Truck className="mr-2 text-orange-600" size={18} />
-        Conteneur de transport
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center justify-between">
+        <span className="flex items-center">
+          <Truck className="mr-2 text-orange-600" size={18} />
+          {isContainerLocked ? "Conteneur de l'expédition" : "Conteneur de transport"}
+        </span>
+        {isContainerLocked && selectedContainerId && (
+          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
+            <Check size={12} />
+            Pré-rempli
+          </span>
+        )}
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {containers.map((container) => (
-          <button
-            key={container.id}
-            type="button"
-            onClick={() => setSelectedContainerId(container.id)}
-            className={`p-4 rounded-lg border-2 text-left transition-all ${
-              selectedContainerId === container.id
-                ? "border-orange-500 bg-orange-50 shadow"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="font-medium text-sm mb-1">
-              {container.name || container.containerNumber}
-            </div>
-            <div className="text-xs text-gray-600 mb-2">
-              {container.status === "PREPARATION" && "En préparation"}
-              {container.status === "LOADED" && "Chargé"}
-              {container.status === "IN_TRANSIT" && "En transit"}
-              {container.status === "CUSTOMS" && "En douane"}
-              {container.status === "DELIVERED" && "Livré"}
-            </div>
-            <div className="text-xs text-gray-500">
-              Charge: {container.currentLoad}/{container.capacity}
-            </div>
-            {container.departureDate && (
-              <div className="text-xs text-gray-500 mt-1">
-                Départ: {new Date(container.departureDate).toLocaleDateString("fr-FR")}
+      {isContainerLocked && selectedContainerId ? (
+        <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+          {(() => {
+            const container = containers.find(c => c.id === selectedContainerId);
+            if (!container) return <p className="text-sm text-gray-500">Conteneur non trouvé</p>;
+            
+            return (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  <span className="font-semibold text-green-900 text-base">
+                    {container.name || container.containerNumber}
+                  </span>
+                </div>
+                <div className="text-sm text-green-700 space-y-1">
+                  <p>Statut: {container.status === "PREPARATION" && "En préparation"}
+                    {container.status === "LOADED" && "Chargé"}
+                    {container.status === "IN_TRANSIT" && "En transit"}
+                    {container.status === "CUSTOMS" && "En douane"}
+                    {container.status === "DELIVERED" && "Livré"}</p>
+                  <p>Charge: {container.currentLoad}/{container.capacity}</p>
+                  {container.departureDate && (
+                    <p>Départ prévu: {new Date(container.departureDate).toLocaleDateString("fr-FR")}</p>
+                  )}
+                </div>
+                <div className="mt-3 text-xs text-green-700 font-medium">
+                  ✓ Conteneur automatiquement assigné de l'expédition
+                </div>
               </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {containers.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <Truck size={48} className="mx-auto mb-3 text-gray-300" />
-          <p className="text-sm">Aucun conteneur disponible</p>
-          <p className="text-xs mt-1">Les colis seront assignés plus tard</p>
+            );
+          })()}
         </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {containers.map((container) => (
+              <button
+                key={container.id}
+                type="button"
+                onClick={() => setSelectedContainerId(container.id)}
+                className={`p-4 rounded-lg border-2 text-left transition-all ${
+                  selectedContainerId === container.id
+                    ? "border-orange-500 bg-orange-50 shadow"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <div className="font-medium text-sm mb-1">
+                  {container.name || container.containerNumber}
+                </div>
+                <div className="text-xs text-gray-600 mb-2">
+                  {container.status === "PREPARATION" && "En préparation"}
+                  {container.status === "LOADED" && "Chargé"}
+                  {container.status === "IN_TRANSIT" && "En transit"}
+                  {container.status === "CUSTOMS" && "En douane"}
+                  {container.status === "DELIVERED" && "Livré"}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Charge: {container.currentLoad}/{container.capacity}
+                </div>
+                {container.departureDate && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Départ: {new Date(container.departureDate).toLocaleDateString("fr-FR")}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {containers.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Truck size={48} className="mx-auto mb-3 text-gray-300" />
+              <p className="text-sm">Aucun conteneur disponible</p>
+              <p className="text-xs mt-1">Les colis seront assignés plus tard</p>
+            </div>
+          )}
+        </>
       )}
     </section>
 

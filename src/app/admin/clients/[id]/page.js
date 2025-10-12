@@ -113,7 +113,7 @@ async function getClientData(id) {
   for (let i = 5; i >= 0; i--) {
     const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-    
+
     const monthPackages = packages.filter(pkg => {
       const pkgDate = new Date(pkg.createdAt);
       return pkgDate >= monthStart && pkgDate <= monthEnd;
@@ -149,13 +149,19 @@ async function getClientData(id) {
   );
 
   // Activité récente (audit logs pour ce client)
+  // ⚠️ Correctif: details est Json => on filtre via path + equals (plus de contains)
   const recentActivity = await prisma.auditLog.findMany({
     where: {
       OR: [
-        { resourceId: client.id, resource: "client" },
-        { 
+        { resource: "client", resourceId: client.id },
+        {
           resource: "package",
-          details: { contains: client.id },
+          details: {
+            path: ["clientId"],
+            equals: client.id,
+            // Si tu as des logs historiques où clientId est une string et tu veux être permissif :
+            // string_contains: client.id,
+          },
         },
       ],
     },
