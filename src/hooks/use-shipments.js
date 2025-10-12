@@ -256,9 +256,8 @@ export function usePackageBatch() {
       }
 
       const data = await response.json();
-      toast.success(
-        `${data.packages?.length || 1} colis créé(s) avec succès`
-      );
+      
+      // Ne pas afficher de toast ici, ce sera géré par l'appelant
       return { success: true, data };
     } catch (error) {
       toast.error(error.message || "Erreur lors de la création des colis");

@@ -287,11 +287,6 @@ export async function POST(request) {
         );
       }
 
-      // Créer l'expédition (Shipment) d'abord
-      const year = new Date().getFullYear();
-      const shCount = (await prisma.shipment.count()) + 1;
-      const shipmentNumber = `SHP${year}${String(shCount).padStart(5, "0")}`;
-
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
       });
@@ -301,34 +296,58 @@ export async function POST(request) {
           { status: 401 }
         );
 
-      const shipment = await prisma.shipment.create({
-        data: {
-          shipmentNumber,
-          client: { connect: { id: clientId } },
-          user: { connect: { id: user.id } },
-          ...(containerId
-            ? { container: { connect: { id: containerId } } }
-            : {}),
-
-          // Partagés
-          pickupAddress: sharedData.pickupAddress || null,
-          pickupDate: sharedData.pickupDate
-            ? new Date(sharedData.pickupDate)
-            : null,
-          pickupTime: sharedData.pickupTime || null,
-          deliveryAddress: body.deliveryAddress || null,
-          specialInstructions: sharedData.specialInstructions || null,
-
-          // Paiement groupé partagé (status final recalculé plus bas)
-          paymentMethod: sharedData.paymentMethod || null,
-          paidAmount: Number(sharedData.paidAmount || 0),
-          paidAt: sharedData.paidAt ? new Date(sharedData.paidAt) : null,
-          paymentStatus: derivePaymentStatus(
-            0,
-            Number(sharedData.paidAmount || 0)
-          ),
+      // RÈGLE: Un seul shipment par client par conteneur
+      // Vérifier si un shipment existe déjà pour ce client + conteneur
+      let shipment = await prisma.shipment.findFirst({
+        where: {
+          clientId,
+          containerId,
         },
       });
+
+      // Variable pour tracker si on utilise un shipment existant
+      const isExistingShipment = !!shipment;
+
+      // Si un shipment existe déjà, on l'utilise
+      if (isExistingShipment) {
+        console.log(`♻️  Shipment existant trouvé: ${shipment.shipmentNumber} pour client ${clientId} + conteneur ${containerId}`);
+      } else {
+        // Sinon, créer un nouveau shipment
+        const year = new Date().getFullYear();
+        const shCount = (await prisma.shipment.count()) + 1;
+        const shipmentNumber = `SHP${year}${String(shCount).padStart(5, "0")}`;
+
+        console.log(`🆕 Création d'un nouveau shipment: ${shipmentNumber} pour client ${clientId} + conteneur ${containerId}`);
+
+        shipment = await prisma.shipment.create({
+          data: {
+            shipmentNumber,
+            client: { connect: { id: clientId } },
+            user: { connect: { id: user.id } },
+            ...(containerId
+              ? { container: { connect: { id: containerId } } }
+              : {}),
+
+            // Partagés
+            pickupAddress: sharedData.pickupAddress || null,
+            pickupDate: sharedData.pickupDate
+              ? new Date(sharedData.pickupDate)
+              : null,
+            pickupTime: sharedData.pickupTime || null,
+            deliveryAddress: body.deliveryAddress || null,
+            specialInstructions: sharedData.specialInstructions || null,
+
+            // Paiement groupé partagé (status final recalculé plus bas)
+            paymentMethod: sharedData.paymentMethod || null,
+            paidAmount: Number(sharedData.paidAmount || 0),
+            paidAt: sharedData.paidAt ? new Date(sharedData.paidAt) : null,
+            paymentStatus: derivePaymentStatus(
+              0,
+              Number(sharedData.paidAmount || 0)
+            ),
+          },
+        });
+      }
 
       // Créer chaque package et les lier à l'expédition
       const created = [];
@@ -419,9 +438,12 @@ export async function POST(request) {
 
       return NextResponse.json(
         {
-          message: "Expédition créée",
-          shipment: { id: shipment.id, shipmentNumber },
+          message: isExistingShipment 
+            ? `Colis ajoutés à l'expédition existante ${shipment.shipmentNumber}`
+            : "Expédition créée",
+          shipment: { id: shipment.id, shipmentNumber: shipment.shipmentNumber },
           packages: created,
+          isExistingShipment,
         },
         { status: 201 }
       );

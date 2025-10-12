@@ -3,11 +3,23 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { mutate as globalMutate } from "swr";
 import { CustomDataTable } from "@/components/modules/data-table/data-table";
 import { shipmentsColumns } from "@/components/modules/admin/shipments/shipments-columns";
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { ShipmentsStats } from "@/components/modules/admin/shipments/shipments-stats";
+import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
 import { useShipments, useShipmentMutations, usePackageBatch } from "@/hooks/use-shipments";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 /* ----------------------------- Helpers ----------------------------- */
 
@@ -137,6 +149,9 @@ export function ShipmentsTable({
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showStats, setShowStats] = useState(true);
+  const [shipmentToDelete, setShipmentToDelete] = useState(null);
+  const [editingShipment, setEditingShipment] = useState(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Hook SWR pour les shipments avec cache
   const { 
@@ -147,6 +162,7 @@ export function ShipmentsTable({
 
   // Hook pour les mutations
   const { 
+    updateShipment,
     deleteShipment, 
     isLoading: isMutating 
   } = useShipmentMutations();
@@ -174,14 +190,19 @@ export function ShipmentsTable({
     router.push(`/admin/shipments/${shipment.id}`);
   }, [router]);
 
-  const handleDelete = useCallback(async (shipment) => {
-    if (!window.confirm(`Supprimer l'expédition ${shipment.shipmentNumber} ?`)) return;
+  const handleDelete = useCallback((shipment) => {
+    setShipmentToDelete(shipment);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!shipmentToDelete) return;
     
-    const result = await deleteShipment(shipment.id);
+    const result = await deleteShipment(shipmentToDelete.id);
     if (result.success) {
       await mutate(); // Rafraîchir le cache
+      setShipmentToDelete(null);
     }
-  }, [deleteShipment, mutate]);
+  }, [shipmentToDelete, deleteShipment, mutate]);
 
   const handleRefresh = useCallback(async () => {
     toast.promise(
@@ -259,13 +280,61 @@ export function ShipmentsTable({
   const handleSaveFromWizard = useCallback(async (payload) => {
     const result = await createPackageBatch(payload);
     if (result.success) {
-      await mutate(); // Rafraîchir le cache
       setIsDialogOpen(false);
       
-      // Navigation vers le shipment créé si disponible
+      // Message informatif
+      const isExisting = result.data?.isExistingShipment;
+      const shipmentNum = result.data?.shipment?.shipmentNumber;
+      const packagesCount = result.data?.packages?.length || 0;
+      
+      if (isExisting) {
+        toast.success(
+          `${packagesCount} colis ajouté(s) à l'expédition existante`,
+          {
+            description: `Expédition ${shipmentNum} - Un shipment existait déjà pour ce client dans ce conteneur`,
+            duration: 5000,
+          }
+        );
+      } else {
+        toast.success(
+          `Expédition créée avec succès`,
+          {
+            description: `${shipmentNum} avec ${packagesCount} colis`,
+            duration: 4000,
+          }
+        );
+      }
+      
+      // Attendre que le serveur finisse les calculs d'agrégats
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Invalider TOUT le cache SWR pour les shipments et packages
+      await globalMutate(
+        key => typeof key === 'string' && (
+          key.startsWith('/api/shipments') || 
+          key.startsWith('/api/packages')
+        ),
+        undefined,
+        { revalidate: true }
+      );
+      
+      // Forcer aussi le rafraîchissement local
+      await mutate(undefined, { revalidate: true });
+      
+      // Second rafraîchissement pour être sûr que les stats sont à jour
+      setTimeout(() => {
+        globalMutate(
+          key => typeof key === 'string' && key.startsWith('/api/shipments'),
+          undefined,
+          { revalidate: true }
+        );
+      }, 1000);
+      
+      // Navigation vers le shipment créé/mis à jour si disponible
       const newShipment = result.data?.shipment;
-      if (newShipment?.id) {
-        setTimeout(() => router.push(`/admin/shipments/${newShipment.id}`), 100);
+      if (newShipment?.id && !isExisting) {
+        // Ne naviguer que si c'est un nouveau shipment
+        setTimeout(() => router.push(`/admin/shipments/${newShipment.id}`), 2000);
       }
     }
   }, [createPackageBatch, mutate, router]);
@@ -293,13 +362,31 @@ export function ShipmentsTable({
     { key: "containerStatus", title: "Statut conteneur", options: containerStatusOptions },
   ];
 
+  const handleEdit = useCallback((shipment) => {
+    if (!shipment?.id) return;
+    setEditingShipment(shipment);
+    setIsEditDialogOpen(true);
+  }, []);
+
+  const handleSaveEdit = useCallback(async (data) => {
+    if (!editingShipment) return;
+    
+    const result = await updateShipment(editingShipment.id, data);
+    if (result.success) {
+      setIsEditDialogOpen(false);
+      setEditingShipment(null);
+      await mutate(); // Rafraîchir le cache
+    }
+  }, [editingShipment, updateShipment, mutate]);
+
   const columns = useMemo(
     () =>
       shipmentsColumns({
         onOpen: handleRowOpen,
+        onEdit: handleEdit,
         onDelete: handleDelete,
       }),
-    [handleRowOpen, handleDelete]
+    [handleRowOpen, handleEdit, handleDelete]
   );
 
   return (
@@ -350,6 +437,7 @@ export function ShipmentsTable({
         ]}
       />
 
+      {/* Dialog création d'expédition */}
       <PackageDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
@@ -358,6 +446,56 @@ export function ShipmentsTable({
         onSave={handleSaveFromWizard}
         loading={isCreating || isMutating}
       />
+
+      {/* Dialog modification d'expédition */}
+      <ShipmentEditDialog
+        shipment={editingShipment}
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setEditingShipment(null);
+        }}
+        onSave={handleSaveEdit}
+        loading={isMutating}
+      />
+
+      {/* Confirmation de suppression */}
+      <AlertDialog open={!!shipmentToDelete} onOpenChange={(open) => !open && setShipmentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer l'expédition{" "}
+              <span className="font-bold text-foreground">
+                {shipmentToDelete?.shipmentNumber}
+              </span>{" "}
+              ?
+              <br />
+              <br />
+              Cette action supprimera également tous les{" "}
+              <span className="font-bold text-red-600">
+                {shipmentToDelete?.packagesCount || 0} colis
+              </span>{" "}
+              associés à cette expédition.
+              <br />
+              <br />
+              <span className="text-red-600 font-semibold">
+                ⚠️ Cette action est irréversible.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isMutating}
+            >
+              {isMutating ? "Suppression..." : "Supprimer définitivement"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

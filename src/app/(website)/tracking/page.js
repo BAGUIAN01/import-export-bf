@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Package, MapPin, Clock, CheckCircle, Truck, Ship, Home, Phone, Mail, AlertCircle, Calendar, User, Copy, ExternalLink, Loader2 } from 'lucide-react';
 
 export default function TrackPackagePage() {
@@ -9,12 +9,9 @@ export default function TrackPackagePage() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!trackingNumber.trim()) return;
     
     setIsLoading(true);
@@ -59,7 +56,7 @@ export default function TrackPackagePage() {
             packagesList: data.packages,
             
             timeline: data.timeline.map((update, index) => ({
-              status: index === data.timeline.length - 1 ? 'current' : 'completed',
+              status: index === 0 ? 'current' : 'completed',
               title: update.location,
               description: update.description,
               location: update.location,
@@ -67,7 +64,7 @@ export default function TrackPackagePage() {
               time: new Date(update.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
               icon: Ship,
               completed: true,
-              current: index === data.timeline.length - 1 && data.container?.status !== 'DELIVERED',
+              current: index === 0 && data.container?.status !== 'DELIVERED',
             })),
             
             estimatedDelivery: data.container?.arrivalDate,
@@ -100,7 +97,7 @@ export default function TrackPackagePage() {
             },
             
             timeline: data.timeline.map((update, index) => ({
-              status: index === data.timeline.length - 1 ? 'current' : 'completed',
+              status: index === 0 ? 'current' : 'completed',
               title: update.location,
               description: update.description,
               location: update.location,
@@ -108,7 +105,7 @@ export default function TrackPackagePage() {
               time: new Date(update.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
               icon: Ship,
               completed: true,
-              current: index === data.timeline.length - 1 && data.container?.status !== 'DELIVERED',
+              current: index === 0 && data.container?.status !== 'DELIVERED',
             })),
             
             estimatedDelivery: data.container?.arrivalDate || data.package.estimatedDelivery,
@@ -119,7 +116,8 @@ export default function TrackPackagePage() {
         }
         
         if (data.container?.status !== 'DELIVERED') {
-          formattedData.timeline.push({
+          // Ajouter "Livraison prévue" au DÉBUT (plus récent) de la timeline
+          formattedData.timeline.unshift({
             status: 'pending',
             title: 'Livraison prévue',
             description: `Livraison à ${data.recipient.city}`,
@@ -131,6 +129,10 @@ export default function TrackPackagePage() {
             icon: Home,
             completed: false,
           });
+          
+          // Le premier élément réel (index 1) reste "current" - c'est la vraie dernière mise à jour
+          // "Livraison prévue" (index 0) reste "pending"
+          // Les autres éléments (index > 1) restent "completed"
         }
         
         setSearchResults(formattedData);
@@ -143,7 +145,47 @@ export default function TrackPackagePage() {
     } finally {
       setIsLoading(false);
     }
+  }, [trackingNumber]);
+
+  useEffect(() => {
+    setIsVisible(true);
+    
+    // Vérifier s'il y a un paramètre de recherche dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryParam = urlParams.get('q');
+    if (queryParam) {
+      setTrackingNumber(queryParam);
+      // Lancer la recherche automatiquement après un court délai
+      setTimeout(() => {
+        handleSearch();
+      }, 500);
+    }
+  }, [handleSearch]);
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Erreur lors de la copie:', err);
+      // Fallback pour les navigateurs plus anciens
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (fallbackErr) {
+        console.error('Erreur fallback:', fallbackErr);
+      }
+      document.body.removeChild(textArea);
+    }
   };
+
 
   const getStatusColor = (status) => {
     const statusLower = status?.toLowerCase();
@@ -171,9 +213,6 @@ export default function TrackPackagePage() {
     return texts[statusLower] || status;
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white mt-16">
@@ -474,12 +513,6 @@ export default function TrackPackagePage() {
                               }`}>
                                 {step.title}
                               </h4>
-                              {step.current && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded-full">
-                                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                                  En cours
-                                </span>
-                              )}
                             </div>
                             
                             <p className={`mb-3 ${
@@ -527,11 +560,24 @@ export default function TrackPackagePage() {
                   </button>
                   
                   <button 
-                    onClick={() => copyToClipboard(window.location.href)}
-                    className="border-2 border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600 font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:bg-orange-50 flex items-center gap-2 justify-center"
+                    onClick={() => copyToClipboard(`${window.location.origin}/tracking?q=${searchResults.id}`)}
+                    className={`border-2 font-bold px-8 py-4 rounded-2xl transition-all duration-300 flex items-center gap-2 justify-center ${
+                      copied 
+                        ? 'border-green-500 text-green-600 bg-green-50' 
+                        : 'border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600 hover:bg-orange-50'
+                    }`}
                   >
-                    <ExternalLink className="w-5 h-5" />
-                    Partager le suivi
+                    {copied ? (
+                      <>
+                        <CheckCircle className="w-5 h-5" />
+                        Lien copié !
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="w-5 h-5" />
+                        Partager le suivi
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

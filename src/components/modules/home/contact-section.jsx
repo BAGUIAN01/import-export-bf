@@ -11,6 +11,7 @@ export default function ContactSection() {
     message: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [nextDeparture, setNextDeparture] = useState(null);
   const sectionRef = useRef(null);
 
   useEffect(() => {
@@ -26,6 +27,21 @@ export default function ContactSection() {
     if (sectionRef.current) observer.observe(sectionRef.current);
 
     return () => observer.disconnect();
+  }, []);
+
+  // Récupérer la date du prochain départ
+  useEffect(() => {
+    const fetchNextDeparture = async () => {
+      try {
+        const response = await fetch('/api/next-departure');
+        const data = await response.json();
+        setNextDeparture(data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du prochain départ:', error);
+      }
+    };
+
+    fetchNextDeparture();
   }, []);
 
   const handleInputChange = (e) => {
@@ -107,7 +123,9 @@ export default function ContactSection() {
     {
       icon: Calendar,
       title: "Prochain chargement",
-      value: "8 Juillet 2025",
+      value: nextDeparture?.hasNextDeparture 
+        ? nextDeparture.departure.formatted.short 
+        : "À déterminer",
       note: "Réservez votre place"
     },
     {

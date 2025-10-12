@@ -37,7 +37,7 @@ const ContainerStatusBadge = ({ status }) => {
   return <Badge variant="outline" className={conf.cls}>{conf.label}</Badge>;
 };
 
-export const shipmentsColumns = ({ onOpen, onDelete }) => [
+export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
   // Sélecteur
   {
     id: "select",
@@ -214,6 +214,11 @@ export const shipmentsColumns = ({ onOpen, onDelete }) => [
             label: "Ouvrir",
             onClick: () => onOpen?.(row.original),
             icon: "Eye",
+          },
+          {
+            label: "Modifier",
+            onClick: () => onEdit?.(row.original),
+            icon: "Edit",
           },
           {
             label: "Supprimer",

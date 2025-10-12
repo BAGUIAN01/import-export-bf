@@ -22,25 +22,13 @@ import {
   AlertCircle,
   Check,
   Mail,
-  Link as LinkIcon
+  Link as LinkIcon,
+  CheckCircle,
+  Clock,
+  XCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
-
-/* ================= BRANDING ================= */
-const AGENCY_NAME = 'IMPORT EXPORT BF';
-const AGENCY_TAGLINE = 'Gestion des colis';
-const AGENCY_LOGO_URL = '/logo.png'; // place ton logo dans /public
-
-// Palette (ajuste si besoin pour coller au logo)
-const BRAND = {
-  bg: '#143B9C',     // bleu profond
-  bg2: '#1E4ED8',    // bleu secondaire
-  chipBg: '#2453D6', // cartouche
-  accent: '#FF7A00', // orange logo
-  textLight: '#FFFFFF',
-  textSub: 'rgba(255,255,255,0.85)',
-};
 
 /* ================= UTILS ================= */
 const formatPhone = (tel) => {
@@ -117,19 +105,24 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
 
       const items = containerPackages.map((pkg) => ({
         id: pkg.id,
+        packageNumber: pkg.packageNumber,
         description: `${pkg.description} (${pkg.packageNumber})`,
         price: (pkg.totalAmount ?? 0).toString(),
+        paidAmount: (pkg.paidAmount ?? 0),
         quantity: pkg.totalQuantity || 1,
+        paymentStatus: pkg.paymentStatus,
         readonly: true
       }));
 
       const total = containerPackages.reduce((sum, pkg) => sum + (pkg.totalAmount ?? 0), 0);
+      const paid = containerPackages.reduce((sum, pkg) => sum + (pkg.paidAmount ?? 0), 0);
 
       setFormData((prev) => ({
         ...prev,
         items: items.length > 0 ? items : [{ description: '', price: '', quantity: 1, readonly: false }],
         total,
-        reste: total - prev.acompte
+        acompte: paid,
+        reste: total - paid
       }));
 
       if (containerPackages.length === 0) {
@@ -157,7 +150,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
       const m = String(now.getMonth() + 1).padStart(2, '0');
       const d = String(now.getDate()).padStart(2, '0');
       const r = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      setFormData((prev) => ({ ...prev, factureClient: `${y}${m}${d}${r}` }));
+      setFormData((prev) => ({ ...prev, factureClient: `BRD-${y}${m}${d}${r}` }));
     }
   }, [isOpen, formData.factureClient]);
 
@@ -208,34 +201,35 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
     }, 350);
   };
 
-  // PDF COULEUR — UNIQUEMENT la zone printRef (bordereau)
+  // PDF via API Puppeteer
   const handleDownload = async () => {
-    if (!selectedContainer) return toast.error('Veuillez sélectionner un conteneur');
-    if (!printRef.current) return toast.error('Aucune zone à exporter');
+    if (!client?.id) return toast.error('Client non trouvé');
 
     try {
       setIsGenerating(true);
-      const html2pdf = (await import('html2pdf.js')).default;
+      
+      const response = await fetch(`/api/clients/${client.id}/bordereau`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la génération du PDF');
+      }
 
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `Bordereau-${formData.factureClient || 'document'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
-      };
-
-      await html2pdf().from(printRef.current).set(opt).save();
-      toast.success('PDF téléchargé');
-    } catch (e) {
-      console.error(e);
-      toast.error('Erreur lors de la génération du PDF');
+      // Créer un blob et télécharger
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bordereau-${client.clientCode}-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Bordereau PDF téléchargé avec succès');
+    } catch (error) {
+      console.error('Erreur téléchargement PDF:', error);
+      toast.error(error.message || 'Erreur lors de la génération du PDF');
     } finally {
       setIsGenerating(false);
     }
@@ -270,22 +264,44 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
     formData.items.length > 0 &&
     formData.items.some((item) => item.description && item.price);
 
+  const getPaymentStatusIcon = (status) => {
+    switch (status) {
+      case 'PAID':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'PARTIAL':
+        return <Clock className="h-4 w-4 text-orange-600" />;
+      default:
+        return <XCircle className="h-4 w-4 text-red-600" />;
+    }
+  };
+
+  const getPaymentStatusText = (status) => {
+    switch (status) {
+      case 'PAID':
+        return 'Payé';
+      case 'PARTIAL':
+        return 'Partiel';
+      default:
+        return 'Impayé';
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[980px] max-h-[90vh] overflow-hidden p-4">
-        <DialogHeader className="border-b pb-4">
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Créer un bordereau d'expédition
+      <DialogContent className="sm:max-w-[1100px] max-h-[90vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <FileText className="h-6 w-6 text-[#010066]" />
+            Bordereau d'expédition professionnel
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-6 py-4">
-          {/* ====== Cette carte n'est PAS dans le PDF ====== */}
-          <Card data-html2canvas-ignore>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {/* ====== Carte de sélection conteneur (hors PDF) ====== */}
+          <Card className="mb-6" data-html2canvas-ignore>
             <CardContent className="p-4 space-y-4">
               <div className="flex items-center gap-4">
-                <ContainerIcon className="h-5 w-5 text-blue-600" />
+                <ContainerIcon className="h-5 w-5 text-[#010066]" />
                 <div className="flex-1">
                   <label className="text-sm font-medium mb-2 block">Conteneur :</label>
                   <Select value={selectedContainer ?? ''} onValueChange={setSelectedContainer}>
@@ -312,35 +328,32 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
               </div>
 
               {selectedContainerData && (
-                <div className="p-3 bg-blue-50 rounded-lg text-sm">
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="p-4 bg-gradient-to-r from-[#010066]/5 to-[#010066]/10 rounded-xl border border-[#010066]/20">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-600">Conteneur :</span>
-                      <p className="font-semibold">{selectedContainerData.containerNumber}</p>
+                      <span className="font-medium text-gray-600">Conteneur</span>
+                      <p className="font-bold text-[#010066]">{selectedContainerData.containerNumber}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">Destination :</span>
-                      <p className="font-semibold">{selectedContainerData.destination}</p>
+                      <span className="font-medium text-gray-600">Destination</span>
+                      <p className="font-bold text-[#010066]">{selectedContainerData.destination}</p>
                     </div>
                     {selectedContainerData.departureDate && (
                       <div>
-                        <span className="font-medium text-gray-600">Date de départ :</span>
-                        <p className="font-semibold">
+                        <span className="font-medium text-gray-600">Départ</span>
+                        <p className="font-bold text-[#010066]">
                           {new Date(selectedContainerData.departureDate).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                     )}
                     <div>
-                      <span className="font-medium text-gray-600">Colis trouvés :</span>
-                      <p className="font-semibold">
-                        {packages.length} colis
-                      </p>
+                      <span className="font-medium text-gray-600">Colis</span>
+                      <p className="font-bold text-[#010066]">{packages.length}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">Récap :</span>
-                      <p className="font-semibold">
-                        {(totalWeight || 0) > 0 ? `${totalWeight.toFixed(2)} kg` : '-'} •{' '}
-                        {(totalVolume || 0) > 0 ? `${totalVolume.toFixed(3)} m³` : '-'}
+                      <span className="font-medium text-gray-600">Poids/Volume</span>
+                      <p className="font-bold text-[#010066]">
+                        {(totalWeight || 0) > 0 ? `${totalWeight.toFixed(1)}kg` : '-'} • {(totalVolume || 0) > 0 ? `${totalVolume.toFixed(2)}m³` : '-'}
                       </p>
                     </div>
                   </div>
@@ -356,394 +369,341 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
             </CardContent>
           </Card>
 
-          {/* ====== ZONE CAPTURÉE EN PDF ====== */}
+          {/* ====== ZONE CAPTURÉE EN PDF - DESIGN MODERNE ====== */}
           <div
             ref={printRef}
-            className="pdf-surface bg-white border border-gray-200 rounded-lg overflow-hidden print:border-0 print:shadow-none"
+            className="bg-white rounded-xl shadow-2xl overflow-hidden print:shadow-none print:rounded-none"
+            style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
           >
-            <div className="border-2 border-black">
-              {/* Entête brandée */}
-              <div
-                className="text-white p-3 flex items-center justify-between"
-                style={{
-                  background: `linear-gradient(90deg, ${BRAND.bg} 0%, ${BRAND.bg2} 100%)`,
-                  borderTopLeftRadius: 12,
-                  borderTopRightRadius: 12
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="shrink-0 relative">
+            {/* En-tête moderne */}
+            <div className="relative bg-gradient-to-br from-[#010066] via-[#010088] to-[#0100aa] text-white p-8">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
                     <img
-                      src={AGENCY_LOGO_URL}
-                      alt={`${AGENCY_NAME} logo`}
-                      className="h-10 w-10 rounded-lg bg-white p-1 shadow-sm print:shadow-none"
-                      style={{ border: `2px solid ${BRAND.accent}` }}
+                      src="/logo.png"
+                      alt="Logo"
+                      className="h-14 w-14 rounded-lg bg-white p-2 shadow-lg"
                     />
-                  </div>
-                  <div className="leading-tight">
-                    <div
-                      className="inline-flex items-center rounded font-bold text-sm tracking-wide"
-                      style={{
-                        backgroundColor: BRAND.chipBg,
-                        color: BRAND.textLight,
-                        padding: '8px 16px',
-                        boxShadow: `0 0 0 2px ${BRAND.bg} inset`
-                      }}
-                    >
-                      {AGENCY_NAME}
-                    </div>
-                    <div className="mt-0.5 text-[11px]" style={{ color: BRAND.textSub }}>
-                      {AGENCY_TAGLINE}
+                    <div>
+                      <h1 className="text-3xl font-bold tracking-tight">IMPORT EXPORT BF</h1>
+                      <p className="text-blue-200 text-sm">Service d'envoi de colis France - Burkina Faso</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="text-right text-xs">
-                  <div
-                    className="inline-block px-2 py-1 rounded mb-1"
-                    style={{ backgroundColor: 'rgba(255,122,0,0.12)', color: BRAND.textLight, border: `1px solid ${BRAND.accent}` }}
-                  >
-                    Import / Export
-                  </div>
-                  <div style={{ color: BRAND.textSub }}>Tél. : +33 6 70 69 98 23 / +226 76 60 19 81</div>
-                  <div style={{ color: BRAND.textSub }}>Email : contact@ieBF.fr</div>
-                </div>
-              </div>
-
-              {/* Date d’édition + Facture + QR */}
-              <div className="grid grid-cols-12 border-b border-black">
-                <div className="col-span-7 flex border-r border-black">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black">Date d’édition</div>
-                  <div className="flex-1 p-3">
-                    <Input
-                      value={formData.dateEdition}
-                      onChange={(e) => setFormData({ ...formData, dateEdition: e.target.value })}
-                      className="border-0 text-sm h-auto p-0 print:bg-transparent"
-                    />
+                  <div className="text-sm text-blue-100 space-y-1">
+                    <p>📞 +33 6 70 69 98 23 • +226 76 60 19 81</p>
+                    <p>✉️ contact@ieBF.fr</p>
                   </div>
                 </div>
-                <div className="col-span-5 p-3 flex items-center justify-between gap-3">
-                  <div className="text-right">
-                    <div className="text-xs font-medium">Facture client N°</div>
-                    <Input
-                      value={formData.factureClient}
-                      onChange={(e) => setFormData({ ...formData, factureClient: e.target.value })}
-                      className="border-0 text-center font-bold h-auto p-1 w-28 text-sm print:bg-transparent"
-                    />
+                <div className="text-right">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 mb-2">
+                    <p className="text-xs text-blue-200">Bordereau N°</p>
+                    <p className="text-xl font-bold">{formData.factureClient}</p>
                   </div>
-                  <div className="print:hidden">
-                    <QRCode value={formData.factureClient || 'N/A'} size={60} />
-                  </div>
-                  <div className="hidden print:block">
-                    <QRCode value={formData.factureClient || 'N/A'} size={60} />
-                  </div>
+                  <p className="text-xs text-blue-200">Date: {formData.dateEdition}</p>
                 </div>
               </div>
+            </div>
 
-              {/* Bandeau jaune */}
-              <div className="bg-yellow-400 p-4 text-center border-b border-black">
-                <div className="font-bold text-xl">IMPORT EXPORT BF</div>
-                <div className="text-sm font-medium">EXPÉDIEZ VOS MARCHANDISES EN TOUTE SÉCURITÉ !</div>
-                <div className="text-xs mt-1">Service d'envoi de colis France — Burkina Faso</div>
-              </div>
-
-              {/* Infos conteneur (récap compact) */}
-              {selectedContainerData && (
-                <div className="bg-blue-50 p-3 border-b border-black text-sm">
-                  <div className="flex flex-wrap gap-x-6 gap-y-1">
-                    <span><strong>Conteneur :</strong> {selectedContainerData.containerNumber}</span>
-                    <span><strong>Destination :</strong> {selectedContainerData.destination}</span>
+            {/* Informations conteneur - Bandeau */}
+            {selectedContainerData && (
+              <div className="bg-gradient-to-r from-amber-400 to-amber-500 px-8 py-4">
+                <div className="flex items-center justify-between text-sm font-medium text-amber-900">
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <span className="text-amber-800">Conteneur:</span>
+                      <span className="ml-2 font-bold">{selectedContainerData.containerNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-amber-800">Destination:</span>
+                      <span className="ml-2 font-bold">{selectedContainerData.destination}</span>
+                    </div>
                     {selectedContainerData.departureDate && (
-                      <span><strong>Date de départ :</strong> {new Date(selectedContainerData.departureDate).toLocaleDateString('fr-FR')}</span>
+                      <div>
+                        <span className="text-amber-800">Départ:</span>
+                        <span className="ml-2 font-bold">
+                          {new Date(selectedContainerData.departureDate).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
                     )}
-                    <span><strong>Colis :</strong> {packages.length}</span>
-                    <span><strong>Montant total :</strong> {formData.total.toFixed(2)}€</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-800">Colis:</span>
+                    <span className="ml-2 font-bold">{packages.length}</span>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Expéditeur */}
-              <div className="border-b border-black">
-                <div className="flex border-b border-black">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">Nom, Prénom</div>
-                  <div className="flex-1 p-3">
-                    <div className="font-medium">{client?.firstName || ''} {client?.lastName || ''}</div>
+            <div className="p-8 space-y-6">
+              {/* Section Expéditeur / Destinataire - Design moderne */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Expéditeur */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border-l-4 border-[#010066]">
+                  <h3 className="text-sm font-bold text-[#010066] uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[#010066] rounded-full flex items-center justify-center text-white text-xs">E</div>
+                    Expéditeur
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Nom complet</p>
+                      <p className="font-bold text-gray-900">{client?.firstName || ''} {client?.lastName || ''}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Téléphone</p>
+                      <p className="font-semibold text-gray-900">{formatPhone(client?.phone)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Email</p>
+                      <p className="font-semibold text-gray-900">{client?.email || 'Non renseigné'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Adresse</p>
+                      <p className="font-semibold text-gray-900">{client?.address || ''}</p>
+                      <p className="text-xs text-gray-600">{client?.city || ''}, {client?.country || ''}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex border-b border-black">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">Adresse</div>
-                  <div className="flex-1 p-3">
-                    <div>{client?.address || ''}{client?.city ? `, ${client.city}` : ''}</div>
+
+                {/* Destinataire */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-5 border-l-4 border-green-600">
+                  <h3 className="text-sm font-bold text-green-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs">D</div>
+                    Destinataire
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Nom complet</p>
+                      <p className="font-bold text-gray-900">{formData.destinataireNom || 'Non renseigné'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Téléphone</p>
+                      <p className="font-semibold text-gray-900">{formatPhone(formData.destinataireTel)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Email</p>
+                      <p className="font-semibold text-gray-900">{formData.destinataireEmail || 'Non renseigné'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Adresse</p>
+                      <p className="font-semibold text-gray-900">{formData.destinataireAdresse || 'Non renseignée'}</p>
+                      <p className="text-xs text-gray-600">{client?.recipientCity || ''}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">Téléphone</div>
-                  <div className="flex-1 p-3">{formatPhone(client?.phone)}</div>
-                </div>
-                <div className="flex">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">E-mail</div>
-                  <div className="flex-1 p-3">{client?.email || ''}</div>
                 </div>
               </div>
 
-              {/* Marchandises */}
-              <div className="bg-yellow-400 p-3 text-center font-bold border-b border-black">
-                Descriptif de la marchandise
-              </div>
-
-              <div className="flex border-b border-black bg-gray-50">
-                <div className="flex-1 p-3 text-sm font-medium border-r border-black text-center">
-                  NOMBRE ET NATURE DE LA MARCHANDISE
-                </div>
-                <div className="w-24 p-3 text-sm font-medium text-center border-r border-black">Qté</div>
-                <div className="w-28 p-3 text-sm font-medium text-center">Prix<br />convenu</div>
-              </div>
-
-              <div className="min-h-48">
+              {/* Liste des colis - Tableau moderne */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Détail des colis</h3>
+                
                 {loading ? (
-                  <div className="p-4 space-y-2">
+                  <div className="space-y-2">
                     {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-8 w-full" />
+                      <Skeleton key={i} className="h-16 w-full rounded-lg" />
                     ))}
                   </div>
                 ) : (
-                  <>
+                  <div className="space-y-3">
                     {formData.items.map((item, index) => (
-                      <div key={index} className="flex border-b border-gray-300 group">
-                        <div className="flex-1 p-2 border-r border-black">
-                          <div className="flex items-center gap-2">
-                            <Input
-                              value={item.description}
-                              onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                              className="border-0 text-sm h-auto p-1 print:bg-transparent"
-                              placeholder="Description de l'article…"
-                              readOnly={item.readonly}
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-[#010066]/30 transition-colors group"
+                      >
+                        <div className="flex items-center gap-4">
+                          {/* QR Code pour tracking */}
+                          <div className="flex-shrink-0 bg-white p-2 rounded-lg border-2 border-gray-200">
+                            <QRCode
+                              value={item.packageNumber ? `${window.location.origin}/tracking?q=${item.packageNumber}` : 'N/A'}
+                              size={60}
+                              level="M"
                             />
-                            {!item.readonly && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeItem(index)}
-                                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 print:hidden"
-                                title="Supprimer la ligne"
-                                data-html2canvas-ignore
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            )}
                           </div>
-                        </div>
-                        <div className="w-24 p-2 border-r border-black">
-                          <Input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                            className="border-0 text-sm h-auto p-1 text-center print:bg-transparent"
-                            min={1}
-                            readOnly={item.readonly}
-                          />
-                        </div>
-                        <div className="w-28 p-2">
-                          <Input
-                            type="number"
-                            value={item.price}
-                            onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                            className="border-0 text-sm h-auto p-1 text-center print:bg-transparent"
-                            placeholder="0"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                    ))}
 
-                    {Array.from({ length: Math.max(0, 5 - formData.items.length) }).map((_, index) => (
-                      <div key={`empty-${index}`} className="flex border-b border-gray-300 h-10">
-                        <div className="flex-1 p-2 border-r border-black"></div>
-                        <div className="w-24 p-2 border-r border-black"></div>
-                        <div className="w-28 p-2"></div>
+                          {/* Infos colis */}
+                          <div className="flex-1 grid grid-cols-12 gap-4 items-center">
+                            <div className="col-span-5">
+                              <p className="text-xs text-gray-500 mb-1">Description</p>
+                              <p className="font-semibold text-gray-900">{item.description}</p>
+                            </div>
+                            <div className="col-span-1 text-center">
+                              <p className="text-xs text-gray-500 mb-1">Qté</p>
+                              <p className="font-bold text-[#010066]">{item.quantity}</p>
+                            </div>
+                            <div className="col-span-2 text-right">
+                              <p className="text-xs text-gray-500 mb-1">Montant</p>
+                              <p className="font-bold text-gray-900">{parseFloat(item.price || 0).toFixed(2)}€</p>
+                            </div>
+                            <div className="col-span-2 text-right">
+                              <p className="text-xs text-gray-500 mb-1">Payé</p>
+                              <p className="font-bold text-green-600">{(item.paidAmount || 0).toFixed(2)}€</p>
+                            </div>
+                            <div className="col-span-2 text-center">
+                              <p className="text-xs text-gray-500 mb-1">Statut</p>
+                              <div className="flex items-center justify-center gap-1">
+                                {getPaymentStatusIcon(item.paymentStatus)}
+                                <span className={`text-xs font-semibold ${
+                                  item.paymentStatus === 'PAID' ? 'text-green-600' :
+                                  item.paymentStatus === 'PARTIAL' ? 'text-orange-600' : 'text-red-600'
+                                }`}>
+                                  {getPaymentStatusText(item.paymentStatus)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {!item.readonly && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeItem(index)}
+                              className="opacity-0 group-hover:opacity-100 print:hidden"
+                              data-html2canvas-ignore
+                            >
+                              <X className="h-4 w-4 text-red-500" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
-                  </>
+                  </div>
                 )}
-              </div>
 
-              <div className="p-2 print:hidden" data-html2canvas-ignore>
-                <Button onClick={addItem} variant="outline" size="sm">
-                  Ajouter un article
-                </Button>
-              </div>
-
-              {/* Totaux & options */}
-              <div className="flex">
-                <div className="flex-1 border-r border-black">
-                  <div className="flex">
-                    <div className="flex-1 p-3 bg-yellow-300">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={formData.effetsPersonnels}
-                          onCheckedChange={(checked) => setFormData({ ...formData, effetsPersonnels: Boolean(checked) })}
-                        />
-                        <span className="text-sm font-medium">Effets personnels usagés</span>
-                      </div>
-                    </div>
-                    <div className="flex-1 p-3 bg-yellow-300">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={formData.effetsNeufs}
-                          onCheckedChange={(checked) => setFormData({ ...formData, effetsNeufs: Boolean(checked) })}
-                        />
-                        <span className="text-sm font-medium">Effets neufs</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3 border-t border-black">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm">Demande de livraison :</span>
-                      <Checkbox
-                        checked={formData.demandeOui}
-                        onCheckedChange={(checked) =>
-                          setFormData({ ...formData, demandeOui: Boolean(checked), demandeNon: !checked })
-                        }
-                      />
-                      <span className="text-xs">OUI</span>
-                      <Checkbox
-                        checked={formData.demandeNon}
-                        onCheckedChange={(checked) =>
-                          setFormData({ ...formData, demandeNon: Boolean(checked), demandeOui: !checked })
-                        }
-                      />
-                      <span className="text-xs">NON</span>
-                    </div>
-                    <div className="text-xs">
-                      <label className="block mb-1">DOCUMENTS, FACTURES OU JUSTIFICATIFS :</label>
-                      <Input
-                        value={formData.livraison}
-                        onChange={(e) => setFormData({ ...formData, livraison: e.target.value })}
-                        className="border border-gray-300 text-xs h-8 p-2"
-                        placeholder="Référence / valeur / remarque"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="w-40">
-                  <div className="p-3 border-b border-black text-center">
-                    <div className="text-sm font-medium">TOTAL :</div>
-                    <div className="font-bold text-lg">{formData.total.toFixed(2)}€</div>
-                  </div>
-                  <div className="p-3 border-b border-black text-center bg-blue-600 text-white">
-                    <div className="text-sm font-medium">ACOMPTE :</div>
-                    <Input
-                      type="number"
-                      value={formData.acompte}
-                      onChange={(e) => {
-                        const acompte = parseFloat(e.target.value) || 0;
-                        if (acompte > formData.total) return toast.error("L'acompte ne peut pas être supérieur au total");
-                        setFormData({ ...formData, acompte, reste: formData.total - acompte });
-                      }}
-                      className="border-0 text-center font-bold h-auto p-1 bg-transparent text-white text-lg"
-                      placeholder="0"
-                      step="0.01"
-                    />
-                  </div>
-                  <div className="p-3 text-center bg-blue-800 text-white">
-                    <div className="text-sm font-medium">RESTE :</div>
-                    <div className="font-bold text-lg">{formData.reste.toFixed(2)}€</div>
-                  </div>
+                <div className="mt-4 print:hidden" data-html2canvas-ignore>
+                  <Button onClick={addItem} variant="outline" size="sm" className="w-full">
+                    + Ajouter un article
+                  </Button>
                 </div>
               </div>
 
-              {/* Destinataire */}
-              <div className="bg-blue-600 text-white p-3 text-center font-bold">DESTINATAIRE</div>
+              {/* Totaux - Design moderne */}
+              <div className="grid grid-cols-3 gap-4 mt-8">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
+                  <p className="text-xs text-blue-600 uppercase tracking-wide mb-2">Total général</p>
+                  <p className="text-3xl font-bold text-[#010066]">{formData.total.toFixed(2)}€</p>
+                  <p className="text-xs text-blue-600 mt-1">{formData.items.length} colis</p>
+                </div>
 
-              <div>
-                <div className="flex border-b border-black">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">Nom, Prénom</div>
-                  <div className="flex-1 p-3">
-                    <Input
-                      value={formData.destinataireNom}
-                      onChange={(e) => setFormData({ ...formData, destinataireNom: e.target.value })}
-                      className="border-0 text-sm h-auto p-0 print:bg-transparent"
-                    />
-                  </div>
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200">
+                  <p className="text-xs text-green-600 uppercase tracking-wide mb-2">Montant payé</p>
+                  <p className="text-3xl font-bold text-green-700">{formData.acompte.toFixed(2)}€</p>
+                  <p className="text-xs text-green-600 mt-1">
+                    {((formData.acompte / formData.total) * 100 || 0).toFixed(0)}% du total
+                  </p>
                 </div>
-                <div className="flex border-b border-black">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">Adresse</div>
-                  <div className="flex-1 p-3">
-                    <Input
-                      value={formData.destinataireAdresse}
-                      onChange={(e) => setFormData({ ...formData, destinataireAdresse: e.target.value })}
-                      className="border-0 text-sm h-auto p-0 print:bg-transparent"
-                    />
-                  </div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">Téléphone</div>
-                  <div className="flex-1 p-3">
-                    <Input
-                      value={formData.destinataireTel}
-                      onChange={(e) => setFormData({ ...formData, destinataireTel: e.target.value })}
-                      className="border-0 text-sm h-auto p-0 print:bg-transparent"
-                    />
-                  </div>
-                </div>
-                <div className="flex">
-                  <div className="w-40 p-3 text-sm font-medium border-r border-black bg-gray-50">E-mail</div>
-                  <div className="flex-1 p-3">
-                    <Input
-                      value={formData.destinataireEmail}
-                      onChange={(e) => setFormData({ ...formData, destinataireEmail: e.target.value })}
-                      className="border-0 text-sm h-auto p-0 print:bg-transparent"
-                      placeholder="destinataire@email.com"
-                    />
-                  </div>
-                  <div className="w-40 p-3 text-right border-l border-black">
-                    <div className="text-xs font-medium">SIGNATURE :</div>
-                    <div className="h-12 border-b border-black mt-2"></div>
-                  </div>
+
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 border-2 border-orange-300">
+                  <p className="text-xs text-orange-700 uppercase tracking-wide mb-2 font-bold">Reste à payer</p>
+                  <p className="text-3xl font-bold text-orange-600">{formData.reste.toFixed(2)}€</p>
+                  <p className="text-xs text-orange-600 mt-1">
+                    {((formData.reste / formData.total) * 100 || 0).toFixed(0)}% restant
+                  </p>
                 </div>
               </div>
 
-              {/* Conditions */}
-              <div className="text-xs p-3 bg-gray-50 space-y-1 leading-relaxed">
-                <div>1 — Toutes marchandises non précisées sur ce document ne pourront pas être réclamées.</div>
-                <div>2 — Toutes valeurs déclarées doivent être justifiées par une facture.</div>
-                <div>3 — La livraison à destination est optionnelle et le montant est déterminé avant le départ.</div>
-                <div>4 — Sous réserve de procédures douanières.</div>
-                <div>5 — L'agence n'est pas responsable des colis non réclamés après 6 mois.</div>
+              {/* Options de livraison - Design épuré */}
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                <h3 className="text-sm font-bold text-gray-900 mb-4">Options d'expédition</h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={formData.effetsPersonnels}
+                      onCheckedChange={(checked) => setFormData({ ...formData, effetsPersonnels: Boolean(checked) })}
+                    />
+                    <span className="text-sm font-medium text-gray-700">Effets personnels usagés</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={formData.effetsNeufs}
+                      onCheckedChange={(checked) => setFormData({ ...formData, effetsNeufs: Boolean(checked) })}
+                    />
+                    <span className="text-sm font-medium text-gray-700">Effets neufs</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="text-sm font-medium text-gray-700">Demande de livraison:</span>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={formData.demandeOui}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, demandeOui: Boolean(checked), demandeNon: !checked })
+                      }
+                    />
+                    <span className="text-sm">OUI</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={formData.demandeNon}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, demandeNon: Boolean(checked), demandeOui: !checked })
+                      }
+                    />
+                    <span className="text-sm">NON</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-600 mb-1 block">Documents, factures ou justificatifs</label>
+                  <Input
+                    value={formData.livraison}
+                    onChange={(e) => setFormData({ ...formData, livraison: e.target.value })}
+                    className="text-sm h-9"
+                    placeholder="Référence, valeur ou remarque..."
+                  />
+                </div>
+              </div>
+
+              {/* Conditions - Design compact */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h4 className="text-xs font-bold text-amber-900 mb-2 uppercase">Conditions générales</h4>
+                <div className="text-xs text-amber-800 space-y-1 leading-relaxed">
+                  <p>• Toutes marchandises non précisées sur ce document ne pourront pas être réclamées</p>
+                  <p>• Toutes valeurs déclarées doivent être justifiées par une facture</p>
+                  <p>• La livraison à destination est optionnelle, montant déterminé avant départ</p>
+                  <p>• Sous réserve de procédures douanières</p>
+                  <p>• L'agence n'est pas responsable des colis non réclamés après 6 mois</p>
+                </div>
+              </div>
+
+              {/* Signature */}
+              <div className="flex items-end justify-between pt-6 border-t-2 border-dashed border-gray-300">
+                <div className="text-xs text-gray-500">
+                  <p className="mb-1">Document généré le {formData.dateEdition}</p>
+                  <p className="font-medium">IMPORT EXPORT BF - Service d'envoi de colis France - Burkina Faso</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-gray-600 mb-2">Signature client</p>
+                  <div className="w-48 h-16 border-b-2 border-gray-400"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ====== Boutons (hors PDF) ====== */}
-        <DialogFooter className="border-t pt-4 flex-shrink-0" data-html2canvas-ignore>
+        {/* ====== Boutons d'action (hors PDF) ====== */}
+        <DialogFooter className="border-t px-6 py-4 bg-gray-50" data-html2canvas-ignore>
           <div className="flex items-center justify-between w-full">
             <div className="flex gap-2">
-              <Button onClick={handlePrint} variant="outline" disabled={!isValid || isGenerating} className="flex items-center gap-2">
-                <Printer className="h-4 w-4" />
-                {isGenerating ? 'Génération…' : 'Imprimer'}
+              <Button onClick={handlePrint} variant="outline" disabled={!isValid || isGenerating}>
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimer
               </Button>
-              <Button onClick={handleDownload} variant="outline" disabled={!isValid || isGenerating} className="flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                Télécharger PDF
+              <Button onClick={handleDownload} variant="default" disabled={!isValid || isGenerating} className="bg-[#010066] hover:bg-[#010088]">
+                <Download className="h-4 w-4 mr-2" />
+                {isGenerating ? 'Génération...' : 'Télécharger PDF'}
               </Button>
-              <Button onClick={handleEmail} variant="outline" disabled={!isValid} className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Envoyer par e-mail
+              <Button onClick={handleEmail} variant="outline" disabled={!isValid}>
+                <Mail className="h-4 w-4 mr-2" />
+                Envoyer par email
               </Button>
-              <Button onClick={handleShareLink} variant="outline" disabled={!isValid} className="flex items-center gap-2">
-                <LinkIcon className="h-4 w-4" />
-                Lien de partage
+              <Button onClick={handleShareLink} variant="outline" disabled={!isValid}>
+                <LinkIcon className="h-4 w-4 mr-2" />
+                Copier le lien
               </Button>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onClose(false)}>Annuler</Button>
-              <Button onClick={handlePrint} disabled={!isValid || isGenerating} className="flex items-center gap-2">
-                {isValid ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                Créer le bordereau
-              </Button>
-            </div>
+            <Button variant="ghost" onClick={() => onClose(false)}>
+              Fermer
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>

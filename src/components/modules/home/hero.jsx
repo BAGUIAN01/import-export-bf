@@ -15,6 +15,7 @@ export default function Hero() {
   const [currentStat, setCurrentStat] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [currentService, setCurrentService] = useState(0);
+  const [nextDeparture, setNextDeparture] = useState(null);
 
   const stats = [
     {
@@ -78,6 +79,21 @@ export default function Hero() {
       clearInterval(statInterval);
       clearInterval(serviceInterval);
     };
+  }, []);
+
+  // Récupérer la date du prochain départ
+  useEffect(() => {
+    const fetchNextDeparture = async () => {
+      try {
+        const response = await fetch('/api/next-departure');
+        const data = await response.json();
+        setNextDeparture(data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du prochain départ:', error);
+      }
+    };
+
+    fetchNextDeparture();
   }, []);
 
   return (
@@ -419,7 +435,10 @@ export default function Hero() {
                     Prochain chargement
                   </div>
                   <div className="text-white text-lg font-black">
-                    8 Juillet 2025
+                    {nextDeparture?.hasNextDeparture 
+                      ? nextDeparture.departure.formatted.short 
+                      : "À déterminer"
+                    }
                   </div>
                   <div className="text-orange-300 text-xs">
                     Réservez votre place

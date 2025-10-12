@@ -150,8 +150,8 @@ const PaymentBadge = ({ status }) => {
   );
 };
 
-const StatCard = ({ icon: Icon, title, value, subtitle, color, trend }) => (
-  <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50/50">
+const StatCard = ({ icon: Icon, title, value, subtitle, color, trend, onClick }) => (
+  <Card className={`border-0 shadow-lg bg-gradient-to-br from-white to-gray-50/50 ${onClick ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''}`} onClick={onClick}>
     <CardContent className="p-6">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
@@ -389,7 +389,7 @@ export default function ClientDetail({
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <StatCard
             icon={Package}
             title="Colis envoyés"
@@ -421,6 +421,15 @@ export default function ClientDetail({
             value={clientStats.lastOrderDate ? formatDate(clientStats.lastOrderDate) : "Aucune"}
             subtitle="Activité récente"
             color="from-orange-500 to-orange-600"
+          />
+
+          <StatCard
+            icon={FileText}
+            title="Bordereau"
+            value="PDF"
+            subtitle="Télécharger le bordereau"
+            color="from-red-500 to-red-600"
+            onClick={() => setIsBordereauDialogOpen(true)}
           />
         </div>
 
@@ -482,6 +491,88 @@ export default function ClientDetail({
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                       <p className="text-sm font-medium text-amber-800 mb-1">Notes internes</p>
                       <p className="text-sm text-amber-700">{currentClient.notes}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Informations de paiement */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Euro className="h-5 w-5 text-green-600" />
+                    Informations de paiement
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {currentPackages.length > 0 ? (
+                    <>
+                      {(() => {
+                        const totalAmount = currentPackages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0);
+                        const totalPaid = currentPackages.reduce((sum, pkg) => sum + (pkg.paidAmount || 0), 0);
+                        const remainingAmount = totalAmount - totalPaid;
+                        const paidPackages = currentPackages.filter(pkg => pkg.paidAmount > 0);
+                        const pendingPackages = currentPackages.filter(pkg => (pkg.totalAmount || 0) - (pkg.paidAmount || 0) > 0);
+
+                        return (
+                          <>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <span className="text-sm font-medium text-green-800">Montant payé</span>
+                                </div>
+                                <p className="text-2xl font-bold text-green-900">{currency(totalPaid)}</p>
+                                <p className="text-xs text-green-600">{paidPackages.length} colis payé{paidPackages.length > 1 ? 's' : ''}</p>
+                              </div>
+                              <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Clock className="h-4 w-4 text-orange-600" />
+                                  <span className="text-sm font-medium text-orange-800">Reste à payer</span>
+                                </div>
+                                <p className="text-2xl font-bold text-orange-900">{currency(remainingAmount)}</p>
+                                <p className="text-xs text-orange-600">{pendingPackages.length} colis en attente</p>
+                              </div>
+                            </div>
+                            
+                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Euro className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-800">Total général</span>
+                              </div>
+                              <p className="text-2xl font-bold text-blue-900">{currency(totalAmount)}</p>
+                              <p className="text-xs text-blue-600">{currentPackages.length} colis au total</p>
+                            </div>
+
+                            {pendingPackages.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-gray-700">Colis avec solde restant :</p>
+                                <div className="space-y-2">
+                                  {pendingPackages.slice(0, 3).map((pkg) => (
+                                    <div key={pkg.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                                      <span className="font-medium">{pkg.packageNumber}</span>
+                                      <span className="text-orange-600 font-semibold">
+                                        {currency((pkg.totalAmount || 0) - (pkg.paidAmount || 0))}
+                                      </span>
+                                    </div>
+                                  ))}
+                                  {pendingPackages.length > 3 && (
+                                    <p className="text-xs text-gray-500 text-center">
+                                      +{pendingPackages.length - 3} autre{pendingPackages.length - 3 > 1 ? 's' : ''} colis
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Euro className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">Aucune transaction pour le moment</p>
+                      <p className="text-sm text-gray-400">Les informations de paiement apparaîtront ici</p>
                     </div>
                   )}
                 </CardContent>

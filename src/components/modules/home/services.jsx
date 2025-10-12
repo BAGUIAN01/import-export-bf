@@ -6,6 +6,7 @@ export default function Services() {
   const [activeService, setActiveService] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [nextDeparture, setNextDeparture] = useState(null);
   const sectionRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +30,21 @@ export default function Services() {
       observer.disconnect();
       clearInterval(interval);
     };
+  }, []);
+
+  // Récupérer la date du prochain départ
+  useEffect(() => {
+    const fetchNextDeparture = async () => {
+      try {
+        const response = await fetch('/api/next-departure');
+        const data = await response.json();
+        setNextDeparture(data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du prochain départ:', error);
+      }
+    };
+
+    fetchNextDeparture();
   }, []);
 
   const handleMouseMove = (e) => {
@@ -96,11 +112,11 @@ export default function Services() {
       title: "Chargements Réguliers",
       subtitle: "Départs programmés",
       description: "Chargements réguliers avec dates fixes pour planifier vos envois",
-      stats: "Prochain • 8 Juillet",
+      stats: "Prochain • Chargement",
       gradient: "from-[#010066] via-[#010088] to-[#0100aa]",
       accentColor: "primary",
       features: ["Départs réguliers", "Dates prévisibles", "Planning fixe"],
-      price: "Prochain: 8 Juillet 2025"
+      price: "Prochain: Chargement"
     },
     {
       id: 5,
@@ -194,7 +210,10 @@ export default function Services() {
                             ? 'bg-orange-100/90 text-orange-800 border border-orange-200' 
                             : 'bg-blue-100/90 border border-blue-200'
                         }`} style={service.accentColor === 'primary' ? { color: '#010066' } : {}}>
-                          {service.stats}
+                          {service.id === 4 && nextDeparture?.hasNextDeparture 
+                            ? `Prochain • ${nextDeparture.departure.formatted.short}`
+                            : service.stats
+                          }
                         </div>
                       </div>
                     </div>
@@ -237,7 +256,10 @@ export default function Services() {
                             ? 'bg-orange-100/90 text-orange-800 border border-orange-200' 
                             : 'bg-blue-100/90 border border-blue-200'
                         }`} style={service.accentColor === 'primary' ? { color: '#010066' } : {}}>
-                          {service.stats}
+                          {service.id === 4 && nextDeparture?.hasNextDeparture 
+                            ? `Prochain • ${nextDeparture.departure.formatted.short}`
+                            : service.stats
+                          }
                         </div>
                       </div>
                     </div>

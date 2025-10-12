@@ -10,6 +10,8 @@ export default function CTA() {
     minutes: 0,
     seconds: 0
   });
+  const [nextDeparture, setNextDeparture] = useState(null);
+  const [loading, setLoading] = useState(true);
   const sectionRef = useRef(null);
 
   useEffect(() => {
@@ -27,15 +29,34 @@ export default function CTA() {
     return () => observer.disconnect();
   }, []);
 
-  // Countdown timer simulation
+  // Récupérer la date du prochain départ
   useEffect(() => {
+    const fetchNextDeparture = async () => {
+      try {
+        const response = await fetch('/api/next-departure');
+        const data = await response.json();
+        setNextDeparture(data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du prochain départ:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNextDeparture();
+  }, []);
+
+  // Countdown timer dynamique
+  useEffect(() => {
+    if (!nextDeparture?.hasNextDeparture) return;
+
     const calculateTimeLeft = () => {
       const now = new Date();
-      const targetDate = new Date('2025-07-08T00:00:00');
+      const targetDate = new Date(nextDeparture.departure.date);
       const difference = targetDate.getTime() - now.getTime();
 
       if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24)) - 2;
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
@@ -53,7 +74,7 @@ export default function CTA() {
     const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [nextDeparture]);
 
   const benefits = [
     {
@@ -99,10 +120,14 @@ export default function CTA() {
         <div className={`text-center mb-12 lg:mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           
           {/* Urgency Badge */}
-          <div className="inline-flex items-center gap-2 bg-orange-500 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 lg:mb-8 shadow-lg">
-            <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-white animate-pulse" />
-            <span className="font-bold text-sm lg:text-base text-white">Prochain chargement : 8 Juillet 2025</span>
-          </div>
+          {!loading && nextDeparture?.hasNextDeparture && (
+            <div className="inline-flex items-center gap-2 bg-orange-500 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 lg:mb-8 shadow-lg">
+              <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-white animate-pulse" />
+              <span className="font-bold text-sm lg:text-base text-white">
+                Prochain chargement : {nextDeparture.departure.formatted.short}
+              </span>
+            </div>
+          )}
           
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 lg:mb-8 leading-tight text-white">
             Votre colis doit partir ?
@@ -118,28 +143,30 @@ export default function CTA() {
           </p>
 
           {/* Countdown Timer */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 lg:p-8 border border-white/20 max-w-lg mx-auto mb-8 lg:mb-12">
-            <h3 className="text-white font-bold mb-4 lg:mb-6">Temps restant pour réserver :</h3>
-            <div className="grid grid-cols-4 gap-4">
-              {[
-                { value: timeLeft.days, label: 'Jours' },
-                { value: timeLeft.hours, label: 'Heures' },
-                { value: timeLeft.minutes, label: 'Minutes' },
-                { value: timeLeft.seconds, label: 'Secondes' }
-              ].map((item, index) => (
-                <div key={index} className="text-center">
-                  <div className="bg-orange-500 rounded-xl p-3 lg:p-4 mb-2 shadow-lg">
-                    <div className="text-xl lg:text-2xl xl:text-3xl font-black text-white">
-                      {item.value.toString().padStart(2, '0')}
+          {!loading && nextDeparture?.hasNextDeparture && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 lg:p-8 border border-white/20 max-w-lg mx-auto mb-8 lg:mb-12">
+              <h3 className="text-white font-bold mb-4 lg:mb-6">Temps restant pour réserver :</h3>
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  { value: timeLeft.days, label: 'Jours' },
+                  { value: timeLeft.hours, label: 'Heures' },
+                  { value: timeLeft.minutes, label: 'Minutes' },
+                  { value: timeLeft.seconds, label: 'Secondes' }
+                ].map((item, index) => (
+                  <div key={index} className="text-center">
+                    <div className="bg-orange-500 rounded-xl p-3 lg:p-4 mb-2 shadow-lg">
+                      <div className="text-xl lg:text-2xl xl:text-3xl font-black text-white">
+                        {item.value.toString().padStart(2, '0')}
+                      </div>
+                    </div>
+                    <div className="text-xs lg:text-sm text-blue-200 font-medium">
+                      {item.label}
                     </div>
                   </div>
-                  <div className="text-xs lg:text-sm text-blue-200 font-medium">
-                    {item.label}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center mb-12">

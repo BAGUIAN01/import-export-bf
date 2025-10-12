@@ -39,7 +39,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Récupération du client avec ses colis et statistiques
     const client = await prisma.client.findUnique({
@@ -139,7 +139,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Vérification de l'existence du client
@@ -239,7 +239,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Vérification de l'existence du client
     const client = await prisma.client.findUnique({
