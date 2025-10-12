@@ -45,9 +45,6 @@ async function recalcShipmentAggregates(shipmentId) {
       customsFee: true,
       discount: true,
       totalAmount: true,
-      paidAmount: true,
-      paidAt: true,
-      paymentMethod: true,
     },
   });
 
@@ -58,39 +55,18 @@ async function recalcShipmentAggregates(shipmentId) {
   const insuranceFeeTotal = pkgs.reduce((s, p) => s + (p.insuranceFee || 0), 0);
   const customsFeeTotal = pkgs.reduce((s, p) => s + (p.customsFee || 0), 0);
   const discountTotal = pkgs.reduce((s, p) => s + (p.discount || 0), 0);
-  const totalAmount = pkgs.reduce((s, p) => s + (p.totalAmount || 0), 0);
   
-  // IMPORTANT: Calculer aussi le montant total payé à partir des colis
-  const paidAmount = pkgs.reduce((s, p) => s + (p.paidAmount || 0), 0);
+  // Recalculer le totalAmount à partir des composants pour assurer la cohérence
+  const totalAmount = Math.max(0, subtotal + pickupFeeTotal + insuranceFeeTotal + customsFeeTotal - discountTotal);
   
-  const paymentStatus = derivePaymentStatus(totalAmount, paidAmount);
-  
-  // Trouver la date de paiement la plus récente et le dernier moyen de paiement utilisé
-  const paidPackages = pkgs.filter(p => p.paidAt);
-  let paidAt = null;
-  let paymentMethod = null;
-  
-  if (paidPackages.length > 0) {
-    // Trier par date de paiement décroissante
-    const sortedByDate = paidPackages.sort((a, b) => 
-      new Date(b.paidAt) - new Date(a.paidAt)
-    );
-    paidAt = sortedByDate[0].paidAt;
-    paymentMethod = sortedByDate[0].paymentMethod;
-  }
+  // ⚠️ IMPORTANT: Le paiement est géré au niveau du SHIPMENT uniquement
+  // On ne touche pas aux champs paidAmount, paidAt, paymentMethod, paymentStatus du shipment
+  // Ces champs doivent être mis à jour uniquement via l'API de paiement du shipment
 
   console.log(`🔄 Recalcul agrégats shipment ${shipmentId}:`, {
     packagesCount,
     totalAmount,
-    paidAmount,
-    paymentStatus,
-    paidAt,
-    paymentMethod,
-    packages: pkgs.map(p => ({ 
-      totalAmount: p.totalAmount, 
-      paidAmount: p.paidAmount, 
-      paidAt: p.paidAt 
-    }))
+    note: 'Paiement géré au niveau shipment, non recalculé ici',
   });
 
   await prisma.shipment.update({
@@ -104,10 +80,7 @@ async function recalcShipmentAggregates(shipmentId) {
       customsFeeTotal,
       discountTotal,
       totalAmount,
-      paidAmount,
-      paymentStatus,
-      paidAt,
-      paymentMethod,
+      // Ne pas toucher aux champs de paiement
     },
   });
   
@@ -339,12 +312,9 @@ export async function POST(request) {
 
             // Paiement groupé partagé (status final recalculé plus bas)
             paymentMethod: sharedData.paymentMethod || null,
-            paidAmount: Number(sharedData.paidAmount || 0),
+            paidAmount: 0, // Sera recalculé après création des packages
             paidAt: sharedData.paidAt ? new Date(sharedData.paidAt) : null,
-            paymentStatus: derivePaymentStatus(
-              0,
-              Number(sharedData.paidAmount || 0)
-            ),
+            paymentStatus: "PENDING", // Sera recalculé après création des packages
           },
         });
       }
@@ -396,45 +366,8 @@ export async function POST(request) {
         created.push(result.package);
       }
 
-      // Agréger les totaux sur l'expédition
-      const packagesCount = created.length;
-      const totalQuantity = created.reduce(
-        (s, p) => s + (p.totalQuantity || 0),
-        0
-      );
-      const subtotal = created.reduce((s, p) => s + (p.basePrice || 0), 0);
-      const pickupFeeTotal = created.reduce(
-        (s, p) => s + (p.pickupFee || 0),
-        0
-      );
-      const insuranceFeeTotal = created.reduce(
-        (s, p) => s + (p.insuranceFee || 0),
-        0
-      );
-      const customsFeeTotal = created.reduce(
-        (s, p) => s + (p.customsFee || 0),
-        0
-      );
-      const discountTotal = created.reduce((s, p) => s + (p.discount || 0), 0);
-      const totalAmount = created.reduce((s, p) => s + (p.totalAmount || 0), 0);
-
-      await prisma.shipment.update({
-        where: { id: shipment.id },
-        data: {
-          packagesCount,
-          totalQuantity,
-          subtotal,
-          pickupFeeTotal,
-          insuranceFeeTotal,
-          customsFeeTotal,
-          discountTotal,
-          totalAmount,
-          paymentStatus: derivePaymentStatus(
-            totalAmount,
-            Number(sharedData.paidAmount || 0)
-          ),
-        },
-      });
+      // Recalculer tous les agrégats du shipment (pas seulement les nouveaux colis)
+      await recalcShipmentAggregates(shipment.id);
 
       return NextResponse.json(
         {
@@ -647,28 +580,12 @@ async function createSinglePackageInternal(body, session) {
         Number(discount || 0)
     );
 
-    // Paiement
-    const paidAmountRaw = toNumOrNull(body.paidAmount);
-    const paidAmount = Math.max(0, paidAmountRaw ?? 0);
-
-    const paymentStatus =
-      body.paymentStatus && isValidPaymentStatus(body.paymentStatus)
-        ? body.paymentStatus
-        : derivePaymentStatus(totalAmount, paidAmount);
-
-    const paidAt =
-      paidAmount > 0
-        ? body.paidAt
-          ? new Date(body.paidAt)
-          : new Date()
-        : null;
-
-    const paymentMethod =
-      body.paymentMethod &&
-      String(body.paymentMethod).trim() !== "" &&
-      isValidPaymentMethod(body.paymentMethod)
-        ? body.paymentMethod
-        : null;
+    // ⚠️ IMPORTANT: Le paiement est géré au niveau du SHIPMENT uniquement
+    // Les colis sont créés sans information de paiement
+    const paidAmount = 0;
+    const paymentStatus = "PENDING";
+    const paidAt = null;
+    const paymentMethod = null;
 
     // --------- 5) Génération packageNumber (retry si P2002) ----------
     const genPackageNumber = () => {

@@ -82,16 +82,16 @@ export const navigationData = {
       icon: MapPin,
       url: "/admin/tracking"
     },
-    {
-      title: "Fichiers",
-      url: "/admin/files",
-      icon: FileText,
-    },
-    {
-      title: "Paramètres",
-      url: "/admin/settings",
-      icon: Settings,
-    },
+    // {
+    //   title: "Fichiers",
+    //   url: "/admin/files",
+    //   icon: FileText,
+    // },
+    // {
+    //   title: "Paramètres",
+    //   url: "/admin/settings",
+    //   icon: Settings,
+    // },
   ],
 };
 

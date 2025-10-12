@@ -37,9 +37,6 @@ async function recalcShipmentAggregates(shipmentId) {
       customsFee: true,
       discount: true,
       totalAmount: true,
-      paidAmount: true,
-      paidAt: true,
-      paymentMethod: true,
     },
   });
 
@@ -50,39 +47,18 @@ async function recalcShipmentAggregates(shipmentId) {
   const insuranceFeeTotal = pkgs.reduce((s, p) => s + (p.insuranceFee || 0), 0);
   const customsFeeTotal = pkgs.reduce((s, p) => s + (p.customsFee || 0), 0);
   const discountTotal = pkgs.reduce((s, p) => s + (p.discount || 0), 0);
-  const totalAmount = pkgs.reduce((s, p) => s + (p.totalAmount || 0), 0);
   
-  // IMPORTANT: Calculer aussi le montant total payé à partir des colis
-  const paidAmount = pkgs.reduce((s, p) => s + (p.paidAmount || 0), 0);
+  // Recalculer le totalAmount à partir des composants pour assurer la cohérence
+  const totalAmount = Math.max(0, subtotal + pickupFeeTotal + insuranceFeeTotal + customsFeeTotal - discountTotal);
   
-  const paymentStatus = derivePaymentStatus(totalAmount, paidAmount);
-  
-  // Trouver la date de paiement la plus récente et le dernier moyen de paiement utilisé
-  const paidPackages = pkgs.filter(p => p.paidAt);
-  let paidAt = null;
-  let paymentMethod = null;
-  
-  if (paidPackages.length > 0) {
-    // Trier par date de paiement décroissante
-    const sortedByDate = paidPackages.sort((a, b) => 
-      new Date(b.paidAt) - new Date(a.paidAt)
-    );
-    paidAt = sortedByDate[0].paidAt;
-    paymentMethod = sortedByDate[0].paymentMethod;
-  }
+  // ⚠️ IMPORTANT: Le paiement est géré au niveau du SHIPMENT uniquement
+  // On ne touche pas aux champs paidAmount, paidAt, paymentMethod, paymentStatus du shipment
+  // Ces champs doivent être mis à jour uniquement via l'API de paiement du shipment
 
   console.log(`🔄 Recalcul agrégats shipment ${shipmentId}:`, {
     packagesCount,
     totalAmount,
-    paidAmount,
-    paymentStatus,
-    paidAt,
-    paymentMethod,
-    packages: pkgs.map(p => ({ 
-      totalAmount: p.totalAmount, 
-      paidAmount: p.paidAmount, 
-      paidAt: p.paidAt 
-    }))
+    note: 'Paiement géré au niveau shipment, non recalculé ici',
   });
 
   await prisma.shipment.update({
@@ -96,10 +72,7 @@ async function recalcShipmentAggregates(shipmentId) {
       customsFeeTotal,
       discountTotal,
       totalAmount,
-      paidAmount,
-      paymentStatus,
-      paidAt,
-      paymentMethod,
+      // Ne pas toucher aux champs de paiement
     },
   });
   
@@ -273,29 +246,12 @@ export async function PUT(request, { params }) {
         Number(discount || 0)
     );
 
-    // Paiement : paidAmount, status, paidAt
-    const paidAmount =
-      body.paidAmount !== undefined
-        ? Math.max(0, toNumOrNull(body.paidAmount) ?? 0)
-        : existingPackage.paidAmount ?? 0;
-
-    const paymentStatus =
-      body.paymentStatus && isValidPaymentStatus(body.paymentStatus)
-        ? body.paymentStatus
-        : derivePaymentStatus(totalAmount, paidAmount);
-
-    let paidAt;
-    if (body.paidAt !== undefined) {
-      paidAt = body.paidAt ? new Date(body.paidAt) : null;
-    } else {
-      if ((existingPackage.paidAmount ?? 0) === 0 && paidAmount > 0) {
-        paidAt = new Date();
-      } else if (paidAmount === 0) {
-        paidAt = null;
-      } else {
-        paidAt = existingPackage.paidAt;
-      }
-    }
+    // ⚠️ IMPORTANT: Le paiement est géré au niveau du SHIPMENT uniquement
+    // Les champs de paiement des colis ne sont pas modifiables via cette API
+    // Utiliser l'API de paiement du shipment pour gérer les paiements
+    const paidAmount = 0;
+    const paymentStatus = "PENDING";
+    const paidAt = null;
 
     // Construction data
     const data = {
@@ -332,8 +288,6 @@ export async function PUT(request, { params }) {
           ? body.specialInstructions || null
           : undefined,
       notes: body.notes !== undefined ? body.notes || null : undefined,
-      paymentMethod:
-        body.paymentMethod ?? existingPackage.paymentMethod ?? undefined,
 
       basePrice,
       pickupFee,
@@ -342,9 +296,8 @@ export async function PUT(request, { params }) {
       discount,
       totalAmount,
 
-      paidAmount,
-      paymentStatus,
-      paidAt,
+      // ⚠️ Les champs de paiement ne sont PAS mis à jour via cette API
+      // Utiliser l'API de paiement du shipment pour gérer les paiements
 
       updatedAt: new Date(),
     };

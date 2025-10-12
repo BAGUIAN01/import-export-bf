@@ -1,128 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Package, Truck, Home, ArrowRight, CheckCircle, Clock, Shield, Euro, Star, Zap, Users, Globe } from 'lucide-react';
+import { ArrowRight, CheckCircle, Euro, Star, Shield, Package } from 'lucide-react';
 import Link from 'next/link';
+import { services, whyChooseUs, additionalServices } from '@/lib/data/services-list';
 
 export default function ServicesList() {
   const [visibleCards, setVisibleCards] = useState([]);
   const [activeService, setActiveService] = useState(0);
-
-  const services = [
-    {
-      id: 'colis-standard',
-      icon: Package,
-      title: 'Colis Standard',
-      price: '100€',
-      originalPrice: null,
-      popular: true,
-      badge: 'Le plus populaire',
-      description: 'Solution idéale pour vos envois quotidiens vers le Burkina Faso',
-      details: 'Parfait pour vêtements, produits alimentaires, médicaments et objets personnels',
-      features: [
-        'Jusqu\'à 30kg maximum',
-        'Dimensions: 80x60x60cm',
-        'Livraison 20-45 jours',
-        'Assurance incluse',
-        'Suivi GPS temps réel',
-        'Support client 24/7'
-      ],
-      includes: [
-        'Collecte possible (+20€)',
-        'Emballage sécurisé',
-        'Dédouanement inclus',
-        'Livraison à domicile'
-      ],
-      color: 'from-[#010066] to-blue-900',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-[#010066]',
-      stats: { satisfaction: '98%', livraisons: '1500+' }
-    },
-    {
-      id: 'transport-barrique',
-      icon: Truck,
-      title: 'Transport Barrique',
-      price: '100€',
-      originalPrice: '120€',
-      popular: false,
-      badge: 'Spécialisé',
-      description: 'Pour vos contenants lourds et volumineux vers le Burkina Faso',
-      details: 'Idéal pour huile, miel, bidons et tous contenants de grande capacité',
-      features: [
-        'Fûts jusqu\'à 200L',
-        'Bidons et contenants',
-        'Transport sécurisé',
-        'Manutention spécialisée',
-        'Assurance renforcée',
-        'Livraison 30-45 jours'
-      ],
-      includes: [
-        'Collecte à domicile incluse',
-        'Protection anti-choc',
-        'Étiquetage professionnel',
-        'Suivi personnalisé'
-      ],
-      color: 'from-orange-500 to-red-600',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-600',
-      stats: { satisfaction: '95%', livraisons: '500+' }
-    },
-    {
-      id: 'ramassage-domicile',
-      icon: Home,
-      title: 'Ramassage Domicile',
-      price: '+20€',
-      originalPrice: null,
-      popular: false,
-      badge: 'Service premium',
-      description: 'Nous venons collecter vos colis directement chez vous',
-      details: 'Service pratique disponible dans toute la France métropolitaine',
-      features: [
-        'Collecte à votre adresse',
-        'Rendez-vous planifié',
-        'Toute la France',
-        'Emballage sur place',
-        'Reçu immédiat',
-        'Flexibilité horaire'
-      ],
-      includes: [
-        'Déplacement inclus',
-        'Vérification colis',
-        'Paperasse administrative',
-        'Confirmation SMS'
-      ],
-      color: 'from-[#010066] to-blue-900',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-[#010066]',
-      stats: { satisfaction: '99%', livraisons: '800+' }
-    }
-  ];
-
-  const whyChooseUs = [
-    {
-      icon: Shield,
-      title: 'Sécurité Garantie',
-      desc: 'Assurance tous risques incluse sur chaque envoi',
-      color: 'text-[#010066]'
-    },
-    {
-      icon: Clock,
-      title: 'Délais Respectés',
-      desc: 'Livraison dans les temps, 98% de ponctualité',
-      color: 'text-orange-500'
-    },
-    {
-      icon: Users,
-      title: 'Service Familial',
-      desc: '8 ans d\'expérience, relation de confiance',
-      color: 'text-[#010066]'
-    },
-    {
-      icon: Globe,
-      title: 'Réseau Établi',
-      desc: 'Partenaires fiables en France et au Burkina',
-      color: 'text-orange-500'
-    }
-  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -286,6 +170,150 @@ export default function ServicesList() {
           ))}
         </div>
 
+        {/* Detailed Services Sections */}
+        <div className="space-y-12 mb-16">
+          
+          {/* Section Détails pour chaque service */}
+          {services.map((service) => (
+            <div key={service.id} id={service.id} className="scroll-mt-32">
+              <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-xl border border-gray-100">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${service.color} rounded-2xl flex items-center justify-center shadow-lg`}>
+                    <service.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-black text-gray-900">{service.title}</h3>
+                    <p className="text-gray-600">{service.description}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Features Column */}
+                  <div>
+                    <h4 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                      <CheckCircle className={`w-5 h-5 ${service.textColor}`} />
+                      Toutes les caractéristiques
+                    </h4>
+                    <div className="space-y-3">
+                      {service.features.map((feature, fidx) => (
+                        <div key={fidx} className={`${service.bgColor} rounded-xl p-4 flex items-start gap-3`}>
+                          <div className={`w-2 h-2 ${service.textColor} rounded-full mt-2`}></div>
+                          <span className="text-gray-700 font-medium">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Includes Column */}
+                  <div>
+                    <h4 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                      <Package className={`w-5 h-5 ${service.textColor}`} />
+                      Services inclus
+                    </h4>
+                    <div className="space-y-3">
+                      {service.includes.map((include, iidx) => (
+                        <div key={iidx} className="bg-gray-50 rounded-xl p-4 flex items-start gap-3">
+                          <CheckCircle className={`w-5 h-5 ${service.textColor} mt-0.5`} />
+                          <span className="text-gray-700 font-medium">{include}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Sub-services pour Frigos si colis-standard */}
+                    {service.id === 'colis-standard' && service.subServices && (
+                      <div className="mt-6">
+                        <h5 className="font-bold text-gray-900 mb-3">Tarifs Frigos</h5>
+                        <div className="space-y-2">
+                          {service.subServices.map((sub, sidx) => (
+                            <div key={sidx} className={`${service.bgColor} rounded-xl p-3 flex items-center justify-between`}>
+                              <span className="text-gray-700 font-medium text-sm">{sub.name}</span>
+                              <div className="text-right">
+                                <div className={`font-black ${service.textColor}`}>{sub.price}</div>
+                                {sub.note && <div className="text-xs text-gray-500">{sub.note}</div>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Additional Services - Complete Pricing */}
+          <div id="tarifs-complets" className="scroll-mt-32">
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 lg:p-12 border border-gray-200 shadow-2xl">
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#010066]/10 to-orange-500/10 backdrop-blur-sm border border-[#010066]/20 rounded-full px-6 py-2 mb-6">
+                  <Euro className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm font-semibold text-gray-700">Grille Tarifaire Complète</span>
+                </div>
+                <h3 className="text-3xl lg:text-4xl font-black text-gray-900 mb-4">
+                  Tous nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">tarifs détaillés</span>
+                </h3>
+                <p className="text-gray-600 max-w-2xl mx-auto">
+                  Tarifs transparents pour tous types d'envois vers le Burkina Faso
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {Object.entries(additionalServices).map(([key, category]) => (
+                  <div key={key} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-12 h-12 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center`}>
+                        <category.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h4 className="font-black text-lg text-gray-900">{category.title}</h4>
+                    </div>
+                    <div className="space-y-2">
+                      {category.items.map((item, idx) => (
+                        <div key={idx} className={`${category.bgColor} rounded-xl p-3`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-sm text-gray-700 font-medium flex-1">{item.name}</span>
+                            <span className={`${category.textColor} font-black text-sm whitespace-nowrap`}>{item.price}</span>
+                          </div>
+                          {item.details && <p className="text-xs text-gray-500 mt-1">{item.details}</p>}
+                          {item.note && <p className="text-xs text-gray-500 mt-1">{item.note}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+              </div>
+
+              {/* Important Notes */}
+              <div className="mt-8 bg-gradient-to-r from-[#010066] to-blue-900 rounded-2xl p-6 text-white">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-lg mb-2">Notes importantes</h5>
+                    <ul className="space-y-2 text-white/90 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-400 mt-1">•</span>
+                        <span>Les tarifs peuvent varier selon la région de départ en France (Paris vs Province)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-400 mt-1">•</span>
+                        <span>Assurance tous risques incluse sur chaque envoi sauf véhicules</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-400 mt-1">•</span>
+                        <span>Pour tout article non listé, contactez-nous pour un devis personnalisé</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Why Choose Us */}
         <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-xl border border-gray-100">
           <div className="text-center mb-10">
@@ -336,11 +364,10 @@ export default function ServicesList() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link href="/#contact">
                   <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 group">
-                    <Zap className="w-5 h-5" />
+                    <Star className="w-5 h-5" />
                     <span>Demander un devis</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                   </button>
-                  
                 </Link>
                 <div className="flex items-center gap-4 text-sm text-white/70">
                   <div className="flex items-center gap-2">

@@ -651,8 +651,6 @@ export default function ShipmentDetail({
                             <div>
                               <div className="flex items-center gap-3 mb-2">
                                 <span className="text-lg font-bold text-gray-900">{pkg.packageNumber}</span>
-                                <StatusBadge status={pkg.status} />
-                                <PaymentBadge status={pkg.paymentStatus} />
                               </div>
                               <p className="text-gray-600 mb-2 line-clamp-2">
                                 {pkg.description || "—"}

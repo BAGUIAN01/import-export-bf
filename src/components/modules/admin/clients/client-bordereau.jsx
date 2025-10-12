@@ -117,7 +117,24 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
       }));
 
       const total = containerPackages.reduce((sum, pkg) => sum + (pkg.totalAmount ?? 0), 0);
-      const paid = containerPackages.reduce((sum, pkg) => sum + (pkg.paidAmount ?? 0), 0);
+      
+      // ⚠️ IMPORTANT: Récupérer le paiement depuis le SHIPMENT, pas les colis
+      let paid = 0;
+      if (client?.id && selectedContainer) {
+        try {
+          // Chercher le shipment pour ce client + conteneur
+          const shipmentRes = await fetch(`/api/shipments?clientId=${client.id}&containerId=${selectedContainer}&limit=1`);
+          if (shipmentRes.ok) {
+            const shipmentData = await shipmentRes.json();
+            if (shipmentData.data && shipmentData.data.length > 0) {
+              paid = shipmentData.data[0].paidAmount || 0;
+            }
+          }
+        } catch (err) {
+          console.warn('Impossible de récupérer le shipment:', err);
+          // En cas d'erreur, on garde paid = 0
+        }
+      }
 
       setFormData((prev) => ({
         ...prev,
@@ -524,21 +541,18 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                   <div className="border border-gray-300">
                     {/* En-tête tableau */}
                     <div className="bg-[#010066] text-white text-xs font-bold">
-                      <div className="grid grid-cols-7 gap-2 px-3 py-2">
+                      <div className="grid grid-cols-4 gap-2 px-3 py-2">
                         <div>N° Colis</div>
                         <div>Description</div>
                         <div className="text-center">Qté</div>
                         <div className="text-right">Montant</div>
-                        <div className="text-right">Payé</div>
-                        <div className="text-right">Reste</div>
-                        <div className="text-center">Statut</div>
                       </div>
                     </div>
                     
                     {/* Corps tableau */}
                     <div className="divide-y divide-gray-200">
                       {formData.items.map((item, index) => (
-                        <div key={index} className={`grid grid-cols-7 gap-2 px-3 py-2 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                        <div key={index} className={`grid grid-cols-4 gap-2 px-3 py-2 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                           <div className="font-bold">{item.packageNumber || `PKG${index + 1}`}</div>
                           <div>
                             <div className="font-semibold">{item.description}</div>
@@ -550,17 +564,6 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                           </div>
                           <div className="text-center">{item.quantity}</div>
                           <div className="text-right font-bold">{parseFloat(item.price || 0).toFixed(2)}€</div>
-                          <div className="text-right font-bold">{(item.paidAmount || 0).toFixed(2)}€</div>
-                          <div className="text-right font-bold">{(parseFloat(item.price || 0) - (item.paidAmount || 0)).toFixed(2)}€</div>
-                          <div className="text-center">
-                            {item.paymentStatus === 'PAID' ? (
-                              <span className="text-green-600">✓</span>
-                            ) : item.paymentStatus === 'PARTIAL' ? (
-                              <span className="text-gray-500">○</span>
-                            ) : (
-                              <span className="text-gray-500">✗</span>
-                            )}
-                          </div>
                         </div>
                       ))}
                     </div>

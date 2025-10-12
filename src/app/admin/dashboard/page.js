@@ -59,16 +59,14 @@ async function getDashboardData() {
       })
     ]);
 
-    const monthlyRevenue = await prisma.package.aggregate({
+    // ⚠️ IMPORTANT: Calculer le revenu à partir des SHIPMENTS, pas des packages
+    const monthlyRevenue = await prisma.shipment.aggregate({
       _sum: {
-        totalAmount: true
+        paidAmount: true
       },
       where: {
-        createdAt: {
+        paidAt: {
           gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        },
-        paymentStatus: {
-          in: ['PAID', 'PARTIAL']
         }
       }
     });
@@ -152,7 +150,7 @@ async function getDashboardData() {
       packagesThisMonth,
       activeContainers,
       totalClients,
-      monthlyRevenue: monthlyRevenue._sum.totalAmount || 0,
+      monthlyRevenue: monthlyRevenue._sum.paidAmount || 0,
       deliveredThisWeek
     };
 

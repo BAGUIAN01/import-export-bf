@@ -55,6 +55,17 @@ export async function GET(request, { params }) {
                 name: true,
                 status: true,
               }
+            },
+            shipment: {
+              select: {
+                id: true,
+                shipmentNumber: true,
+                totalAmount: true,
+                paidAmount: true,
+                paymentStatus: true,
+                paymentMethod: true,
+                paidAt: true,
+              }
             }
           }
         },

@@ -48,6 +48,17 @@ async function getClientData(id) {
               lastName: true,
             },
           },
+          shipment: {
+            select: {
+              id: true,
+              shipmentNumber: true,
+              totalAmount: true,
+              paidAmount: true,
+              paymentStatus: true,
+              paymentMethod: true,
+              paidAt: true,
+            }
+          }
         },
         orderBy: { createdAt: "desc" },
       },

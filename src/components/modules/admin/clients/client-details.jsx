@@ -508,11 +508,29 @@ export default function ClientDetail({
                   {currentPackages.length > 0 ? (
                     <>
                       {(() => {
-                        const totalAmount = currentPackages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0);
-                        const totalPaid = currentPackages.reduce((sum, pkg) => sum + (pkg.paidAmount || 0), 0);
+                        // ⚠️ IMPORTANT: Regrouper les colis par shipment pour afficher les paiements au niveau shipment
+                        const shipmentGroups = currentPackages.reduce((acc, pkg) => {
+                          const shipmentId = pkg.shipment?.id || pkg.shipmentId || 'no-shipment';
+                          if (!acc[shipmentId]) {
+                            acc[shipmentId] = {
+                              shipment: pkg.shipment,
+                              packages: [],
+                              totalAmount: 0,
+                            };
+                          }
+                          acc[shipmentId].packages.push(pkg);
+                          acc[shipmentId].totalAmount += (pkg.totalAmount || 0);
+                          return acc;
+                        }, {});
+
+                        const shipments = Object.values(shipmentGroups).filter(g => g.shipment);
+                        
+                        // Calculer les totaux à partir des shipments
+                        const totalAmount = shipments.reduce((sum, s) => sum + (s.shipment.totalAmount || 0), 0);
+                        const totalPaid = shipments.reduce((sum, s) => sum + (s.shipment.paidAmount || 0), 0);
                         const remainingAmount = totalAmount - totalPaid;
-                        const paidPackages = currentPackages.filter(pkg => pkg.paidAmount > 0);
-                        const pendingPackages = currentPackages.filter(pkg => (pkg.totalAmount || 0) - (pkg.paidAmount || 0) > 0);
+                        const paidShipments = shipments.filter(s => s.shipment.paymentStatus === 'PAID');
+                        const pendingShipments = shipments.filter(s => s.shipment.paymentStatus !== 'PAID');
 
                         return (
                           <>
@@ -523,7 +541,7 @@ export default function ClientDetail({
                                   <span className="text-sm font-medium text-green-800">Montant payé</span>
                                 </div>
                                 <p className="text-2xl font-bold text-green-900">{currency(totalPaid)}</p>
-                                <p className="text-xs text-green-600">{paidPackages.length} colis payé{paidPackages.length > 1 ? 's' : ''}</p>
+                                <p className="text-xs text-green-600">{paidShipments.length} expédition{paidShipments.length > 1 ? 's' : ''} payée{paidShipments.length > 1 ? 's' : ''}</p>
                               </div>
                               <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
                                 <div className="flex items-center gap-2 mb-2">
@@ -531,7 +549,7 @@ export default function ClientDetail({
                                   <span className="text-sm font-medium text-orange-800">Reste à payer</span>
                                 </div>
                                 <p className="text-2xl font-bold text-orange-900">{currency(remainingAmount)}</p>
-                                <p className="text-xs text-orange-600">{pendingPackages.length} colis en attente</p>
+                                <p className="text-xs text-orange-600">{pendingShipments.length} expédition{pendingShipments.length > 1 ? 's' : ''} en attente</p>
                               </div>
                             </div>
                             
@@ -541,24 +559,32 @@ export default function ClientDetail({
                                 <span className="text-sm font-medium text-blue-800">Total général</span>
                               </div>
                               <p className="text-2xl font-bold text-blue-900">{currency(totalAmount)}</p>
-                              <p className="text-xs text-blue-600">{currentPackages.length} colis au total</p>
+                              <p className="text-xs text-blue-600">{shipments.length} expédition{shipments.length > 1 ? 's' : ''} ({currentPackages.length} colis)</p>
                             </div>
 
-                            {pendingPackages.length > 0 && (
+                            {pendingShipments.length > 0 && (
                               <div className="space-y-2">
-                                <p className="text-sm font-medium text-gray-700">Colis avec solde restant :</p>
+                                <p className="text-sm font-medium text-gray-700">Expéditions avec solde restant :</p>
                                 <div className="space-y-2">
-                                  {pendingPackages.slice(0, 3).map((pkg) => (
-                                    <div key={pkg.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
-                                      <span className="font-medium">{pkg.packageNumber}</span>
-                                      <span className="text-orange-600 font-semibold">
-                                        {currency((pkg.totalAmount || 0) - (pkg.paidAmount || 0))}
-                                      </span>
-                                    </div>
-                                  ))}
-                                  {pendingPackages.length > 3 && (
+                                  {pendingShipments.slice(0, 3).map((shipmentGroup) => {
+                                    const shipment = shipmentGroup.shipment;
+                                    const remaining = (shipment.totalAmount || 0) - (shipment.paidAmount || 0);
+                                    return (
+                                      <div key={shipment.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                                        <div>
+                                          <span className="font-medium">{shipment.shipmentNumber}</span>
+                                          <span className="text-xs text-gray-500 ml-2">({shipmentGroup.packages.length} colis)</span>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="text-orange-600 font-semibold">{currency(remaining)}</div>
+                                          <PaymentBadge status={shipment.paymentStatus} />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  {pendingShipments.length > 3 && (
                                     <p className="text-xs text-gray-500 text-center">
-                                      +{pendingPackages.length - 3} autre{pendingPackages.length - 3 > 1 ? 's' : ''} colis
+                                      +{pendingShipments.length - 3} autre{pendingShipments.length - 3 > 1 ? 's' : ''} expédition{pendingShipments.length - 3 > 1 ? 's' : ''}
                                     </p>
                                   )}
                                 </div>
