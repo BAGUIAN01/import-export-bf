@@ -164,6 +164,7 @@ export function ClientDialog({
       if (!formData.recipientFirstName?.trim()) newErrors.recipientFirstName = "Le prénom du destinataire est requis";
       if (!formData.recipientLastName?.trim()) newErrors.recipientLastName = "Le nom du destinataire est requis";
       if (!formData.recipientPhone?.trim()) newErrors.recipientPhone = "Le téléphone du destinataire est requis";
+      if (!formData.recipientCountry?.trim()) newErrors.recipientCountry = "Le pays du destinataire est requis";
       if (!formData.recipientAddress?.trim()) newErrors.recipientAddress = "L'adresse du destinataire est requise";
       if (!formData.recipientCity?.trim()) newErrors.recipientCity = "La ville du destinataire est requise";
       
@@ -256,7 +257,7 @@ export function ClientDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Modifier le client" : "Nouveau client"}
@@ -270,12 +271,13 @@ export function ClientDialog({
           {renderStepContent()}
         </div>
 
-        <DialogFooter className="flex-row items-center justify-between gap-3">
+        <DialogFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <Button 
             type="button" 
             variant="outline" 
             onClick={currentStep === 0 ? onClose : handlePrevious}
             disabled={loading}
+            className="min-h-[44px] sm:min-h-[36px] order-2 sm:order-1"
           >
             {currentStep === 0 ? (
               "Annuler"
@@ -292,6 +294,7 @@ export function ClientDialog({
               type="button"
               onClick={handleNext}
               disabled={loading}
+              className="min-h-[44px] sm:min-h-[36px] order-1 sm:order-2"
             >
               Suivant
               <ChevronRight className="h-4 w-4 ml-2" />
@@ -301,6 +304,7 @@ export function ClientDialog({
               type="button"
               onClick={handleSubmit}
               disabled={loading}
+              className="min-h-[44px] sm:min-h-[36px] order-1 sm:order-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {isEditing ? "Sauvegarder" : "Créer le client"}

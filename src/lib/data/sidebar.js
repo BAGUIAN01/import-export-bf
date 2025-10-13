@@ -87,15 +87,15 @@ export const navigationData = {
       icon: UserCheck,
       url: "/admin/profile"
     },
+    {
+      title: "Paramètres",
+      icon: Settings,
+      url: "/admin/settings"
+    },
     // {
     //   title: "Fichiers",
     //   url: "/admin/files",
     //   icon: FileText,
-    // },
-    // {
-    //   title: "Paramètres",
-    //   url: "/admin/settings",
-    //   icon: Settings,
     // },
   ],
 };

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClientDetails, useClientMutations } from "@/hooks/use-clients";
+import { usePackageBatch } from "@/hooks/use-shipments";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +63,7 @@ import {
 } from "lucide-react";
 import { ClientDialog } from "./client-dialog";
 import BordereauDialog from "./client-bordereau";
+import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 const formatDateTime = (d) => (d ? new Date(d).toLocaleString("fr-FR") : "-");
@@ -186,6 +188,7 @@ export default function ClientDetail({
   const [activity] = useState(initialActivity);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isBordereauDialogOpen, setIsBordereauDialogOpen] = useState(false);
+  const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
 
   // Hook SWR pour les détails du client avec cache
   const { 
@@ -202,6 +205,9 @@ export default function ClientDetail({
     deleteClient, 
     isLoading: isMutating 
   } = useClientMutations();
+
+  // Hook pour la création de packages
+  const { createPackageBatch, isLoading: isCreating } = usePackageBatch();
 
   // Utiliser les données du cache ou fallback sur les données initiales
   const currentClient = client || initialClient;
@@ -233,6 +239,39 @@ export default function ClientDetail({
       await refresh(); // Rafraîchir le cache
     }
   }, [updateClient, currentClient.id, refresh]);
+
+  const handleCreatePackage = useCallback(async (payload) => {
+    const result = await createPackageBatch(payload);
+    if (result.success) {
+      setIsPackageDialogOpen(false);
+      
+      // Message informatif
+      const isExisting = result.data?.isExistingShipment;
+      const shipmentNum = result.data?.shipment?.shipmentNumber;
+      const packagesCount = result.data?.packages?.length || 0;
+      
+      if (isExisting) {
+        toast.success(
+          `${packagesCount} colis ajouté(s) à l'expédition existante`,
+          {
+            description: `Expédition ${shipmentNum} - Un shipment existait déjà pour ce client dans ce conteneur`,
+            duration: 5000,
+          }
+        );
+      } else {
+        toast.success(
+          `Expédition créée avec succès`,
+          {
+            description: `${shipmentNum} avec ${packagesCount} colis`,
+            duration: 4000,
+          }
+        );
+      }
+      
+      // Rafraîchir les données du client
+      await refresh();
+    }
+  }, [createPackageBatch, refresh]);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -281,35 +320,36 @@ export default function ClientDetail({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50/50">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
         {/* Hero Header */}
         <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl">
           <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative p-8">
-            <div className="flex items-center justify-between mb-6">
+          <div className="relative p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <Button 
                 variant="secondary" 
                 onClick={() => router.push("/admin/clients")}
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm min-h-[44px] sm:min-h-[36px]"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour aux clients
+                <span className="hidden sm:inline">Retour aux clients</span>
+                <span className="sm:hidden">Retour</span>
               </Button>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <Button 
                   variant="secondary" 
                   onClick={handleRefresh} 
                   disabled={isLoading}
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm min-h-[44px] sm:min-h-[36px] flex-1 sm:flex-none"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                  Actualiser
+                  <span className="hidden sm:inline">Actualiser</span>
                 </Button>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm">
+                    <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm min-h-[44px] sm:min-h-[36px] w-12 sm:w-auto">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -366,40 +406,61 @@ export default function ClientDetail({
             </div>
 
             <div className="text-white">
-              <div className="flex items-center gap-4 mb-2">
-                <h1 className="text-4xl font-bold">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-2">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
                   {currentClient.firstName} {currentClient.lastName}
                 </h1>
                 <StatusBadge isActive={currentClient.isActive} isVip={currentClient.isVip} />
               </div>
-              <p className="text-white/80 text-lg mb-2">
+              <p className="text-white/80 text-base sm:text-lg mb-2">
                 Code client: {currentClient.clientCode}
               </p>
-              <p className="text-white/70">
+              <p className="text-white/70 text-sm sm:text-base">
                 Client depuis le {formatDate(currentClient.createdAt)}
               </p>
-              <div className="flex items-center gap-4 mt-4">
-                <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
-                  <Phone className="h-4 w-4" />
-                  <span className="font-medium">{currentClient.phone}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
-                  <MapPin className="h-4 w-4" />
-                  <span>{currentClient.city}, {currentClient.country}</span>
-                </div>
-                {currentClient.company && (
-                  <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
-                    <Building className="h-4 w-4" />
-                    <span>{currentClient.company}</span>
+              <div className="flex flex-col gap-3 mt-4">
+                {/* Version mobile - empilée */}
+                <div className="sm:hidden space-y-2">
+                  <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm min-h-[44px] min-w-0">
+                    <Phone className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium text-sm truncate">{currentClient.phone}</span>
                   </div>
-                )}
+                  <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm min-h-[44px] min-w-0">
+                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm truncate">{currentClient.city}, {currentClient.country}</span>
+                  </div>
+                  {currentClient.company && (
+                    <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm min-h-[44px] min-w-0">
+                      <Building className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm truncate">{currentClient.company}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Version desktop - horizontale */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm min-h-[36px] min-w-0 flex-1">
+                    <Phone className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium text-sm truncate">{currentClient.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm min-h-[36px] min-w-0 flex-1">
+                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm truncate">{currentClient.city}, {currentClient.country}</span>
+                  </div>
+                  {currentClient.company && (
+                    <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm min-h-[36px] min-w-0 flex-1">
+                      <Building className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm truncate">{currentClient.company}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
           <StatCard
             icon={Package}
             title="Expéditions"
@@ -452,15 +513,27 @@ export default function ClientDetail({
 
         {/* Contenu principal avec onglets */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="packages">Colis ({currentPackages.length || 0})</TabsTrigger>
-            <TabsTrigger value="recipient">Destinataire</TabsTrigger>
-            <TabsTrigger value="activity">Activité</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+            <TabsTrigger value="overview" className="min-h-[44px] sm:min-h-[40px] text-xs sm:text-sm">
+              <span className="hidden sm:inline">Vue d'ensemble</span>
+              <span className="sm:hidden">Vue</span>
+            </TabsTrigger>
+            <TabsTrigger value="packages" className="min-h-[44px] sm:min-h-[40px] text-xs sm:text-sm">
+              <span className="hidden sm:inline">Colis ({currentPackages.length || 0})</span>
+              <span className="sm:hidden">Colis</span>
+            </TabsTrigger>
+            <TabsTrigger value="recipient" className="min-h-[44px] sm:min-h-[40px] text-xs sm:text-sm">
+              <span className="hidden sm:inline">Destinataire</span>
+              <span className="sm:hidden">Dest.</span>
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="min-h-[44px] sm:min-h-[40px] text-xs sm:text-sm">
+              <span className="hidden sm:inline">Activité</span>
+              <span className="sm:hidden">Act.</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid gap-4 xs:gap-6 sm:gap-6 grid-cols-1 lg:grid-cols-2">
               {/* Informations personnelles */}
               <Card className="border-0 shadow-lg">
                 <CardHeader>
@@ -470,7 +543,7 @@ export default function ClientDetail({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Prénom</p>
                       <p className="font-semibold">{currentClient.firstName}</p>
@@ -482,32 +555,32 @@ export default function ClientDetail({
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <Phone className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">{currentClient.phone}</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                      <Phone className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                      <span className="font-medium truncate">{currentClient.phone}</span>
                     </div>
                     {currentClient.email && (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Mail className="h-4 w-4 text-green-500" />
-                        <span className="font-medium">{currentClient.email}</span>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                        <Mail className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <span className="font-medium truncate">{currentClient.email}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-red-500" />
-                      <div>
-                        <p className="font-medium">{currentClient.address}</p>
-                        <p className="text-sm text-gray-600">{currentClient.city}, {currentClient.country}</p>
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                      <MapPin className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{currentClient.address}</p>
+                        <p className="text-sm text-gray-600 truncate">{currentClient.city}, {currentClient.country}</p>
                         {currentClient.postalCode && (
-                          <p className="text-sm text-gray-500">{currentClient.postalCode}</p>
+                          <p className="text-sm text-gray-500 truncate">{currentClient.postalCode}</p>
                         )}
                       </div>
                     </div>
                   </div>
 
                   {currentClient.notes && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg min-w-0">
                       <p className="text-sm font-medium text-amber-800 mb-1">Notes internes</p>
-                      <p className="text-sm text-amber-700">{currentClient.notes}</p>
+                      <p className="text-sm text-amber-700 break-words">{currentClient.notes}</p>
                     </div>
                   )}
                 </CardContent>
@@ -551,13 +624,13 @@ export default function ClientDetail({
 
                         return (
                           <>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                                 <div className="flex items-center gap-2 mb-2">
                                   <CheckCircle className="h-4 w-4 text-green-600" />
                                   <span className="text-sm font-medium text-green-800">Montant payé</span>
                                 </div>
-                                <p className="text-2xl font-bold text-green-900">{currency(totalPaid)}</p>
+                                <p className="text-xl sm:text-2xl font-bold text-green-900">{currency(totalPaid)}</p>
                                 <p className="text-xs text-green-600">{paidShipments.length} expédition{paidShipments.length > 1 ? 's' : ''} payée{paidShipments.length > 1 ? 's' : ''}</p>
                               </div>
                               <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
@@ -565,7 +638,7 @@ export default function ClientDetail({
                                   <Clock className="h-4 w-4 text-orange-600" />
                                   <span className="text-sm font-medium text-orange-800">Reste à payer</span>
                                 </div>
-                                <p className="text-2xl font-bold text-orange-900">{currency(remainingAmount)}</p>
+                                <p className="text-xl sm:text-2xl font-bold text-orange-900">{currency(remainingAmount)}</p>
                                 <p className="text-xs text-orange-600">{pendingShipments.length} expédition{pendingShipments.length > 1 ? 's' : ''} en attente</p>
                               </div>
                             </div>
@@ -575,7 +648,7 @@ export default function ClientDetail({
                                 <Euro className="h-4 w-4 text-blue-600" />
                                 <span className="text-sm font-medium text-blue-800">Total général</span>
                               </div>
-                              <p className="text-2xl font-bold text-blue-900">{currency(totalAmount)}</p>
+                              <p className="text-xl sm:text-2xl font-bold text-blue-900">{currency(totalAmount)}</p>
                               <p className="text-xs text-blue-600">{shipments.length} expédition{shipments.length > 1 ? 's' : ''} ({currentPackages.length} colis)</p>
                             </div>
 
@@ -630,31 +703,31 @@ export default function ClientDetail({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-600">{clientStats.paymentStatus.pending}</div>
-                      <div className="text-sm text-gray-500">En attente</div>
-                      <Clock className="h-4 w-4 mx-auto mt-1 text-gray-400" />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+                    <div className="text-center p-3 sm:p-4 bg-gray-50 rounded-lg">
+                      <div className="text-xl sm:text-2xl font-bold text-gray-600">{clientStats.paymentStatus.pending}</div>
+                      <div className="text-xs sm:text-sm text-gray-500">En attente</div>
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 mx-auto mt-1 text-gray-400" />
                     </div>
-                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                      <div className="text-2xl font-bold text-yellow-600">{clientStats.paymentStatus.partial}</div>
-                      <div className="text-sm text-yellow-500">Partiel</div>
-                      <TrendingUp className="h-4 w-4 mx-auto mt-1 text-yellow-400" />
+                    <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
+                      <div className="text-xl sm:text-2xl font-bold text-yellow-600">{clientStats.paymentStatus.partial}</div>
+                      <div className="text-xs sm:text-sm text-yellow-500">Partiel</div>
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mx-auto mt-1 text-yellow-400" />
                     </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">{clientStats.paymentStatus.paid}</div>
-                      <div className="text-sm text-green-500">Payé</div>
-                      <CheckCircle className="h-4 w-4 mx-auto mt-1 text-green-400" />
+                    <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
+                      <div className="text-xl sm:text-2xl font-bold text-green-600">{clientStats.paymentStatus.paid}</div>
+                      <div className="text-xs sm:text-sm text-green-500">Payé</div>
+                      <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mx-auto mt-1 text-green-400" />
                     </div>
-                    <div className="text-center p-4 bg-red-50 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">{clientStats.paymentStatus.cancelled}</div>
-                      <div className="text-sm text-red-500">Annulé</div>
-                      <XCircle className="h-4 w-4 mx-auto mt-1 text-red-400" />
+                    <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg">
+                      <div className="text-xl sm:text-2xl font-bold text-red-600">{clientStats.paymentStatus.cancelled}</div>
+                      <div className="text-xs sm:text-sm text-red-500">Annulé</div>
+                      <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mx-auto mt-1 text-red-400" />
                     </div>
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">{clientStats.paymentStatus.refunded}</div>
-                      <div className="text-sm text-blue-500">Remboursé</div>
-                      <ArrowLeft className="h-4 w-4 mx-auto mt-1 text-blue-400" />
+                    <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                      <div className="text-xl sm:text-2xl font-bold text-blue-600">{clientStats.paymentStatus.refunded}</div>
+                      <div className="text-xs sm:text-sm text-blue-500">Remboursé</div>
+                      <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mx-auto mt-1 text-blue-400" />
                     </div>
                   </div>
                   
@@ -678,36 +751,37 @@ export default function ClientDetail({
                 </CardContent>
               </Card>
 
-              {/* Destinataire au Burkina Faso */}
+              {/* Destinataire */}
               <Card className="border-0 shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5 text-orange-600" />
-                    Destinataire au Burkina Faso
+                    <span className="hidden sm:inline">Destinataire au Burkina Faso</span>
+                    <span className="sm:hidden">Destinataire</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Nom complet</p>
-                    <p className="text-lg font-bold text-gray-900">{currentClient.recipientName}</p>
+                    <p className="text-lg font-bold text-gray-900 truncate">{currentClient.recipientName}</p>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <Phone className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">{currentClient.recipientPhone}</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                      <Phone className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                      <span className="font-medium truncate">{currentClient.recipientPhone}</span>
                     </div>
                     {currentClient.recipientEmail && (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Mail className="h-4 w-4 text-green-500" />
-                        <span className="font-medium">{currentClient.recipientEmail}</span>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                        <Mail className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <span className="font-medium truncate">{currentClient.recipientEmail}</span>
                       </div>
                     )}
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
-                      <div>
-                        <p className="font-medium">{currentClient.recipientAddress}</p>
-                        <p className="text-sm text-gray-600">{currentClient.recipientCity}</p>
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                      <MapPin className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium break-words">{currentClient.recipientAddress}</p>
+                        <p className="text-sm text-gray-600 truncate">{currentClient.recipientCity}</p>
                       </div>
                     </div>
                   </div>
@@ -715,7 +789,7 @@ export default function ClientDetail({
                   {currentClient.recipientRelation && (
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm font-medium text-blue-800">Relation</p>
-                      <p className="text-blue-700">{currentClient.recipientRelation}</p>
+                      <p className="text-blue-700 truncate">{currentClient.recipientRelation}</p>
                     </div>
                   )}
                 </CardContent>
@@ -724,12 +798,16 @@ export default function ClientDetail({
           </TabsContent>
 
           <TabsContent value="packages" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Historique des colis</h3>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <h3 className="text-lg sm:text-xl font-semibold">Historique des colis</h3>
               {canCreatePackage && (
-                <Button onClick={() => router.push(`/admin/packages/new?clientId=${currentClient.id}`)}>
+                <Button 
+                  onClick={() => setIsPackageDialogOpen(true)}
+                  className="w-full sm:w-auto min-h-[44px] sm:min-h-[36px]"
+                >
                   <Plus className="h-4 w-4 mr-2" />
-                  Nouveau colis
+                  <span className="hidden sm:inline">Nouveau colis</span>
+                  <span className="sm:hidden">Nouveau colis</span>
                 </Button>
               )}
             </div>
@@ -757,7 +835,7 @@ export default function ClientDetail({
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun colis</h3>
                   <p className="text-gray-500 mb-6">Ce client n'a encore envoyé aucun colis</p>
                   {canCreatePackage && (
-                    <Button onClick={() => router.push(`/admin/packages/new?clientId=${currentClient.id}`)}>
+                    <Button onClick={() => setIsPackageDialogOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
                       Créer le premier colis
                     </Button>
@@ -768,8 +846,42 @@ export default function ClientDetail({
               <div className="space-y-4">
                 {currentPackages.map((pkg) => (
                   <Card key={pkg.id} className="border-0 shadow-sm hover:shadow-lg transition-all duration-200">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-4 sm:p-6">
+                      {/* Version mobile */}
+                      <div className="sm:hidden space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-50 rounded-lg">
+                            <Package className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-base truncate">{pkg.packageNumber}</h4>
+                            <p className="text-sm text-gray-600 truncate">{pkg.description}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">{formatDate(pkg.createdAt)}</span>
+                            <span className="font-medium">{currency(pkg.totalAmount)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs">{pkg.status}</Badge>
+                            {pkg.paymentStatus && (
+                              <PaymentBadge status={pkg.paymentStatus} />
+                            )}
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => router.push(`/admin/packages/${pkg.id}`)}
+                          className="w-full min-h-[44px]"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Voir les détails
+                        </Button>
+                      </div>
+                      
+                      {/* Version desktop */}
+                      <div className="hidden sm:flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="p-3 bg-blue-50 rounded-lg">
                             <Package className="h-6 w-6 text-blue-600" />
@@ -817,14 +929,14 @@ export default function ClientDetail({
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-3">Identité</h4>
                     <div className="space-y-3">
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-sm text-gray-600">Nom complet</p>
-                        <p className="font-medium text-lg">{currentClient.recipientName}</p>
+                        <p className="font-medium text-lg truncate">{currentClient.recipientName}</p>
                       </div>
                       {currentClient.recipientRelation && (
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-sm text-gray-600">Relation avec l'expéditeur</p>
-                          <p className="font-medium">{currentClient.recipientRelation}</p>
+                          <p className="font-medium truncate">{currentClient.recipientRelation}</p>
                         </div>
                       )}
                     </div>
@@ -833,19 +945,19 @@ export default function ClientDetail({
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-3">Contact</h4>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Phone className="h-4 w-4 text-blue-500" />
-                        <div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                        <Phone className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm text-gray-600">Téléphone</p>
-                          <p className="font-medium">{currentClient.recipientPhone}</p>
+                          <p className="font-medium truncate">{currentClient.recipientPhone}</p>
                         </div>
                       </div>
                       {currentClient.recipientEmail && (
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Mail className="h-4 w-4 text-green-500" />
-                          <div>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg min-w-0">
+                          <Mail className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm text-gray-600">Email</p>
-                            <p className="font-medium">{currentClient.recipientEmail}</p>
+                            <p className="font-medium truncate">{currentClient.recipientEmail}</p>
                           </div>
                         </div>
                       )}
@@ -855,12 +967,12 @@ export default function ClientDetail({
 
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3">Adresse de livraison</h4>
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-blue-900">{currentClient.recipientAddress}</p>
-                        <p className="text-blue-700 mt-1">{currentClient.recipientCity}, Burkina Faso</p>
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg min-w-0">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <MapPin className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-blue-900 break-words">{currentClient.recipientAddress}</p>
+                        <p className="text-blue-700 mt-1 truncate">{currentClient.recipientCity}, Burkina Faso</p>
                       </div>
                     </div>
                   </div>
@@ -954,6 +1066,16 @@ export default function ClientDetail({
         isOpen={isBordereauDialogOpen}
         onClose={() => setIsBordereauDialogOpen(false)}
         client={currentClient}
+      />
+
+      {/* Dialog de création de colis */}
+      <PackageDialog
+        isOpen={isPackageDialogOpen}
+        onClose={() => setIsPackageDialogOpen(false)}
+        clients={[currentClient]} // Passer le client actuel
+        containers={containers}
+        onSave={handleCreatePackage}
+        loading={isCreating}
       />
     </div>
   );

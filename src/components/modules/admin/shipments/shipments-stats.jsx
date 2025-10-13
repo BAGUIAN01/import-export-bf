@@ -62,15 +62,15 @@ function StatTile({
   const isLarge = size === "large";
 
   return (
-    <div className={`rounded-xl border border-gray-200 bg-white p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${isLarge ? 'lg:col-span-2' : ''}`}>
+    <div className={`rounded-xl border border-gray-200 bg-white p-3 xs:p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-200 ${isLarge ? 'lg:col-span-2' : ''}`}>
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className={`p-2.5 rounded-xl ${colors.bg} ring-1 ring-black/5`}>
-            <Icon className={`h-5 w-5 ${colors.icon}`} />
+        <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
+          <div className={`p-2 xs:p-2.5 rounded-xl ${colors.bg} ring-1 ring-black/5 flex-shrink-0`}>
+            <Icon className={`h-4 w-4 xs:h-5 xs:w-5 ${colors.icon}`} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-gray-600 mb-1">{label}</div>
-            <div className={`text-2xl md:text-3xl font-bold ${colors.value} leading-tight`}>
+            <div className="text-xs xs:text-sm font-medium text-gray-600 mb-1 truncate">{label}</div>
+            <div className={`text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold ${colors.value} leading-tight`}>
               {value}
             </div>
             {sub && (
@@ -82,11 +82,11 @@ function StatTile({
         </div>
         
         {trend && (
-          <div className="flex items-center gap-1 ml-2">
+          <div className="flex items-center gap-1 ml-2 flex-shrink-0">
             {trend.direction === 'up' ? (
-              <TrendingUp className="h-4 w-4 text-green-600" />
+              <TrendingUp className="h-3 w-3 xs:h-4 xs:w-4 text-green-600" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-600" />
+              <TrendingDown className="h-3 w-3 xs:h-4 xs:w-4 text-red-600" />
             )}
             <span className={`text-xs font-medium ${
               trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
@@ -135,19 +135,19 @@ export function ShipmentsStats({ stats }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 xs:space-y-6">
       {/* Titre de section */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0">
+        <h2 className="text-base xs:text-lg font-semibold text-gray-900">
           Tableau de bord des expéditions
         </h2>
-        <div className="text-sm text-gray-500">
+        <div className="text-xs xs:text-sm text-gray-500">
           Données en temps réel
         </div>
       </div>
 
       {/* Grille principale */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 xs:gap-4 sm:gap-4 md:gap-6">
         <StatTile 
           icon={Package} 
           label="Total expéditions" 
@@ -241,49 +241,49 @@ export function ShipmentsStats({ stats }) {
 
       {/* Indicateurs de performance supplémentaires */}
       {(trends.revenue || trends.total) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-blue-900">Performance mensuelle</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 xs:gap-4 md:gap-6">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 xs:p-6 border border-blue-100">
+            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between mb-3 xs:mb-4 gap-2 xs:gap-0">
+              <h3 className="text-sm xs:text-base font-semibold text-blue-900">Performance mensuelle</h3>
               <div className="flex items-center gap-1 text-blue-700">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-sm font-medium">+12%</span>
+                <TrendingUp className="h-3 w-3 xs:h-4 xs:w-4" />
+                <span className="text-xs xs:text-sm font-medium">+12%</span>
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2 xs:space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-blue-700">Taux de livraison</span>
-                <span className="font-semibold text-blue-900">
+                <span className="text-xs xs:text-sm text-blue-700">Taux de livraison</span>
+                <span className="text-sm xs:text-base font-semibold text-blue-900">
                   {total > 0 ? Math.round((delivered / total) * 100) : 0}%
                 </span>
               </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
+              <div className="w-full bg-blue-200 rounded-full h-1.5 xs:h-2">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                  className="bg-blue-600 h-1.5 xs:h-2 rounded-full transition-all duration-500"
                   style={{ width: `${total > 0 ? (delivered / total) * 100 : 0}%` }}
                 ></div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-green-900">Santé financière</h3>
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 xs:p-6 border border-green-100">
+            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between mb-3 xs:mb-4 gap-2 xs:gap-0">
+              <h3 className="text-sm xs:text-base font-semibold text-green-900">Santé financière</h3>
               <div className="flex items-center gap-1 text-green-700">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-sm font-medium">+8%</span>
+                <TrendingUp className="h-3 w-3 xs:h-4 xs:w-4" />
+                <span className="text-xs xs:text-sm font-medium">+8%</span>
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2 xs:space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-green-700">Taux de paiement</span>
-                <span className="font-semibold text-green-900">
+                <span className="text-xs xs:text-sm text-green-700">Taux de paiement</span>
+                <span className="text-sm xs:text-base font-semibold text-green-900">
                   {total > 0 ? Math.round(((total - paymentPending) / total) * 100) : 0}%
                 </span>
               </div>
-              <div className="w-full bg-green-200 rounded-full h-2">
+              <div className="w-full bg-green-200 rounded-full h-1.5 xs:h-2">
                 <div 
-                  className="bg-green-600 h-2 rounded-full transition-all duration-500"
+                  className="bg-green-600 h-1.5 xs:h-2 rounded-full transition-all duration-500"
                   style={{ width: `${total > 0 ? ((total - paymentPending) / total) * 100 : 0}%` }}
                 ></div>
               </div>

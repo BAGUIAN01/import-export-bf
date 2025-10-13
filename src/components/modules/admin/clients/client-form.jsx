@@ -24,14 +24,15 @@ import {
 } from "lucide-react";
 import  PhoneInput  from "./phone-input";
 
-const frenchCities = [
-  "Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Nantes", 
-  "Montpellier", "Strasbourg", "Bordeaux", "Lille", "Rennes", "Reims"
-];
-
 const burkinaCities = [
   "Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora", "Ouahigouya", 
   "Pouytenga", "Dédougou", "Fada N'gourma", "Kaya", "Tenkodogo"
+];
+
+const frenchCities = [
+  "Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Nantes", "Strasbourg", 
+  "Montpellier", "Bordeaux", "Lille", "Rennes", "Reims", "Le Havre", 
+  "Saint-Étienne", "Toulon", "Grenoble", "Dijon", "Angers", "Nîmes", "Villeurbanne"
 ];
 
 const countries = ["France", "Burkina Faso"];
@@ -63,7 +64,7 @@ export function PersonalInformationStep({ formData, errors, handleChange }) {
             <User className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold text-foreground">Identité</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="firstName" className="text-sm font-medium">
                 Prénom <span className="text-destructive">*</span>
@@ -108,7 +109,7 @@ export function PersonalInformationStep({ formData, errors, handleChange }) {
             <Phone className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold text-foreground">Coordonnées</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2">
             <PhoneInput
               id="phone"
               label="Téléphone"
@@ -149,7 +150,7 @@ export function PersonalInformationStep({ formData, errors, handleChange }) {
             <h3 className="text-sm font-semibold text-foreground">Adresse en France</h3>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="country" className="text-sm font-medium">
                 Pays <span className="text-destructive">*</span>
@@ -247,7 +248,7 @@ export function RecipientInformationStep({ formData, errors, handleChange }) {
       <CardHeader className="px-0 pt-0">
         <CardTitle className="text-lg">Informations du destinataire</CardTitle>
         <p className="text-sm text-muted-foreground mt-1">
-          Renseignez les coordonnées du destinataire au Burkina Faso
+          Renseignez les coordonnées du destinataire (France ou Burkina Faso)
         </p>
       </CardHeader>
       <CardContent className="px-0 space-y-6">
@@ -257,7 +258,7 @@ export function RecipientInformationStep({ formData, errors, handleChange }) {
             <User className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold text-foreground">Identité</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="recipientFirstName" className="text-sm font-medium">
                 Prénom <span className="text-destructive">*</span>
@@ -319,13 +320,13 @@ export function RecipientInformationStep({ formData, errors, handleChange }) {
             <Phone className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold text-foreground">Coordonnées</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2">
             <PhoneInput
               id="recipientPhone"
               label="Téléphone"
               value={formData.recipientPhone}
               onChange={(value) => handleChange("recipientPhone", value)}
-              country={formData.recipientCountry}
+              countryIso2={formData.recipientCountry === "France" ? "FR" : "BF"}
               error={errors.recipientPhone}
               required
             />
@@ -340,7 +341,7 @@ export function RecipientInformationStep({ formData, errors, handleChange }) {
                 value={formData.recipientEmail}
                 onChange={(e) => handleChange("recipientEmail", e.target.value)}
                 className={errors.recipientEmail ? "border-destructive focus-visible:ring-destructive" : ""}
-                placeholder="Ex: bouba@email.bf"
+                placeholder={formData.recipientCountry === "France" ? "Ex: jean@email.fr" : "Ex: bouba@email.bf"}
               />
               {errors.recipientEmail && (
                 <p className="text-sm text-destructive">{errors.recipientEmail}</p>
@@ -356,7 +357,29 @@ export function RecipientInformationStep({ formData, errors, handleChange }) {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Adresse au Burkina Faso</h3>
+            <h3 className="text-sm font-semibold text-foreground">Adresse de livraison</h3>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="recipientCountry" className="text-sm font-medium">
+              Pays <span className="text-destructive">*</span>
+            </Label>
+            <Select value={formData.recipientCountry} onValueChange={(v) => {
+              handleChange("recipientCountry", v);
+              // Réinitialiser la ville quand on change de pays
+              handleChange("recipientCity", "");
+            }}>
+              <SelectTrigger className={errors.recipientCountry ? "border-destructive focus:ring-destructive" : ""}>
+                <SelectValue placeholder="Sélectionnez le pays" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Burkina Faso">Burkina Faso</SelectItem>
+                <SelectItem value="France">France</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.recipientCountry && (
+              <p className="text-sm text-destructive">{errors.recipientCountry}</p>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -368,11 +391,19 @@ export function RecipientInformationStep({ formData, errors, handleChange }) {
                 <SelectValue placeholder="Sélectionnez la ville" />
               </SelectTrigger>
               <SelectContent>
-                {burkinaCities.map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
+                {formData.recipientCountry === "France" ? (
+                  frenchCities.map((city) => (
+                    <SelectItem key={city} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))
+                ) : (
+                  burkinaCities.map((city) => (
+                    <SelectItem key={city} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             {errors.recipientCity && (
@@ -390,7 +421,7 @@ export function RecipientInformationStep({ formData, errors, handleChange }) {
               value={formData.recipientAddress}
               onChange={(e) => handleChange("recipientAddress", e.target.value)}
               className={`resize-none ${errors.recipientAddress ? "border-destructive focus-visible:ring-destructive" : ""}`}
-              placeholder="Ex: Secteur 15, Zone du Bois, près du marché"
+              placeholder={formData.recipientCountry === "France" ? "Ex: 123 Rue de la Paix, 75001 Paris" : "Ex: Secteur 15, Zone du Bois, près du marché"}
             />
             {errors.recipientAddress && (
               <p className="text-sm text-destructive">{errors.recipientAddress}</p>

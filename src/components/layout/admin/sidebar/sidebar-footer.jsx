@@ -32,8 +32,8 @@ export const SidebarFooter = () => {
 
   useEffect(() => {
     // Préchargement des routes de compte
-    router.prefetch("/dashboard/settings?tab=profile");
-    if (role === "ADMIN") router.prefetch("/dashboard/settings");
+    router.prefetch("/admin/settings?tab=profile");
+    if (role === "ADMIN") router.prefetch("/admin/settings");
   }, [router, role]);
 
   if (!user) return null;
@@ -61,7 +61,7 @@ export const SidebarFooter = () => {
     return (
       <div className="border-t p-3 shrink-0">
         {/* Info utilisateur visible */}
-        <div className="mb-3 p-3 bg-card border rounded-lg">
+        <Link href="/admin/profile" className="block mb-3 p-3 bg-card border rounded-lg hover:bg-accent/50 transition-colors">
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.image} alt={user.name || 'Utilisateur'} />
@@ -77,8 +77,9 @@ export const SidebarFooter = () => {
                 {getRoleLabel()}
               </Badge>
             </div>
+            <User className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
-        </div>
+        </Link>
 
         <TooltipProvider>
           <Tooltip delayDuration={300}>
@@ -112,7 +113,7 @@ export const SidebarFooter = () => {
 
                 <div className="space-y-1 pt-2 border-t">
                   <Link
-                    href="/dashboard/settings?tab=profile"
+                    href="/admin/profile"
                     className="flex items-center gap-2 text-xs p-2 rounded-md hover:bg-accent transition-colors"
                   >
                     <User className="h-3.5 w-3.5" />
@@ -121,7 +122,7 @@ export const SidebarFooter = () => {
 
                   {role === "ADMIN" && (
                     <Link
-                      href="/dashboard/settings"
+                      href="/admin/settings"
                       className="flex items-center gap-2 text-xs p-2 rounded-md hover:bg-accent transition-colors"
                     >
                       <Settings className="h-3.5 w-3.5" />
@@ -154,7 +155,7 @@ export const SidebarFooter = () => {
   return (
     <div className="border-t p-4 shrink-0">
       {/* Info utilisateur visible */}
-      <div className="mb-4 p-4 bg-card border rounded-lg">
+      <Link href="/admin/profile" className="block mb-4 p-4 bg-card border rounded-lg hover:bg-accent/50 transition-colors">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src={user.image} alt={user.name || 'Utilisateur'} />
@@ -173,8 +174,9 @@ export const SidebarFooter = () => {
               {getRoleLabel()}
             </Badge>
           </div>
+          <User className="h-4 w-4 text-muted-foreground" />
         </div>
-      </div>
+      </Link>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -199,7 +201,7 @@ export const SidebarFooter = () => {
 
           {/* Profil */}
           <DropdownMenuItem asChild className="px-3 py-2">
-            <Link href="/dashboard/settings?tab=profile" prefetch className="flex items-center gap-3">
+            <Link href="/admin/profile" prefetch className="flex items-center gap-3">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">Mon profil</span>
             </Link>
@@ -208,7 +210,7 @@ export const SidebarFooter = () => {
           {/* Paramètres (ADMIN seulement) */}
           {role === "ADMIN" && (
             <DropdownMenuItem asChild className="px-3 py-2">
-              <Link href="/dashboard/settings" prefetch className="flex items-center gap-3">
+              <Link href="/admin/settings" prefetch className="flex items-center gap-3">
                 <Settings className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">Paramètres</span>
               </Link>

@@ -118,7 +118,7 @@ export default async function ShipmentsPage() {
     <PageContainer>
       <PageTitle title="Expéditions" />
       <PageHeader breadcrumbs={[{ label: "Accueil", href: "/admin/dashboard" }, { label: "Expéditions" }]} />
-      <PageBody>
+      <PageBody className="p-3 xs:p-4 sm:p-6">
         <ShipmentsTable
           initialShipments={shipments}
           initialClients={clients}

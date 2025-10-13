@@ -88,8 +88,8 @@ export const SidebarNavItem = ({ item, isActive = false, onClick, searchQuery = 
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-center h-9 px-2 font-medium transition-all duration-200 relative",
-                  "cursor-pointer hover:cursor-pointer",
+                  "w-full justify-center h-11 sm:h-9 px-2 font-medium transition-all duration-200 relative",
+                  "cursor-pointer hover:cursor-pointer min-h-[44px] sm:min-h-[36px]",
                   isActive 
                     ? "bg-primary text-primary-foreground shadow-md " 
                     : "hover:bg-accent hover:text-accent-foreground"
@@ -153,8 +153,8 @@ export const SidebarNavItem = ({ item, isActive = false, onClick, searchQuery = 
                   variant="ghost"
                   onClick={handleClick}
                   className={cn(
-                    "w-full justify-center h-9 px-2 font-medium transition-all duration-200 relative",
-                    "cursor-pointer hover:cursor-pointer",
+                    "w-full justify-center h-11 sm:h-9 px-2 font-medium transition-all duration-200 relative",
+                    "cursor-pointer hover:cursor-pointer min-h-[44px] sm:min-h-[36px]",
                     isActive 
                       ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90" 
                       : "hover:bg-accent hover:text-accent-foreground"
@@ -193,8 +193,8 @@ export const SidebarNavItem = ({ item, isActive = false, onClick, searchQuery = 
           variant="ghost"
           onClick={handleClick}
           className={cn(
-            "w-full justify-start h-9 px-2 font-medium transition-all duration-200 relative",
-            "cursor-pointer hover:cursor-pointer",
+            "w-full justify-start h-11 sm:h-9 px-2 font-medium transition-all duration-200 relative",
+            "cursor-pointer hover:cursor-pointer min-h-[44px] sm:min-h-[36px]",
             isActive 
               ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90" 
               : "hover:bg-accent hover:text-accent-foreground"
@@ -242,8 +242,8 @@ export const SidebarNavItem = ({ item, isActive = false, onClick, searchQuery = 
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start h-8 px-2 font-medium text-sm transition-all duration-200 relative",
-                    "cursor-pointer hover:cursor-pointer",
+                    "w-full justify-start h-10 sm:h-8 px-2 font-medium text-sm transition-all duration-200 relative",
+                    "cursor-pointer hover:cursor-pointer min-h-[44px] sm:min-h-[32px]",
                     isSubActive 
                       ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90" 
                       : "hover:bg-accent hover:text-accent-foreground"

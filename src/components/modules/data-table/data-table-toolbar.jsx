@@ -43,7 +43,7 @@ export function DataTableToolbar({
               onClick={onImport}
               variant="outline"
               size="sm"
-              className="flex-1 sm:flex-none"
+              className="flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]"
             >
               <Upload className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Importer</span>
@@ -55,7 +55,7 @@ export function DataTableToolbar({
               onClick={onExport}
               variant="outline"
               size="sm"
-              className="flex-1 sm:flex-none"
+              className="flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]"
             >
               <Download className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Exporter</span>
@@ -70,7 +70,7 @@ export function DataTableToolbar({
                 variant={act.variant || "default"}
                 size={act.size || "default"}
                 onClick={act.onClick}
-                className="flex-1 sm:flex-none"
+                className="flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]"
               >
                 {Icon && <Icon className="mr-2 h-4 w-4" />}
                 {act.label}
@@ -79,7 +79,11 @@ export function DataTableToolbar({
           })}
 
           {onAdd && (
-            <Button onClick={onAdd} size="sm" className="flex-1 sm:flex-none">
+            <Button 
+              onClick={onAdd} 
+              size="sm" 
+              className="flex-1 sm:flex-none min-h-[44px] sm:min-h-[36px]"
+            >
               <Plus className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">{addButtonText}</span>
             </Button>

@@ -22,7 +22,7 @@ const PaymentStatusBadge = ({ status }) => {
     REFUNDED: { label: "Remboursé",  cls: "bg-purple-50 text-purple-700 border-purple-200" },
   };
   const conf = paymentConfig[status] || paymentConfig.PENDING;
-  return <Badge variant="outline" className={conf.cls}>{conf.label}</Badge>;
+  return <Badge variant="outline" className={`${conf.cls} text-xs xs:text-sm`}>{conf.label}</Badge>;
 };
 
 const ContainerStatusBadge = ({ status }) => {
@@ -34,7 +34,7 @@ const ContainerStatusBadge = ({ status }) => {
     DELIVERED:   { label: "Livré",       cls: "bg-green-50 text-green-700 border-green-200" },
   };
   const conf = map[status] || { label: status || "-", cls: "bg-slate-50 text-slate-700 border-slate-200" };
-  return <Badge variant="outline" className={conf.cls}>{conf.label}</Badge>;
+  return <Badge variant="outline" className={`${conf.cls} text-xs xs:text-sm`}>{conf.label}</Badge>;
 };
 
 export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
@@ -75,13 +75,13 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
       return (
         <button
           onClick={() => onOpen?.(sh)}
-          className="flex items-center gap-3 hover:underline"
+          className="flex items-center gap-2 xs:gap-3 hover:underline min-h-[44px] sm:min-h-auto"
           title="Ouvrir les détails"
         >
-          <div className="p-2 rounded-full bg-blue-50">
-            <Package className="h-4 w-4 text-blue-600" />
+          <div className="p-1.5 xs:p-2 rounded-full bg-blue-50 flex-shrink-0">
+            <Package className="h-3 w-3 xs:h-4 xs:w-4 text-blue-600" />
           </div>
-          <div className="font-medium">{sh.shipmentNumber}</div>
+          <div className="font-medium text-sm xs:text-base truncate">{sh.shipmentNumber}</div>
         </button>
       );
     },
@@ -96,16 +96,16 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
     cell: ({ row }) => {
       const client = row.original.client;
       return (
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
+        <div className="flex items-center gap-2 xs:gap-3 min-w-0">
+          <Avatar className="h-6 w-6 xs:h-8 xs:w-8 flex-shrink-0">
             <AvatarFallback className="text-xs">{initials(client)}</AvatarFallback>
           </Avatar>
-          <div>
-            <div className="font-medium flex items-center gap-2">
-              <User className="h-4 w-4" />
-              {client?.firstName} {client?.lastName}
+          <div className="min-w-0 flex-1">
+            <div className="font-medium flex items-center gap-1 xs:gap-2 text-sm xs:text-base">
+              <User className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
+              <span className="truncate">{client?.firstName} {client?.lastName}</span>
             </div>
-            <div className="text-xs text-muted-foreground">{client?.clientCode}</div>
+            <div className="text-xs text-muted-foreground truncate">{client?.clientCode}</div>
           </div>
         </div>
       );
@@ -121,9 +121,9 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
     cell: ({ row }) => {
       const sh = row.original;
       return (
-        <div className="flex items-center gap-2">
-          <Truck className="h-4 w-4 text-muted-foreground" />
-          <span className="max-w-[180px] truncate">
+        <div className="flex items-center gap-1 xs:gap-2 min-w-0">
+          <Truck className="h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground flex-shrink-0" />
+          <span className="max-w-[120px] xs:max-w-[180px] truncate text-sm xs:text-base">
             {sh.containerLabel || "-"}
           </span>
         </div>
@@ -147,14 +147,18 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Nb Colis" />
     ),
-    cell: ({ row }) => row.getValue("packagesCount") ?? 0,
+    cell: ({ row }) => (
+      <span className="text-sm xs:text-base font-medium">{row.getValue("packagesCount") ?? 0}</span>
+    ),
   },
   {
     accessorKey: "totalQuantity",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Qté totale" />
     ),
-    cell: ({ row }) => row.getValue("totalQuantity") ?? 0,
+    cell: ({ row }) => (
+      <span className="text-sm xs:text-base font-medium">{row.getValue("totalQuantity") ?? 0}</span>
+    ),
   },
 
   // Montants
@@ -165,8 +169,8 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
     ),
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        <Euro className="h-4 w-4 text-muted-foreground" />
-        {formatCurrency(row.getValue("totalAmount"))}
+        <Euro className="h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm xs:text-base font-medium">{formatCurrency(row.getValue("totalAmount"))}</span>
       </div>
     ),
   },
@@ -175,7 +179,9 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Payé" />
     ),
-    cell: ({ row }) => formatCurrency(row.getValue("paidAmount")),
+    cell: ({ row }) => (
+      <span className="text-sm xs:text-base font-medium">{formatCurrency(row.getValue("paidAmount"))}</span>
+    ),
   },
 
   // Paiement
@@ -196,8 +202,8 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
     ),
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        <Calendar className="h-4 w-4 text-muted-foreground" />
-        {formatDate(row.getValue("createdAt"))}
+        <Calendar className="h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm xs:text-base">{formatDate(row.getValue("createdAt"))}</span>
       </div>
     ),
   },

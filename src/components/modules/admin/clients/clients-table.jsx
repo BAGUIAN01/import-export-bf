@@ -70,21 +70,21 @@ const formatCurrency = (amount) =>
 const StatusBadge = ({ isActive, isVip }) => {
   if (!isActive) {
     return (
-      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 truncate">
         Inactif
       </Badge>
     );
   }
   if (isVip) {
     return (
-      <Badge variant="outline" className="bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-700 border-yellow-200 shadow-sm">
+      <Badge variant="outline" className="bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-700 border-yellow-200 shadow-sm truncate">
         <Star className="h-3 w-3 mr-1" />
         VIP
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 truncate">
       Actif
     </Badge>
   );
@@ -97,7 +97,7 @@ const CountryBadge = ({ country }) => {
     "Côte d'Ivoire": { label: "Côte d'Ivoire", color: "bg-orange-50 text-orange-700 border-orange-200" },
   }[country] || { label: country || "Non défini", color: "bg-gray-50 text-gray-700 border-gray-200" };
 
-  return <Badge variant="outline" className={conf.color}>{conf.label}</Badge>;
+  return <Badge variant="outline" className={`${conf.color} truncate max-w-[100px]`}>{conf.label}</Badge>;
 };
 
 const StatsCard = ({ icon: Icon, title, value, subtitle, color }) => (
@@ -351,42 +351,49 @@ export function ClientsTable({ initialClients, initialStats }) {
 
   return (
     <div className="min-h-screen ">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             {/* <h1 className="text-3xl font-bold text-gray-900">Gestion des Clients</h1>
             <p className="text-gray-600 mt-1">
               Gérez votre base de clients et leurs destinataires
             </p> */}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Button 
               variant="outline" 
               size="sm"
               onClick={handleRefresh}
               disabled={isLoading}
+              className="min-h-[44px] sm:min-h-[36px] flex-1 sm:flex-none"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-              Actualiser
+              <span className="hidden sm:inline">Actualiser</span>
             </Button>
-            <Button variant="outline" onClick={() => setShowStats(!showStats)}>
-              {showStats ? "Masquer Stats" : "Voir Stats"}
+            <Button 
+              variant="outline" 
+              onClick={() => setShowStats(!showStats)}
+              className="min-h-[44px] sm:min-h-[36px] flex-1 sm:flex-none"
+            >
+              <span className="hidden sm:inline">{showStats ? "Masquer Stats" : "Voir Stats"}</span>
+              <span className="sm:hidden">{showStats ? "Masquer" : "Stats"}</span>
             </Button>
             <Button 
               onClick={handleAdd} 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all min-h-[44px] sm:min-h-[36px] flex-1 sm:flex-none"
               disabled={isMutating}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Nouveau Client
+              <span className="hidden sm:inline">Nouveau Client</span>
+              <span className="sm:hidden">Nouveau</span>
             </Button>
           </div>
         </div>
 
         {/* Statistiques */}
         {showStats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+          <div className="grid gap-3 xs:gap-4 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {isLoading && !clients.length ? (
               <>
                 {[...Array(6)].map((_, idx) => (
@@ -565,37 +572,39 @@ export function ClientsTable({ initialClients, initialStats }) {
                     className="group p-6 border border-gray-200 rounded-xl hover:shadow-lg hover:border-blue-200 transition-all duration-200 cursor-pointer"
                     onClick={() => handleView(client)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold">
+                    <div className="flex items-center justify-between min-w-0">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0">
                           {client.firstName?.[0]}{client.lastName?.[0]}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
                               {client.firstName} {client.lastName}
                             </h3>
-                            <StatusBadge isActive={client.isActive} isVip={client.isVip} />
-                            <CountryBadge country={client.country} />
-                          </div>
-                          <div className="flex items-center gap-6 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Building className="h-4 w-4" />
-                              <span>{client.clientCode}</span>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <StatusBadge isActive={client.isActive} isVip={client.isVip} />
+                              <CountryBadge country={client.country} />
                             </div>
-                            <div className="flex items-center gap-1">
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 min-w-0 overflow-x-auto">
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Building className="h-4 w-4" />
+                              <span className="truncate">{client.clientCode}</span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
                               <Phone className="h-4 w-4" />
-                              <span>{client.phone}</span>
+                              <span className="truncate">{client.phone}</span>
                             </div>
                             {client.email && (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 flex-shrink-0">
                                 <Mail className="h-4 w-4" />
-                                <span>{client.email}</span>
+                                <span className="truncate">{client.email}</span>
                               </div>
                             )}
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 flex-shrink-0">
                               <MapPin className="h-4 w-4" />
-                              <span>{client.city}</span>
+                              <span className="truncate">{client.city}</span>
                             </div>
                           </div>
                         </div>
@@ -658,25 +667,25 @@ export function ClientsTable({ initialClients, initialStats }) {
                     </div>
 
                     {/* Informations supplémentaires */}
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                      <div>
+                    <div className="mt-4 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                      <div className="min-w-0">
                         <p className="text-gray-500">Destinataire</p>
-                        <p className="font-medium">{client.recipientName}</p>
-                        <p className="text-gray-500">{client.recipientCity}</p>
+                        <p className="font-medium truncate">{client.recipientName}</p>
+                        <p className="text-gray-500 truncate">{client.recipientCity}</p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-gray-500">Expéditions</p>
                         <p className="font-medium">{client.shipmentsCount || 0}</p>
                         <p className="text-gray-500">{client.packagesCount || 0} colis</p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-gray-500">Total dépensé</p>
-                        <p className="font-medium text-green-600">{formatCurrency(client.totalSpent)}</p>
+                        <p className="font-medium text-green-600 truncate">{formatCurrency(client.totalSpent)}</p>
                         {client.totalShipmentsAmount > 0 && (
-                          <p className="text-gray-500">sur {formatCurrency(client.totalShipmentsAmount)}</p>
+                          <p className="text-gray-500 truncate">sur {formatCurrency(client.totalShipmentsAmount)}</p>
                         )}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-gray-500">Statut paiement</p>
                         <p className="font-medium">
                           {client.totalSpent > 0 ? (
@@ -690,9 +699,9 @@ export function ClientsTable({ initialClients, initialStats }) {
                           )}
                         </p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-gray-500">Client depuis</p>
-                        <p className="font-medium">{formatDate(client.createdAt)}</p>
+                        <p className="font-medium truncate">{formatDate(client.createdAt)}</p>
                       </div>
                     </div>
                   </div>

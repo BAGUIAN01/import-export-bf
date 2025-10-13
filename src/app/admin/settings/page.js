@@ -1,16 +1,16 @@
 import { Suspense } from 'react'
-import { ProfileDashboard } from '@/components/modules/admin/profile/profile-dashboard'
+import { SettingsDashboard } from '@/components/modules/admin/settings/settings-dashboard'
 import { PageContainer, PageHeader, PageBody } from '@/components/layout/admin/page-shell'
 import { PageTitle } from '@/components/layout/admin/page-title'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export const metadata = {
-  title: 'Profil - Import Export BF',
-  description: 'Gérez votre profil utilisateur et vos paramètres de sécurité',
+  title: 'Paramètres - Import Export BF',
+  description: 'Gérez les paramètres de votre application et de votre compte',
 }
 
-function ProfileSkeleton() {
+function SettingsSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
@@ -48,24 +48,24 @@ function ProfileSkeleton() {
   )
 }
 
-export default function ProfilePage() {
+export default function SettingsPage() {
   return (
     <PageContainer>
       <PageTitle
-        title="Mon Profil"
-        description="Gérez vos informations personnelles et paramètres de sécurité"
+        title="Paramètres"
+        description="Gérez les paramètres de votre application et de votre compte"
       />
       
       <PageHeader
         breadcrumbs={[
           { label: "Accueil", href: "/admin/dashboard" },
-          { label: "Mon Profil" },
+          { label: "Paramètres" },
         ]}
       />
       
       <PageBody>
-        <Suspense fallback={<ProfileSkeleton />}>
-          <ProfileDashboard />
+        <Suspense fallback={<SettingsSkeleton />}>
+          <SettingsDashboard />
         </Suspense>
       </PageBody>
     </PageContainer>

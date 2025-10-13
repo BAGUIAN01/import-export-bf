@@ -36,7 +36,8 @@ export function CustomDataTable({
   addButtonText = "Ajouter",
   title,
   customActions = [],
-  initialHiddenColumns = [], 
+  initialHiddenColumns = [],
+  onRowClick, // Nouveau prop pour gérer le clic sur les lignes
 }) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState({});
@@ -123,7 +124,7 @@ export function CustomDataTable({
       />
 
       <div className="rounded-md border w-full overflow-x-auto">
-        <Table className="min-w-[720px] sm:min-w-full">
+        <Table className="min-w-[720px] sm:min-w-full hidden sm:table">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -165,6 +166,43 @@ export function CustomDataTable({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Version mobile avec cards */}
+      <div className="sm:hidden space-y-3">
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => (
+            <div 
+              key={row.id} 
+              className={`border rounded-lg p-4 space-y-2 bg-card ${onRowClick ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
+              onClick={() => onRowClick?.(row.original)}
+            >
+              {row.getVisibleCells().map((cell) => {
+                const column = cell.column;
+                const header = column.columnDef.header;
+                const value = cell.getValue();
+                
+                // Masquer certaines colonnes sur mobile
+                if (column.id === 'select' || column.id === 'actions') return null;
+                
+                return (
+                  <div key={cell.id} className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {typeof header === 'string' ? header : column.id}
+                    </span>
+                    <div className="text-sm text-right max-w-[60%] truncate">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucun résultat trouvé.
+          </div>
+        )}
       </div>
 
       <DataTablePagination table={table} />

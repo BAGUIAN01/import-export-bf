@@ -390,7 +390,7 @@ export function ShipmentsTable({
   );
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 xs:space-y-6">
       {showStats && <ShipmentsStats stats={stats} />}
 
       <CustomDataTable
@@ -412,6 +412,7 @@ export function ShipmentsTable({
         onImport={handleImport}
         addButtonText="Nouvelle expédition"
         loading={isLoading}
+        onRowClick={handleRowOpen} // Ajout du clic sur les lignes
         customActions={[
           {
             label: "Actualiser",

@@ -19,7 +19,7 @@ export const MobileSidebar = () => {
     <Sheet open={sidebarMobileOpen} onOpenChange={setSidebarMobileOpen}>
       <SheetContent 
         side="left" 
-        className="w-80 p-0 bg-white border-r-2 border-gray-200"
+        className="w-80 max-w-[85vw] p-0 bg-background border-r-2 border-border"
       >
         {/* Titre caché pour l'accessibilité */}
         <VisuallyHidden>
@@ -27,15 +27,15 @@ export const MobileSidebar = () => {
         </VisuallyHidden>
 
         <div className="flex h-full flex-col">
-          <div className="relative border-b border-gray-100">
+          <div className="relative border-b border-border">
             <SidebarHeader />
             <Button
               variant="ghost"
               size="sm"
               onClick={closeSidebar}
-              className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+              className="absolute top-2 right-2 h-10 w-10 p-0 hover:bg-accent rounded-full min-h-[44px]"
             >
-              <X className="h-4 w-4 text-gray-600" strokeWidth={2.5} />
+              <X className="h-4 w-4 text-muted-foreground" strokeWidth={2.5} />
             </Button>
           </div>
 
@@ -43,7 +43,7 @@ export const MobileSidebar = () => {
             <SidebarNavigation onItemClick={closeSidebar} />
           </div>
 
-          <div className="border-t border-gray-100">
+          <div className="border-t border-border">
             <SidebarFooter />
           </div>
         </div>
