@@ -152,21 +152,21 @@ const PaymentBadge = ({ status }) => {
 
 const StatCard = ({ icon: Icon, title, value, subtitle, color, trend, onClick }) => (
   <Card className={`border-0 shadow-lg bg-gradient-to-br from-white to-gray-50/50 ${onClick ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''}`} onClick={onClick}>
-    <CardContent className="p-6">
+    <CardContent className="p-4">
       <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}</p>
-          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+        <div className="space-y-1 min-w-0 flex-1">
+          <p className="text-xs font-medium text-gray-600 truncate">{title}</p>
+          <p className="text-xl lg:text-2xl font-bold text-gray-900 truncate">{value}</p>
+          {subtitle && <p className="text-xs text-gray-500 truncate">{subtitle}</p>}
         </div>
-        <div className={`p-3 rounded-xl bg-gradient-to-br ${color} shadow-sm`}>
-          <Icon className="h-6 w-6 text-white" />
+        <div className={`p-2 rounded-lg bg-gradient-to-br ${color} shadow-sm flex-shrink-0 ml-2`}>
+          <Icon className="h-4 w-4 text-white" />
         </div>
       </div>
       {trend && (
-        <div className="mt-4 flex items-center gap-1">
-          <TrendingUp className="h-4 w-4 text-green-600" />
-          <span className="text-sm font-medium text-green-600">{trend}</span>
+        <div className="mt-3 flex items-center gap-1">
+          <TrendingUp className="h-3 w-3 text-green-600" />
+          <span className="text-xs font-medium text-green-600 truncate">{trend}</span>
         </div>
       )}
     </CardContent>
@@ -242,9 +242,19 @@ export default function ClientDetail({
   const clientStats = useMemo(() => {
     return {
       totalSpent: currentStats.totalSpent || 0,
+      totalShipmentsAmount: currentStats.totalShipmentsAmount || 0,
       packagesCount: currentStats.packagesCount || 0,
+      shipmentsCount: currentStats.shipmentsCount || 0,
       avgOrderValue: currentStats.avgOrderValue || 0,
-      lastOrderDate: currentStats.lastOrderDate
+      lastOrderDate: currentStats.lastOrderDate,
+      paymentPercentage: currentStats.paymentPercentage || 0,
+      paymentStatus: currentStats.paymentStatus || {
+        pending: 0,
+        partial: 0,
+        paid: 0,
+        cancelled: 0,
+        refunded: 0,
+      }
     };
   }, [currentStats]);
 
@@ -389,12 +399,12 @@ export default function ClientDetail({
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <StatCard
             icon={Package}
-            title="Colis envoyés"
-            value={clientStats.packagesCount}
-            subtitle="Total des expéditions"
+            title="Expéditions"
+            value={clientStats.shipmentsCount}
+            subtitle={`${clientStats.packagesCount} colis`}
             color="from-blue-500 to-blue-600"
           />
           
@@ -402,16 +412,23 @@ export default function ClientDetail({
             icon={Euro}
             title="Total dépensé"
             value={currency(clientStats.totalSpent)}
-            subtitle="Chiffre d'affaires généré"
+            subtitle={`${clientStats.paymentPercentage.toFixed(1)}% payé`}
             color="from-green-500 to-green-600"
-            trend="+12% ce mois"
+          />
+          
+          <StatCard
+            icon={Target}
+            title="Chiffre d'affaires"
+            value={currency(clientStats.totalShipmentsAmount)}
+            subtitle="Total expéditions"
+            color="from-emerald-500 to-emerald-600"
           />
           
           <StatCard
             icon={TrendingUp}
             title="Panier moyen"
             value={currency(clientStats.avgOrderValue)}
-            subtitle="Valeur moyenne par colis"
+            subtitle="Moyenne/expédition"
             color="from-purple-500 to-purple-600"
           />
           
@@ -427,7 +444,7 @@ export default function ClientDetail({
             icon={FileText}
             title="Bordereau"
             value="PDF"
-            subtitle="Télécharger le bordereau"
+            subtitle="Télécharger"
             color="from-red-500 to-red-600"
             onClick={() => setIsBordereauDialogOpen(true)}
           />
@@ -601,6 +618,63 @@ export default function ClientDetail({
                       <p className="text-sm text-gray-400">Les informations de paiement apparaîtront ici</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Statistiques de paiement par statut */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-indigo-600" />
+                    Répartition des paiements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-600">{clientStats.paymentStatus.pending}</div>
+                      <div className="text-sm text-gray-500">En attente</div>
+                      <Clock className="h-4 w-4 mx-auto mt-1 text-gray-400" />
+                    </div>
+                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                      <div className="text-2xl font-bold text-yellow-600">{clientStats.paymentStatus.partial}</div>
+                      <div className="text-sm text-yellow-500">Partiel</div>
+                      <TrendingUp className="h-4 w-4 mx-auto mt-1 text-yellow-400" />
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">{clientStats.paymentStatus.paid}</div>
+                      <div className="text-sm text-green-500">Payé</div>
+                      <CheckCircle className="h-4 w-4 mx-auto mt-1 text-green-400" />
+                    </div>
+                    <div className="text-center p-4 bg-red-50 rounded-lg">
+                      <div className="text-2xl font-bold text-red-600">{clientStats.paymentStatus.cancelled}</div>
+                      <div className="text-sm text-red-500">Annulé</div>
+                      <XCircle className="h-4 w-4 mx-auto mt-1 text-red-400" />
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">{clientStats.paymentStatus.refunded}</div>
+                      <div className="text-sm text-blue-500">Remboursé</div>
+                      <ArrowLeft className="h-4 w-4 mx-auto mt-1 text-blue-400" />
+                    </div>
+                  </div>
+                  
+                  {/* Barre de progression du paiement */}
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">Progression du paiement</span>
+                      <span className="text-sm text-gray-500">{clientStats.paymentPercentage.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(clientStats.paymentPercentage, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>0€</span>
+                      <span>{currency(clientStats.totalSpent)} / {currency(clientStats.totalShipmentsAmount)}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 

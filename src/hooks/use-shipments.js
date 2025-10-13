@@ -155,11 +155,11 @@ export function useShipmentMutations() {
   const updatePaymentStatus = async (shipmentId, paymentData) => {
     setIsLoading(true);
     try {
+      // Ne pas envoyer paymentStatus car il sera recalculé automatiquement côté serveur
       const response = await fetch(`/api/shipments/${shipmentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          paymentStatus: paymentData.paymentStatus,
           paymentMethod: paymentData.paymentMethod,
           paidAmount: paymentData.paidAmount,
           paidAt: paymentData.paidAt,

@@ -41,7 +41,7 @@ export async function GET(request, { params }) {
 
     const { id } = await params;
 
-    // Récupération du client avec ses colis et statistiques
+    // Récupération du client avec ses colis, shipments et statistiques
     const client = await prisma.client.findUnique({
       where: { id },
       include: {
@@ -69,8 +69,26 @@ export async function GET(request, { params }) {
             }
           }
         },
+        shipments: {
+          select: {
+            id: true,
+            shipmentNumber: true,
+            totalAmount: true,
+            paidAmount: true,
+            paymentStatus: true,
+            paymentMethod: true,
+            paidAt: true,
+            packagesCount: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
         _count: {
-          select: { packages: true }
+          select: { 
+            packages: true,
+            shipments: true,
+          }
         }
       },
     });
@@ -89,32 +107,49 @@ export async function GET(request, { params }) {
       }
     }
 
-    // Calcul des statistiques du client
+    // Calcul des statistiques du client basées sur les shipments
     const packages = client.packages;
-    const totalSpent = packages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0);
-    const packagesCount = packages.length;
-    const avgOrderValue = packagesCount > 0 ? totalSpent / packagesCount : 0;
-    const lastOrderDate = packagesCount > 0 ? packages[0].createdAt : null;
+    const shipments = client.shipments;
+    
+    // Logique de paiement centralisée au niveau shipment
+    const totalSpent = shipments.reduce((sum, shipment) => sum + (shipment.paidAmount || 0), 0);
+    const totalShipmentsAmount = shipments.reduce((sum, shipment) => sum + (shipment.totalAmount || 0), 0);
+    const packagesCount = shipments.reduce((sum, shipment) => sum + (shipment.packagesCount || 0), 0);
+    const shipmentsCount = shipments.length;
+    const avgOrderValue = shipmentsCount > 0 ? totalShipmentsAmount / shipmentsCount : 0;
+    const lastOrderDate = shipmentsCount > 0 ? shipments[0].createdAt : null;
 
-    // Statistiques par statut
+    // Statistiques par statut des colis
     const statusBreakdown = packages.reduce((acc, pkg) => {
       acc[pkg.status] = (acc[pkg.status] || 0) + 1;
       return acc;
     }, {});
 
-    // Statistiques par statut de paiement
-    const paymentBreakdown = packages.reduce((acc, pkg) => {
-      acc[pkg.paymentStatus] = (acc[pkg.paymentStatus] || 0) + 1;
+    // Statistiques par statut de paiement des shipments
+    const paymentBreakdown = shipments.reduce((acc, shipment) => {
+      acc[shipment.paymentStatus] = (acc[shipment.paymentStatus] || 0) + 1;
       return acc;
     }, {});
 
     const stats = {
       totalSpent,
+      totalShipmentsAmount,
       packagesCount,
+      shipmentsCount,
       avgOrderValue,
       lastOrderDate,
       statusBreakdown,
       paymentBreakdown,
+      // Statistiques de paiement
+      paymentStatus: {
+        pending: paymentBreakdown.PENDING || 0,
+        partial: paymentBreakdown.PARTIAL || 0,
+        paid: paymentBreakdown.PAID || 0,
+        cancelled: paymentBreakdown.CANCELLED || 0,
+        refunded: paymentBreakdown.REFUNDED || 0,
+      },
+      // Pourcentage de paiement
+      paymentPercentage: totalShipmentsAmount > 0 ? (totalSpent / totalShipmentsAmount) * 100 : 0,
     };
 
     // Mise à jour du totalSpent si nécessaire
@@ -130,9 +165,13 @@ export async function GET(request, { params }) {
       client: {
         ...client,
         packagesCount: client._count.packages,
+        shipmentsCount: client._count.shipments,
         _count: undefined,
+        packages: undefined, // Retirer les packages détaillés
+        shipments: undefined, // Retirer les shipments détaillés
       },
       packages,
+      shipments,
       stats,
     });
 

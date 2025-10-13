@@ -62,6 +62,21 @@ async function getClientData(id) {
         },
         orderBy: { createdAt: "desc" },
       },
+      shipments: {
+        select: {
+          id: true,
+          shipmentNumber: true,
+          totalAmount: true,
+          paidAmount: true,
+          paymentStatus: true,
+          paymentMethod: true,
+          paidAt: true,
+          packagesCount: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      },
       invoices: {
         select: {
           id: true,
@@ -90,6 +105,7 @@ async function getClientData(id) {
       _count: {
         select: {
           packages: true,
+          shipments: true,
           invoices: true,
           payments: true,
         },
@@ -99,12 +115,17 @@ async function getClientData(id) {
 
   if (!client) return null;
 
-  // Calcul des statistiques du client
+  // Calcul des statistiques du client basées sur les shipments
   const packages = client.packages || [];
-  const totalSpent = packages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0);
-  const packagesCount = packages.length;
-  const avgOrderValue = packagesCount > 0 ? totalSpent / packagesCount : 0;
-  const lastOrderDate = packagesCount > 0 ? packages[0].createdAt : null;
+  const shipments = client.shipments || [];
+  
+  // Logique de paiement centralisée au niveau shipment
+  const totalSpent = shipments.reduce((sum, shipment) => sum + (shipment.paidAmount || 0), 0);
+  const totalShipmentsAmount = shipments.reduce((sum, shipment) => sum + (shipment.totalAmount || 0), 0);
+  const packagesCount = shipments.reduce((sum, shipment) => sum + (shipment.packagesCount || 0), 0);
+  const shipmentsCount = shipments.length;
+  const avgOrderValue = shipmentsCount > 0 ? totalShipmentsAmount / shipmentsCount : 0;
+  const lastOrderDate = shipmentsCount > 0 ? shipments[0].createdAt : null;
 
   // Statistiques par statut des colis
   const statusBreakdown = packages.reduce((acc, pkg) => {
@@ -112,28 +133,29 @@ async function getClientData(id) {
     return acc;
   }, {});
 
-  // Statistiques par statut de paiement
-  const paymentBreakdown = packages.reduce((acc, pkg) => {
-    acc[pkg.paymentStatus] = (acc[pkg.paymentStatus] || 0) + 1;
+  // Statistiques par statut de paiement des shipments
+  const paymentBreakdown = shipments.reduce((acc, shipment) => {
+    acc[shipment.paymentStatus] = (acc[shipment.paymentStatus] || 0) + 1;
     return acc;
   }, {});
 
-  // Évolution mensuelle des commandes (6 derniers mois)
+  // Évolution mensuelle des expéditions (6 derniers mois)
   const now = new Date();
   const monthlyOrders = [];
   for (let i = 5; i >= 0; i--) {
     const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
 
-    const monthPackages = packages.filter(pkg => {
-      const pkgDate = new Date(pkg.createdAt);
-      return pkgDate >= monthStart && pkgDate <= monthEnd;
+    const monthShipments = shipments.filter(shipment => {
+      const shipmentDate = new Date(shipment.createdAt);
+      return shipmentDate >= monthStart && shipmentDate <= monthEnd;
     });
 
     monthlyOrders.push({
       month: monthStart.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }),
-      count: monthPackages.length,
-      revenue: monthPackages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0),
+      count: monthShipments.length,
+      revenue: monthShipments.reduce((sum, shipment) => sum + (shipment.totalAmount || 0), 0),
+      paid: monthShipments.reduce((sum, shipment) => sum + (shipment.paidAmount || 0), 0),
     });
   }
 
@@ -191,7 +213,9 @@ async function getClientData(id) {
 
   const stats = {
     totalSpent,
+    totalShipmentsAmount,
     packagesCount,
+    shipmentsCount,
     avgOrderValue,
     lastOrderDate,
     statusBreakdown,
@@ -199,6 +223,16 @@ async function getClientData(id) {
     monthlyOrders,
     invoicesCount: client._count.invoices,
     paymentsCount: client._count.payments,
+    // Statistiques de paiement
+    paymentStatus: {
+      pending: paymentBreakdown.PENDING || 0,
+      partial: paymentBreakdown.PARTIAL || 0,
+      paid: paymentBreakdown.PAID || 0,
+      cancelled: paymentBreakdown.CANCELLED || 0,
+      refunded: paymentBreakdown.REFUNDED || 0,
+    },
+    // Pourcentage de paiement
+    paymentPercentage: totalShipmentsAmount > 0 ? (totalSpent / totalShipmentsAmount) * 100 : 0,
   };
 
   return { 

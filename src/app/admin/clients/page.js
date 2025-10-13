@@ -17,7 +17,7 @@ import { PageTitle } from "@/components/layout/admin/page-title";
 
 async function getClientsData(session) {
   try {
-    // Récupération des clients avec le nombre de colis associés
+    // Récupération des clients avec les shipments associés
     const clients = await prisma.client.findMany({
       include: {
         packages: {
@@ -25,11 +25,22 @@ async function getClientsData(session) {
             id: true,
             status: true,
             totalAmount: true,
+            shipmentId: true,
+          },
+        },
+        shipments: {
+          select: {
+            id: true,
+            totalAmount: true,
+            paidAmount: true,
+            paymentStatus: true,
+            packagesCount: true,
           },
         },
         _count: {
           select: {
             packages: true,
+            shipments: true,
           },
         },
       },
@@ -39,11 +50,26 @@ async function getClientsData(session) {
     });
 
     // Enrichissement des données clients
-    const enrichedClients = clients.map(client => ({
-      ...client,
-      packagesCount: client._count.packages,
-      totalSpent: client.packages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0),
-    }));
+    const enrichedClients = clients.map(client => {
+      // Calculer le total dépensé basé sur les shipments (logique de paiement centralisée)
+      const totalSpent = client.shipments.reduce((sum, shipment) => sum + (shipment.paidAmount || 0), 0);
+      
+      // Calculer le total des montants des shipments (pour référence)
+      const totalShipmentsAmount = client.shipments.reduce((sum, shipment) => sum + (shipment.totalAmount || 0), 0);
+      
+      // Calculer le nombre total de colis via les shipments
+      const totalPackagesCount = client.shipments.reduce((sum, shipment) => sum + (shipment.packagesCount || 0), 0);
+
+      return {
+        ...client,
+        packagesCount: totalPackagesCount,
+        totalSpent,
+        totalShipmentsAmount,
+        shipmentsCount: client._count.shipments,
+        // Garder l'ancien calcul pour compatibilité si nécessaire
+        legacyTotalSpent: client.packages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0),
+      };
+    });
 
     // Calcul des statistiques
     const [total, activeCount, vipCount] = await Promise.all([
@@ -56,10 +82,10 @@ async function getClientsData(session) {
       }),
     ]);
 
-    // Calcul des clients avec commandes
+    // Calcul des clients avec commandes (shipments)
     const withOrdersCount = await prisma.client.count({
       where: {
-        packages: {
+        shipments: {
           some: {}
         }
       }
@@ -87,6 +113,17 @@ async function getClientsData(session) {
       }
     });
 
+    // Calcul des statistiques financières
+    const financialStats = await prisma.shipment.aggregate({
+      _sum: {
+        totalAmount: true,
+        paidAmount: true,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
     const stats = {
       total,
       active: activeCount,
@@ -94,6 +131,10 @@ async function getClientsData(session) {
       withOrders: withOrdersCount,
       vip: vipCount,
       burkinaRecipients: burkinaRecipientsCount,
+      // Statistiques financières
+      totalRevenue: financialStats._sum.totalAmount || 0,
+      totalPaid: financialStats._sum.paidAmount || 0,
+      totalShipments: financialStats._count.id || 0,
     };
 
     return { clients: enrichedClients, stats };

@@ -45,34 +45,24 @@ const PAYMENT_METHOD_OPTIONS = [
 
 export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading }) {
   const [formData, setFormData] = useState({
-    pickupAddress: "",
-    pickupDate: null,
-    pickupTime: "",
-    deliveryAddress: "",
-    specialInstructions: "",
-    notes: "",
-    paymentStatus: "PENDING",
-    paymentMethod: null,
     paidAmount: 0,
+    paymentMethod: null,
     paidAt: null,
+    paymentStatus: "PENDING",
+    notes: "",
   });
 
   useEffect(() => {
-    if (shipment && isOpen) {
+    if (shipment) {
       setFormData({
-        pickupAddress: shipment.pickupAddress || "",
-        pickupDate: shipment.pickupDate ? new Date(shipment.pickupDate) : null,
-        pickupTime: shipment.pickupTime || "",
-        deliveryAddress: shipment.deliveryAddress || "",
-        specialInstructions: shipment.specialInstructions || "",
-        notes: shipment.notes || "",
-        paymentStatus: shipment.paymentStatus || "PENDING",
-        paymentMethod: shipment.paymentMethod || null,
         paidAmount: shipment.paidAmount || 0,
+        paymentMethod: shipment.paymentMethod || null,
         paidAt: shipment.paidAt ? new Date(shipment.paidAt) : null,
+        paymentStatus: shipment.paymentStatus || "PENDING",
+        notes: shipment.notes || "",
       });
     }
-  }, [shipment, isOpen]);
+  }, [shipment]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -80,9 +70,10 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Ne pas envoyer paymentStatus car il sera recalculé automatiquement côté serveur
+    const { paymentStatus, ...dataToSave } = formData;
     await onSave({
-      ...formData,
-      pickupDate: formData.pickupDate ? formData.pickupDate.toISOString() : null,
+      ...dataToSave,
       paidAt: formData.paidAt ? formData.paidAt.toISOString() : null,
     });
   };
@@ -91,176 +82,75 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Modifier l'expédition</DialogTitle>
+          <DialogTitle>Gérer le paiement</DialogTitle>
           <DialogDescription>
-            Expédition <span className="font-bold">{shipment.shipmentNumber}</span> - Client:{" "}
-            <span className="font-bold">
+            Expédition <span className="font-semibold">{shipment.shipmentNumber}</span> - 
+            <span className="font-semibold ml-1">
               {shipment.client?.firstName} {shipment.client?.lastName}
             </span>
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informations de ramassage */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Ramassage</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="pickupAddress">Adresse de ramassage</Label>
-              <Input
-                id="pickupAddress"
-                value={formData.pickupAddress}
-                onChange={(e) => handleChange("pickupAddress", e.target.value)}
-                placeholder="Ex: 123 rue de Paris, 75001 Paris"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Date de ramassage</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.pickupDate ? (
-                        format(formData.pickupDate, "PPP", { locale: fr })
-                      ) : (
-                        <span>Choisir une date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.pickupDate}
-                      onSelect={(date) => handleChange("pickupDate", date)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pickupTime">Heure de ramassage</Label>
-                <Input
-                  id="pickupTime"
-                  type="time"
-                  value={formData.pickupTime}
-                  onChange={(e) => handleChange("pickupTime", e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Informations de livraison */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Livraison</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="deliveryAddress">Adresse de livraison</Label>
-              <Input
-                id="deliveryAddress"
-                value={formData.deliveryAddress}
-                onChange={(e) => handleChange("deliveryAddress", e.target.value)}
-                placeholder="Adresse au Burkina Faso"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="specialInstructions">Instructions spéciales</Label>
-              <Textarea
-                id="specialInstructions"
-                value={formData.specialInstructions}
-                onChange={(e) => handleChange("specialInstructions", e.target.value)}
-                placeholder="Instructions de livraison particulières..."
-                rows={3}
-              />
-            </div>
-          </div>
-
           {/* Paiement */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Paiement</h3>
+            <h3 className="text-lg font-semibold">Paiement</h3>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="paymentStatus">Statut de paiement</Label>
-                <Select
-                  value={formData.paymentStatus}
-                  onValueChange={(value) => handleChange("paymentStatus", value)}
-                >
-                  <SelectTrigger id="paymentStatus">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="paidAmount">Montant payé</Label>
+                  <div className="relative">
+                    <Input
+                      id="paidAmount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max={shipment.totalAmount || 0}
+                      value={formData.paidAmount}
+                      onChange={(e) => handleChange("paidAmount", parseFloat(e.target.value) || 0)}
+                      className="pr-8"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Total: {shipment.totalAmount?.toFixed(2) || 0}€
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="paymentMethod">Mode de paiement</Label>
+                  <Select
+                    value={formData.paymentMethod || "NONE"}
+                    onValueChange={(value) => handleChange("paymentMethod", value === "NONE" ? null : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NONE">Aucun</SelectItem>
+                      {PAYMENT_METHOD_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="paymentMethod">Moyen de paiement</Label>
-                <Select
-                  value={formData.paymentMethod || ""}
-                  onValueChange={(value) => handleChange("paymentMethod", value || null)}
-                >
-                  <SelectTrigger id="paymentMethod">
-                    <SelectValue placeholder="Sélectionner..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Aucun</SelectItem>
-                    {PAYMENT_METHOD_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="paidAmount">
-                  Montant payé (Total: {shipment.totalAmount?.toFixed(2) || 0}€)
-                </Label>
-                <Input
-                  id="paidAmount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={shipment.totalAmount || 0}
-                  value={formData.paidAmount}
-                  onChange={(e) => handleChange("paidAmount", parseFloat(e.target.value) || 0)}
-                />
-              </div>
-
-              <div className="space-y-2">
+              <div>
                 <Label>Date de paiement</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
+                    <Button variant="outline" className="w-full justify-start">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.paidAt ? (
-                        format(formData.paidAt, "PPP", { locale: fr })
-                      ) : (
-                        <span>Choisir une date</span>
-                      )}
+                      {formData.paidAt ? format(formData.paidAt, "dd/MM/yyyy") : "Sélectionner"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
                       selected={formData.paidAt}
@@ -270,19 +160,36 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
                   </PopoverContent>
                 </Popover>
               </div>
+
+              {/* Statut automatique */}
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Statut</span>
+                  <span className="text-sm text-muted-foreground">
+                    {PAYMENT_STATUS_OPTIONS.find(opt => opt.value === formData.paymentStatus)?.label || "En attente"}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Calculé automatiquement
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes internes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              placeholder="Notes internes (non visibles par le client)..."
-              rows={3}
-            />
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Notes</h3>
+            <div>
+              <Label htmlFor="notes">Notes internes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                placeholder="Notes internes (non visibles par le client)..."
+                rows={3}
+                className="resize-none"
+              />
+            </div>
           </div>
 
           <DialogFooter>
@@ -290,7 +197,7 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Enregistrement..." : "Enregistrer"}
+              {loading ? "Sauvegarde..." : "Sauvegarder"}
             </Button>
           </DialogFooter>
         </form>
@@ -298,4 +205,3 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
     </Dialog>
   );
 }
-

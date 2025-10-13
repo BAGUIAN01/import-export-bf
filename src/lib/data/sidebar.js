@@ -82,6 +82,11 @@ export const navigationData = {
       icon: MapPin,
       url: "/admin/tracking"
     },
+    {
+      title: "Mon Profil",
+      icon: UserCheck,
+      url: "/admin/profile"
+    },
     // {
     //   title: "Fichiers",
     //   url: "/admin/files",

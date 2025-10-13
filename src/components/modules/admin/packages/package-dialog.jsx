@@ -58,9 +58,6 @@ const PackageDialog = ({
     pickupDate: "",
     pickupTime: "",
     specialInstructions: "",
-    paidAmount: 0,
-    paymentMethod: "",
-    paidAt: "",
   });
 
   const [form, setForm] = useState(emptyForm);
@@ -109,9 +106,6 @@ const PackageDialog = ({
         pickupDate: editingPackage.pickupDate ? new Date(editingPackage.pickupDate).toISOString().slice(0,10) : "",
         pickupTime: editingPackage.pickupTime || "",
         specialInstructions: editingPackage.specialInstructions || "",
-        paidAmount: editingPackage.paidAmount ?? 0,
-        paymentMethod: editingPackage.paymentMethod || "",
-        paidAt: editingPackage.paidAt ? new Date(editingPackage.paidAt).toISOString().slice(0,10) : "",
       });
       setForm(prefilled);
       return;
@@ -137,13 +131,6 @@ const PackageDialog = ({
           : "",
         pickupTime: prefilledSharedData?.pickupTime || "",
         specialInstructions: prefilledSharedData?.specialInstructions || "",
-        paidAmount: prefilledSharedData?.paidAmount ?? 0,
-        paymentMethod: prefilledSharedData?.paymentMethod || "",
-        paidAt: prefilledSharedData?.paidAt 
-          ? (typeof prefilledSharedData.paidAt === 'string' 
-              ? prefilledSharedData.paidAt.slice(0,10) 
-              : new Date(prefilledSharedData.paidAt).toISOString().slice(0,10))
-          : "",
       });
       setForm(emptyForm);
       return;
@@ -162,9 +149,6 @@ const PackageDialog = ({
       pickupDate: "",
       pickupTime: "",
       specialInstructions: "",
-      paidAmount: 0,
-      paymentMethod: "",
-      paidAt: "",
     });
     setForm(emptyForm);
   }, [isOpen, editingPackage, isAddingToShipment, prefilledClient, prefilledContainer, prefilledSharedData]);
@@ -265,17 +249,12 @@ const PackageDialog = ({
         customsFee: form.customsFee,
         discount: form.discount,
 
-        // champs partagés (si tu veux autoriser la MAJ à l’édition)
+        // champs partagés (si tu veux autoriser la MAJ à l'édition)
         pickupAddress: sharedData.pickupAddress || null,
         pickupDate: sharedData.pickupDate || null,
         pickupTime: sharedData.pickupTime || null,
         deliveryAddress: selectedClient?.recipientAddress || null,
         specialInstructions: sharedData.specialInstructions || null,
-
-        // paiement (facultatif pour la PUT)
-        paidAmount: sharedData.paidAmount || 0,
-        paymentMethod: sharedData.paymentMethod || null,
-        paidAt: sharedData.paidAt || null,
       };
 
       await onSave(singlePayload);

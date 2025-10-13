@@ -38,22 +38,6 @@ export const SidebarFooter = () => {
 
   if (!user) return null;
 
-  const getRoleColor = () => {
-    switch (role) {
-      case "ADMIN":
-        return "bg-red-100 text-red-800";
-      case "TEACHER":
-        return "bg-green-100 text-green-800";
-      case "STUDENT":
-        return "bg-blue-100 text-blue-800";
-      case "PARENT":
-        return "bg-purple-100 text-purple-800";
-      case "STAFF":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
   const getRoleLabel = () => {
     switch (role) {
@@ -75,72 +59,88 @@ export const SidebarFooter = () => {
   // --- Version compacte (sidebar fermée) ---
   if (!sidebarOpen) {
     return (
-      <div className="border-t p-2 shrink-0">
+      <div className="border-t p-3 shrink-0">
+        {/* Info utilisateur visible */}
+        <div className="mb-3 p-3 bg-card border rounded-lg">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.image} alt={user.name || 'Utilisateur'} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                {user.name?.[0] || user.email?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {user.name || user.email || 'Utilisateur'}
+              </p>
+              <Badge variant="secondary" className="text-xs mt-0.5">
+                {getRoleLabel()}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
         <TooltipProvider>
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
-              <Button variant="ghost" className="w-full justify-center h-10 p-1">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={user.image}
-                    alt={`Avatar de ${user.firstName}`}
-                  />
-                  <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
-                    {user.firstName?.[0]}
-                    {user.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
+              <Button variant="ghost" size="sm" className="w-full justify-center h-9">
+                <div className="relative">
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={user.image} alt={user.name || 'Utilisateur'} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {user.name?.[0] || user.email?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-background rounded-full"></div>
+                </div>
               </Button>
             </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              sideOffset={15}
-              className="max-w-xs p-3"
-            >
-              <div className="flex flex-col gap-2">
-                <div>
-                  <p className="font-medium text-sm">
-                    {user.firstName} {user.lastName}
+            <TooltipContent side="right" sideOffset={15} className="w-64 p-2">
+              <div className="space-y-3">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    {user.name || user.email || 'Utilisateur'}
                   </p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {user.email || user.phone || 'Non renseigné'}
+                  </p>
                 </div>
 
-                <Badge className={`text-xs w-fit ${getRoleColor()}`}>
+                <Badge variant="outline" className="w-fit mx-auto">
                   {getRoleLabel()}
                 </Badge>
 
-                <div className="pt-2 border-t space-y-2">
-                  {/* Profil */}
+                <div className="space-y-1 pt-2 border-t">
                   <Link
                     href="/dashboard/settings?tab=profile"
-                    className="flex items-center gap-2 text-xs hover:text-foreground"
+                    className="flex items-center gap-2 text-xs p-2 rounded-md hover:bg-accent transition-colors"
                   >
-                    <User className="h-3 w-3" />
-                    <span>Profil</span>
+                    <User className="h-3.5 w-3.5" />
+                    <span>Mon profil</span>
                   </Link>
 
-                  {/* Paramètres (ADMIN uniquement) */}
                   {role === "ADMIN" && (
                     <Link
                       href="/dashboard/settings"
-                      className="flex items-center gap-2 text-xs hover:text-foreground"
+                      className="flex items-center gap-2 text-xs p-2 rounded-md hover:bg-accent transition-colors"
                     >
-                      <Settings className="h-3 w-3" />
+                      <Settings className="h-3.5 w-3.5" />
                       <span>Paramètres</span>
                     </Link>
                   )}
 
-                  {/* Logout */}
-                  <LogoutButton
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 p-0 h-auto"
-                    showIcon
-                    showText
-                    confirmLogout
-                    iconClassName="h-3 w-3"
-                    textClassName="text-xs"
-                  />
+                  <div className="pt-1 border-t">
+                    <LogoutButton
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 p-2 h-auto"
+                      showIcon
+                      showText
+                      confirmLogout
+                      iconClassName="h-3.5 w-3.5"
+                      textClassName="text-xs"
+                    />
+                  </div>
                 </div>
               </div>
             </TooltipContent>
@@ -152,67 +152,65 @@ export const SidebarFooter = () => {
 
   // --- Version étendue (sidebar ouverte) ---
   return (
-    <div className="border-t p-3 shrink-0">
+    <div className="border-t p-4 shrink-0">
+      {/* Info utilisateur visible */}
+      <div className="mb-4 p-4 bg-card border rounded-lg">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={user.image} alt={user.name || 'Utilisateur'} />
+            <AvatarFallback className="bg-primary text-primary-foreground font-medium">
+              {user.name?.[0] || user.email?.[0] || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">
+              {user.name || user.email || 'Utilisateur'}
+            </p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
+              {user.email || user.phone || 'Non renseigné'}
+            </p>
+            <Badge variant="secondary" className="text-xs mt-1">
+              {getRoleLabel()}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="w-full justify-start h-auto p-2 hover:bg-accent min-h-[60px]"
-          >
-            <div className="flex items-center gap-3 w-full overflow-hidden">
-              <Avatar className="h-8 w-8 shrink-0">
-                <AvatarImage
-                  src={user.image}
-                  alt={`Avatar de ${user.firstName}`}
-                />
-                <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
-                  {user.firstName?.[0]}
-                  {user.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="flex flex-col text-left flex-1 min-w-0 overflow-hidden">
-                <span className="text-sm font-medium truncate">
-                  {user.firstName} {user.lastName}
-                </span>
-                <span className="text-xs text-muted-foreground truncate">
-                  {user.email}
-                </span>
-                <Badge className={`text-xs mt-1 w-fit ${getRoleColor()}`}>
-                  {getRoleLabel()}
-                </Badge>
-              </div>
-
-              <ChevronDown className="h-4 w-4 shrink-0 ml-1" />
+          <Button variant="ghost" size="sm" className="w-full justify-center h-9">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Menu</span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="w-56" sideOffset={5}>
-          <DropdownMenuLabel>
+        <DropdownMenuContent align="end" className="w-64 p-2" sideOffset={5}>
+          <DropdownMenuLabel className="px-3 py-2">
             <div className="flex flex-col space-y-1">
-              <span>Mon compte</span>
+              <span className="font-semibold text-foreground">Mon compte</span>
               <span className="text-xs font-normal text-muted-foreground truncate">
-                {user.firstName} {user.lastName}
+                {user.name || user.email || 'Utilisateur'}
               </span>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
           {/* Profil */}
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/settings?tab=profile" prefetch>
-              <User className="mr-2 h-4 w-4" />
-              <span>Mon profil</span>
+          <DropdownMenuItem asChild className="px-3 py-2">
+            <Link href="/dashboard/settings?tab=profile" prefetch className="flex items-center gap-3">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Mon profil</span>
             </Link>
           </DropdownMenuItem>
 
           {/* Paramètres (ADMIN seulement) */}
           {role === "ADMIN" && (
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings" prefetch>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Paramètres</span>
+            <DropdownMenuItem asChild className="px-3 py-2">
+              <Link href="/dashboard/settings" prefetch className="flex items-center gap-3">
+                <Settings className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">Paramètres</span>
               </Link>
             </DropdownMenuItem>
           )}
@@ -224,7 +222,7 @@ export const SidebarFooter = () => {
             <LogoutButton
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 px-3 py-2"
               showIcon
               showText
               confirmLogout

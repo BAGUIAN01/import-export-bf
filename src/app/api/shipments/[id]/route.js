@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { derivePaymentStatus } from "@/lib/utils/package-helpers";
 
 // GET /api/shipments/[id]
 export async function GET(request, { params }) {
@@ -197,10 +198,35 @@ export async function PUT(request, { params }) {
       updateData.notes = body.notes;
     }
 
+    // Recalculer automatiquement le paymentStatus si paidAmount est modifié
+    if (body.paidAmount !== undefined) {
+      const paidAmount = Number(body.paidAmount);
+      const totalAmount = existingShipment.totalAmount || 0;
+      
+      updateData.paymentStatus = derivePaymentStatus(totalAmount, paidAmount);
+      
+      console.log(`🔄 Recalcul paymentStatus pour shipment ${id}:`, {
+        paidAmount,
+        totalAmount,
+        paymentStatus: updateData.paymentStatus
+      });
+    }
+
+    // Debug: afficher les données avant mise à jour
+    console.log(`🔍 Données de mise à jour pour shipment ${id}:`, updateData);
+
     // Mise à jour
     const updatedShipment = await prisma.shipment.update({
       where: { id },
       data: updateData,
+    });
+
+    // Debug: afficher les données après mise à jour
+    console.log(`✅ Shipment ${id} mis à jour:`, {
+      paidAmount: updatedShipment.paidAmount,
+      paymentStatus: updatedShipment.paymentStatus,
+      paymentMethod: updatedShipment.paymentMethod,
+      paidAt: updatedShipment.paidAt
     });
 
     // Log d'audit

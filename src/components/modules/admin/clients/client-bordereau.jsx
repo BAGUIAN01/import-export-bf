@@ -214,7 +214,9 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
     if (!selectedContainer) return toast.error('Veuillez sélectionner un conteneur');
     setIsGenerating(true);
     setTimeout(() => {
-      window.print();
+      if (typeof window !== 'undefined') {
+        window.print();
+      }
       setIsGenerating(false);
       toast.success('Bordereau généré pour impression');
     }, 350);
@@ -296,9 +298,14 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
 
   const handleShareLink = async () => {
     try {
-      const link = `${window.location.origin}/bordereau/${formData.factureClient}`;
-      await navigator.clipboard.writeText(link);
-      toast.success('Lien copié dans le presse-papiers');
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://import-export-bf.com';
+      const link = `${origin}/bordereau/${formData.factureClient}`;
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(link);
+        toast.success('Lien copié dans le presse-papiers');
+      } else {
+        toast.error('Fonction de copie non disponible');
+      }
     } catch {
       toast.error('Erreur lors de la génération du lien');
     }
@@ -456,7 +463,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                   </div>
                   <div className="w-16 h-16 bg-white rounded flex items-center justify-center">
                     <QRCode
-                      value={`${window.location.origin}/tracking?q=SHP202500001`}
+                      value={`${typeof window !== 'undefined' ? window.location.origin : 'https://import-export-bf.com'}/tracking?q=SHP202500001`}
                       size={60}
                       level="M"
                     />

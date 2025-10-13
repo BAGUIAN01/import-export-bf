@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { derivePaymentStatus } from "@/lib/utils/package-helpers";
 
 // ---------- Helpers ----------
 const toNumOrNull = (v) =>
@@ -22,14 +23,6 @@ const isValidPaymentStatus = (s) =>
 
 const isValidPaymentMethod = (m) =>
   ["CASH", "CARD", "TRANSFER", "MOBILE_MONEY", "CHEQUE"].includes(m);
-
-const derivePaymentStatus = (totalAmount, paidAmount) => {
-  const total = Number(totalAmount || 0);
-  const paid = Number(paidAmount || 0);
-  if (paid <= 0) return "PENDING";
-  if (paid < total) return "PARTIAL";
-  return "PAID";
-};
 
 // Fonction pour recalculer les agrégats d'un shipment
 async function recalcShipmentAggregates(shipmentId) {

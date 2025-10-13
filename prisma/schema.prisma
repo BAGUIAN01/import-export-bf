@@ -62,6 +62,10 @@ model User {
   country     String?   @default("France")
   dateOfBirth DateTime?
   lastLoginAt DateTime?
+  
+  // Sécurité et préférences
+  twoFactorEnabled     Boolean @default(false)
+  notificationSettings Json?
 
   // Relations
   accounts        Account[]

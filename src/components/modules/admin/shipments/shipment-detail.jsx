@@ -57,6 +57,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
+import { ShipmentEditDialog } from "./shipment-edit-dialog";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 const formatDateTime = (d) => (d ? new Date(d).toLocaleString("fr-FR") : "-");
@@ -161,6 +162,7 @@ export default function ShipmentDetail({
   const [isPkgDialogOpen, setPkgDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState(null);
   const [addingMode, setAddingMode] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Hook SWR pour les détails du shipment avec cache
   const { 
@@ -223,9 +225,6 @@ export default function ShipmentDetail({
           deliveryAddress: payload.sharedData?.deliveryAddress || currentShipment.deliveryAddress || null,
           specialInstructions:
             payload.sharedData?.specialInstructions || currentShipment.specialInstructions || null,
-          paidAmount: Number(payload.sharedData?.paidAmount || 0),
-          paymentMethod: payload.sharedData?.paymentMethod || null,
-          paidAt: payload.sharedData?.paidAt || null,
           shipmentId: currentShipment.id,
         }));
 
@@ -245,10 +244,15 @@ export default function ShipmentDetail({
         setPkgDialogOpen(false);
         
         // Attendre un peu pour que le serveur termine le recalcul
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         // Forcer le rafraîchissement COMPLET du cache (pas de cache, force refetch)
         await refresh();
+        
+        // Second rafraîchissement pour être sûr que les stats sont à jour
+        setTimeout(() => {
+          refresh();
+        }, 500);
       } else if (editingPackage) {
         const res = await fetch(`/api/packages/${editingPackage.id}`, {
           method: "PUT",
@@ -266,10 +270,15 @@ export default function ShipmentDetail({
         setEditingPackage(null);
         
         // Attendre un peu pour que le serveur termine le recalcul
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         // Rafraîchir le cache
         await refresh();
+        
+        // Second rafraîchissement pour être sûr que les stats sont à jour
+        setTimeout(() => {
+          refresh();
+        }, 500);
       }
     } catch {
       toast.error("Erreur de connexion");
@@ -288,10 +297,15 @@ export default function ShipmentDetail({
       toast.success("Colis supprimé");
       
       // Attendre un peu pour que le serveur termine le recalcul
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Rafraîchir le cache
       await refresh();
+      
+      // Second rafraîchissement pour être sûr que les stats sont à jour
+      setTimeout(() => {
+        refresh();
+      }, 500);
     } catch {
       toast.error("Erreur de connexion");
     }
@@ -316,8 +330,20 @@ export default function ShipmentDetail({
     const total = Number(currentShipment.totalAmount || 0);
     const paid = Number(currentShipment.paidAmount || 0);
     const percentage = total > 0 ? (paid / total) * 100 : 0;
+    
+    // Debug: afficher les valeurs dans la console
+    console.log('💰 Payment Progress Debug:', {
+      shipmentId: currentShipment.id,
+      totalAmount: total,
+      paidAmount: paid,
+      percentage,
+      paymentStatus: currentShipment.paymentStatus,
+      paymentMethod: currentShipment.paymentMethod,
+      paidAt: currentShipment.paidAt
+    });
+    
     return { total, paid, percentage, remaining: total - paid };
-  }, [currentShipment.totalAmount, currentShipment.paidAmount]);
+  }, [currentShipment.totalAmount, currentShipment.paidAmount, currentShipment.paymentStatus, currentShipment.paymentMethod, currentShipment.paidAt, currentShipment.id]);
 
   // Affichage du loading skeleton si pas de shipment
   if (!currentShipment) {
@@ -607,10 +633,19 @@ export default function ShipmentDetail({
                       {headerStats.count}
                     </Badge>
                   </CardTitle>
-                  <Button onClick={openAddPackages} className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter des colis
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={openAddPackages} className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter des colis
+                    </Button>
+                    <Button 
+                      onClick={() => setIsEditDialogOpen(true)} 
+                      className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg"
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Gérer le paiement
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -804,19 +839,42 @@ export default function ShipmentDetail({
         package={editingPackage}
         prefilledClient={addingMode ? currentShipment.client : null}
         prefilledContainer={addingMode ? currentShipment.container : null}
-        prefilledSharedData={addingMode ? {
-          pickupAddress: currentShipment.pickupAddress || currentShipment.client?.address,
-          pickupDate: currentShipment.pickupDate,
-          pickupTime: currentShipment.pickupTime,
-          deliveryAddress: currentShipment.deliveryAddress || currentShipment.client?.recipientAddress,
-          specialInstructions: currentShipment.specialInstructions,
-          paymentMethod: currentShipment.paymentMethod,
-        } : null}
+        prefilledSharedData={null}
         clients={clients}
         containers={containers}
         onSave={handleSavePackage}
         loading={isLoading || isMutating}
         isAddingToShipment={addingMode}
+      />
+
+      {/* Dialog pour gérer le paiement du shipment */}
+      <ShipmentEditDialog
+        shipment={currentShipment}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={async (data) => {
+          try {
+            const res = await fetch(`/api/shipments/${currentShipment.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            if (!res.ok) {
+              const e = await res.json().catch(() => ({}));
+              toast.error(e?.error || "Erreur modification paiement");
+              return;
+            }
+            
+            toast.success("Paiement mis à jour");
+            setIsEditDialogOpen(false);
+            
+            // Rafraîchir le cache
+            await refresh();
+          } catch {
+            toast.error("Erreur de connexion");
+          }
+        }}
+        loading={isLoading || isMutating}
       />
     </div>
   );

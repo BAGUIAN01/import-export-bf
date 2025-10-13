@@ -290,13 +290,26 @@ export function ClientsTable({ initialClients, initialStats }) {
           "Statut",
           "VIP",
           "Total Dépensé",
+          "Total Expéditions",
+          "Nb Expéditions",
           "Nb Colis",
+          "Statut Paiement",
           "Date création",
         ].join(","),
         ...filteredAndSortedClients.map((client) => {
           const createdAt = client.createdAt
             ? new Date(client.createdAt).toLocaleDateString("fr-FR")
             : "";
+          
+          let paymentStatus = "En attente";
+          if (client.totalSpent > 0) {
+            if (client.totalSpent >= client.totalShipmentsAmount) {
+              paymentStatus = "Payé";
+            } else {
+              paymentStatus = "Partiel";
+            }
+          }
+          
           return [
             client.clientCode,
             client.firstName,
@@ -312,7 +325,10 @@ export function ClientsTable({ initialClients, initialStats }) {
             client.isActive ? "Actif" : "Inactif",
             client.isVip ? "Oui" : "Non",
             client.totalSpent || "0",
+            client.totalShipmentsAmount || "0",
+            client.shipmentsCount || "0",
             client.packagesCount || "0",
+            paymentStatus,
             createdAt,
           ].join(",");
         }),
@@ -370,10 +386,10 @@ export function ClientsTable({ initialClients, initialStats }) {
 
         {/* Statistiques */}
         {showStats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             {isLoading && !clients.length ? (
               <>
-                {[...Array(5)].map((_, idx) => (
+                {[...Array(6)].map((_, idx) => (
                   <Card key={idx} className="border-0 shadow-lg">
                     <CardContent className="p-6">
                       <Skeleton className="h-16 w-full" />
@@ -407,6 +423,13 @@ export function ClientsTable({ initialClients, initialStats }) {
                   title="Avec Commandes"
                   value={stats.withOrders}
                   color="from-orange-500 to-orange-600"
+                />
+                <StatsCard
+                  icon={Euro}
+                  title="Chiffre d'affaires"
+                  value={formatCurrency(stats.totalRevenue)}
+                  subtitle={`${stats.totalShipments} expéditions`}
+                  color="from-emerald-500 to-emerald-600"
                 />
                 <StatsCard
                   icon={Star}
@@ -635,19 +658,37 @@ export function ClientsTable({ initialClients, initialStats }) {
                     </div>
 
                     {/* Informations supplémentaires */}
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                       <div>
                         <p className="text-gray-500">Destinataire</p>
                         <p className="font-medium">{client.recipientName}</p>
                         <p className="text-gray-500">{client.recipientCity}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500">Colis envoyés</p>
-                        <p className="font-medium">{client.packagesCount || 0}</p>
+                        <p className="text-gray-500">Expéditions</p>
+                        <p className="font-medium">{client.shipmentsCount || 0}</p>
+                        <p className="text-gray-500">{client.packagesCount || 0} colis</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Total dépensé</p>
-                        <p className="font-medium">{formatCurrency(client.totalSpent)}</p>
+                        <p className="font-medium text-green-600">{formatCurrency(client.totalSpent)}</p>
+                        {client.totalShipmentsAmount > 0 && (
+                          <p className="text-gray-500">sur {formatCurrency(client.totalShipmentsAmount)}</p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Statut paiement</p>
+                        <p className="font-medium">
+                          {client.totalSpent > 0 ? (
+                            client.totalSpent >= client.totalShipmentsAmount ? (
+                              <Badge variant="default" className="bg-green-100 text-green-800">Payé</Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Partiel</Badge>
+                            )
+                          ) : (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-800">En attente</Badge>
+                          )}
+                        </p>
                       </div>
                       <div>
                         <p className="text-gray-500">Client depuis</p>

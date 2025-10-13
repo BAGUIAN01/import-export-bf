@@ -924,86 +924,27 @@ export const ContainerAndSummaryStep = ({
       </div>
     </section>
 
-    {/* Paiement (niveau expédition) */}
+    {/* Information sur le paiement */}
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">
         Paiement
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Montant payé (€)
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            max={totalAmount}
-            value={sharedData.paidAmount || ""}
-            onChange={(e) =>
-              setSharedData((prev) => ({
-                ...prev,
-                paidAmount: parseFloat(e.target.value) || 0,
-              }))
-            }
-            placeholder="0.00"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Total à payer: <strong>{totalAmount.toFixed(2)}€</strong>
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Mode de paiement
-          </label>
-          <select
-            value={sharedData.paymentMethod || ""}
-            onChange={(e) =>
-              setSharedData((prev) => ({ ...prev, paymentMethod: e.target.value }))
-            }
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          >
-            <option value="">Sélectionner un mode</option>
-            {PAYMENT_METHODS.map((method) => (
-              <option key={method.value} value={method.value}>
-                {method.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Date de paiement
-          </label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="justify-start text-left font-normal border-gray-300 hover:bg-orange-50 min-h-[44px]"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {sharedData.paidAt ? sharedData.paidAt : "Choisir une date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={sharedData.paidAt ? new Date(sharedData.paidAt) : undefined}
-                onSelect={(date) =>
-                  setSharedData((prev) => ({
-                    ...prev,
-                    paidAt: date ? format(date, "yyyy-MM-dd", { locale: fr }) : "",
-                  }))
-                }
-                initialFocus
-                locale={fr}
-              />
-            </PopoverContent>
-          </Popover>
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Euro className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h4 className="font-medium text-blue-900 mb-1">Gestion du paiement</h4>
+            <p className="text-sm text-blue-800 mb-2">
+              Le paiement sera géré au niveau de l'expédition complète. 
+              Vous pourrez enregistrer les paiements après la création des colis.
+            </p>
+            <div className="text-sm text-blue-700">
+              <strong>Total de l'expédition : {totalAmount.toFixed(2)}€</strong>
+            </div>
+          </div>
         </div>
       </div>
     </section>
