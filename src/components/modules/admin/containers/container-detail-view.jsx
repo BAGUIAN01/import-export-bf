@@ -9,6 +9,8 @@ import {
   Calendar,
   Eye,
   EyeOff,
+  Bell,
+  BellOff,
   Save,
   Plus,
   ArrowLeft,
@@ -84,7 +86,8 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
     location: '',
     description: '',
     status: container.status,
-    isPublic: true
+    isPublic: true,
+    notifyClients: false
   });
 
   const handleInputChange = (field, value) => {
@@ -100,7 +103,8 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
       location: update.location,
       description: update.description,
       status: container.status,
-      isPublic: update.isPublic
+      isPublic: update.isPublic,
+      notifyClients: false
     });
     setShowUpdateForm(true);
   };
@@ -111,7 +115,8 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
       location: '',
       description: '',
       status: container.status,
-      isPublic: true
+      isPublic: true,
+      notifyClients: false
     });
     setShowUpdateForm(false);
   };
@@ -182,6 +187,7 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
             location: updateForm.location,
             description: updateForm.description,
             isPublic: updateForm.isPublic,
+            notifyClients: updateForm.notifyClients,
           }),
         });
 
@@ -205,7 +211,23 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
         }
 
         setTrackingUpdates(prev => [trackingData.trackingUpdate, ...prev]);
-        toast.success('Mise à jour enregistrée');
+        
+        // Message de confirmation avec information sur les notifications
+        if (updateForm.notifyClients && trackingData.notificationResult) {
+          const { success, errors, invalidPhones, total } = trackingData.notificationResult;
+          
+          if (success === total) {
+            toast.success(`Mise à jour enregistrée - ${success} SMS envoyés avec succès`);
+          } else if (success > 0) {
+            toast.warning(`Mise à jour enregistrée - ${success}/${total} SMS envoyés (${errors} erreurs, ${invalidPhones} numéros invalides)`);
+          } else {
+            toast.error(`Mise à jour enregistrée - Aucun SMS envoyé (${errors} erreurs, ${invalidPhones} numéros invalides)`);
+          }
+        } else if (updateForm.notifyClients) {
+          toast.success('Mise à jour enregistrée et clients notifiés');
+        } else {
+          toast.success('Mise à jour enregistrée');
+        }
         
         // Rafraîchir les données du conteneur
         await refresh();
@@ -520,20 +542,47 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
               </div>
 
               <div className="flex items-center justify-between pt-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="isPublic"
-                    checked={updateForm.isPublic}
-                    onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
-                  />
-                  <Label htmlFor="isPublic" className="flex items-center gap-2 text-sm">
-                    Visible par les clients
-                    {updateForm.isPublic ? (
-                      <Eye className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <EyeOff className="h-3 w-3 text-muted-foreground" />
-                    )}
-                  </Label>
+                <div className="flex flex-col space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isPublic"
+                      checked={updateForm.isPublic}
+                      onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
+                    />
+                    <Label htmlFor="isPublic" className="flex items-center gap-2 text-sm">
+                      Visible par les clients
+                      {updateForm.isPublic ? (
+                        <Eye className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <EyeOff className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </Label>
+                  </div>
+                  
+                  {!editingUpdate && (
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="notifyClients"
+                          checked={updateForm.notifyClients}
+                          onCheckedChange={(checked) => handleInputChange('notifyClients', checked)}
+                        />
+                        <Label htmlFor="notifyClients" className="flex items-center gap-2 text-sm">
+                          Notifier tous les clients
+                          {updateForm.notifyClients ? (
+                            <Bell className="h-3 w-3 text-blue-500" />
+                          ) : (
+                            <BellOff className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </Label>
+                      </div>
+                      {updateForm.notifyClients && (
+                        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded-md">
+                          📱 Les clients recevront un SMS avec la position et un lien de tracking
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2">

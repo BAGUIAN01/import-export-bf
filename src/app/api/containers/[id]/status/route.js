@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { TrackingService } from "@/lib/services/tracking";
 
 // GET - Récupérer l'historique de suivi
 export async function GET(request, { params }) {
@@ -59,7 +60,8 @@ export async function POST(request, { params }) {
       longitude, 
       temperature, 
       isPublic,
-      photos 
+      photos,
+      notifyClients 
     } = body;
 
     // Validation
@@ -116,6 +118,25 @@ export async function POST(request, { params }) {
       },
     });
 
+    // Notifier les clients si demandé
+    let notificationResult = null;
+    if (notifyClients) {
+      try {
+        notificationResult = await TrackingService.notifyClientsOfContainerUpdate(id, trackingUpdate);
+        console.log("📊 Résultat des notifications:", notificationResult);
+      } catch (error) {
+        console.error("Erreur lors de la notification des clients:", error);
+        // Ne pas faire échouer la requête si la notification échoue
+        notificationResult = {
+          total: 0,
+          success: 0,
+          errors: 1,
+          invalidPhones: 0,
+          errorDetails: [{ error: error.message }]
+        };
+      }
+    }
+
     // Log de l'audit
     await prisma.auditLog.create({
       data: {
@@ -123,7 +144,7 @@ export async function POST(request, { params }) {
         action: "CREATE_TRACKING_UPDATE",
         resource: "container",
         resourceId: id,
-        details: JSON.stringify({ location, description, isPublic }),
+        details: JSON.stringify({ location, description, isPublic, notifyClients }),
         ipAddress: request.headers.get("x-forwarded-for") || 
                    request.headers.get("x-real-ip") || 
                    "unknown",
@@ -133,6 +154,7 @@ export async function POST(request, { params }) {
     return NextResponse.json({
       message: "Mise à jour créée avec succès",
       trackingUpdate,
+      notificationResult,
     });
   } catch (error) {
     console.error("Erreur création suivi:", error);
