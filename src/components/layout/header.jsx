@@ -627,7 +627,7 @@ export function Header() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <Link href="/login">
+                    <Link href="/auth/signin">
                       <button
                         className="flex items-center justify-center space-x-2 w-full px-4 py-3 text-gray-700 bg-white rounded-xl font-medium hover:bg-gray-50 transition-all duration-300"
                         onClick={() => setIsOpen(false)}
@@ -636,7 +636,7 @@ export function Header() {
                         <span>Connexion</span>
                       </button>
                     </Link>
-                    <Link href="/register">
+                    <Link href="/auth/signup">
                       <button
                         className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gradient-to-r from-[#010066] to-blue-900 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
                         onClick={() => setIsOpen(false)}
