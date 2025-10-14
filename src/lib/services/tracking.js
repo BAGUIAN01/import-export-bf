@@ -290,7 +290,8 @@ export class TrackingService {
       }
       
       // Créer le message avec la position et le lien de tracking
-      const trackingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/tracking?q=${shipment.shipmentNumber}`
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://import-export-bf.vercel.app'
+      const trackingUrl = `${baseUrl}/tracking?q=${shipment.shipmentNumber}`
       
       // Message SMS optimisé (160 caractères max recommandé)
       const message = `IE BF: Expédition ${shipment.shipmentNumber} - Position: ${update.location}. ${update.description}. Suivez: ${trackingUrl}`
