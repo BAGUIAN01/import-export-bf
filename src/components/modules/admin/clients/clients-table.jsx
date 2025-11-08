@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClients, useClientMutations } from "@/hooks/use-clients";
+import { useContainers } from "@/hooks/use-containers";
+import { usePackageBatch } from "@/hooks/use-shipments";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,6 +64,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { ClientDialog } from "./client-dialog";
+import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 const formatCurrency = (amount) =>
@@ -121,6 +124,8 @@ export function ClientsTable({ initialClients, initialStats }) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
+  const [packageDialogClient, setPackageDialogClient] = useState(null);
   
   // Filtres et recherche
   const [searchTerm, setSearchTerm] = useState("");
@@ -129,6 +134,36 @@ export function ClientsTable({ initialClients, initialStats }) {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
   const [showStats, setShowStats] = useState(true);
+
+  const isDefaultFilters = useMemo(
+    () => !searchTerm && statusFilter === "all" && countryFilter === "all",
+    [searchTerm, statusFilter, countryFilter]
+  );
+
+  const fallbackData = useMemo(() => {
+    if (!initialClients?.length && !initialStats) {
+      return undefined;
+    }
+
+    return {
+      data: initialClients ?? [],
+      stats: initialStats ?? null,
+      pagination: {
+        page: 1,
+        limit: initialClients?.length ?? 0,
+        total: initialClients?.length ?? 0,
+        pages: 1,
+      },
+    };
+  }, [initialClients, initialStats]);
+
+  const swrConfig = useMemo(() => {
+    if (!fallbackData || !isDefaultFilters) return {};
+    return {
+      fallbackData,
+      revalidateOnMount: false,
+    };
+  }, [fallbackData, isDefaultFilters]);
 
   // Utilisation du hook SWR pour le cache
   const { 
@@ -141,7 +176,24 @@ export function ClientsTable({ initialClients, initialStats }) {
     status: statusFilter,
     country: countryFilter,
     includeStats: true,
+    swrConfig,
   });
+
+  const dialogClients = useMemo(() => {
+    if (!packageDialogClient) return clients;
+    const exists = clients.some((client) => client.id === packageDialogClient.id);
+    return exists ? clients : [packageDialogClient, ...clients];
+  }, [clients, packageDialogClient]);
+
+  const prefilledSharedData = useMemo(() => {
+    if (!packageDialogClient) return null;
+    return {
+      pickupAddress: packageDialogClient.address || "",
+      specialInstructions: "",
+      pickupDate: "",
+      pickupTime: "",
+    };
+  }, [packageDialogClient]);
 
   // Mutations avec le hook personnalisé
   const { 
@@ -150,6 +202,8 @@ export function ClientsTable({ initialClients, initialStats }) {
     deleteClient, 
     isLoading: isMutating 
   } = useClientMutations();
+  const { containers } = useContainers({ limit: 200 });
+  const { createPackageBatch, isLoading: isCreatingPackage } = usePackageBatch();
 
   // Utiliser les stats du serveur ou fallback sur initialStats
   const stats = useMemo(() => {
@@ -223,17 +277,17 @@ export function ClientsTable({ initialClients, initialStats }) {
     setIsDialogOpen(true);
   }, []);
 
-  const handleEdit = useCallback((client) => {
-    setEditingClient(client);
+  const handleEdit = useCallback((clientData) => {
+    setEditingClient(clientData);
     setIsDialogOpen(true);
   }, []);
 
-  const handleView = useCallback((client) => {
-    router.push(`/admin/clients/${client.id}`);
+  const handleView = useCallback((clientData) => {
+    router.push(`/admin/clients/${clientData.id}`);
   }, [router]);
 
-  const handleDelete = useCallback(async (client) => {
-    const result = await deleteClient(client.id);
+  const handleDelete = useCallback(async (clientData) => {
+    const result = await deleteClient(clientData.id);
     if (result.success) {
       // Rafraîchir le cache SWR
       await mutate();
@@ -257,9 +311,44 @@ export function ClientsTable({ initialClients, initialStats }) {
     }
   }, [editingClient, createClient, updateClient, mutate]);
 
-  const handleCreatePackage = useCallback((client) => {
-    router.push(`/admin/packages/new?clientId=${client.id}`);
-  }, [router]);
+  const handleOpenPackageDialog = useCallback((clientData) => {
+    setPackageDialogClient(clientData);
+    setIsPackageDialogOpen(true);
+  }, []);
+
+  const handlePackageDialogClose = useCallback(() => {
+    setIsPackageDialogOpen(false);
+    setPackageDialogClient(null);
+  }, []);
+
+  const handleCreatePackage = useCallback(async (payload) => {
+    const result = await createPackageBatch(payload);
+
+    if (result.success) {
+      handlePackageDialogClose();
+
+      const isExisting = result.data?.isExistingShipment;
+      const shipmentNum = result.data?.shipment?.shipmentNumber;
+      const packagesCount = result.data?.packages?.length || 0;
+
+      if (isExisting) {
+        toast.success(
+          `${packagesCount} colis ajouté(s) à l'expédition existante`,
+          {
+            description: `Expédition ${shipmentNum} - Un shipment existait déjà pour ce client dans ce conteneur`,
+            duration: 5000,
+          }
+        );
+      } else {
+        toast.success(`Expédition créée avec succès`, {
+          description: `${shipmentNum} avec ${packagesCount} colis`,
+          duration: 4000,
+        });
+      }
+
+      await mutate();
+    }
+  }, [createPackageBatch, handlePackageDialogClose, mutate]);
 
   const handleRefresh = useCallback(async () => {
     toast.promise(
@@ -616,7 +705,7 @@ export function ClientsTable({ initialClients, initialStats }) {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCreatePackage(client);
+                            handleOpenPackageDialog(client);
                           }}
                         >
                           <Package className="h-4 w-4 mr-1" />
@@ -722,6 +811,18 @@ export function ClientsTable({ initialClients, initialStats }) {
         client={editingClient}
         onSave={handleSave}
         loading={isMutating}
+      />
+
+      {/* Dialog de création de colis / expédition */}
+      <PackageDialog
+        isOpen={isPackageDialogOpen}
+        onClose={handlePackageDialogClose}
+        clients={dialogClients}
+        containers={containers}
+        onSave={handleCreatePackage}
+        loading={isCreatingPackage}
+        prefilledClient={packageDialogClient}
+        prefilledSharedData={prefilledSharedData}
       />
     </div>
   );

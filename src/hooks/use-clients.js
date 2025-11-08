@@ -32,6 +32,7 @@ export function useClients(options = {}) {
     page = 1,
     limit = 50,
     includeStats = true,
+    swrConfig = {},
   } = options;
 
   // Construction de l'URL avec les paramètres
@@ -48,18 +49,24 @@ export function useClients(options = {}) {
   const url = `/api/clients?${queryParams.toString()}`;
 
   // SWR avec options de cache optimisées
-  const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
-    revalidateOnFocus: false, // Ne pas revalider au focus
-    revalidateOnReconnect: true, // Revalider à la reconnexion
-    dedupingInterval: 2000, // Éviter les requêtes dupliquées pendant 2s
-    keepPreviousData: true, // Garder les données précédentes pendant le chargement
-  });
+  const { data, error, isLoading, mutate, isValidating } = useSWR(
+    url,
+    fetcher,
+    {
+      revalidateOnFocus: false, // Ne pas revalider au focus
+      revalidateOnReconnect: true, // Revalider à la reconnexion
+      dedupingInterval: 2000, // Éviter les requêtes dupliquées pendant 2s
+      keepPreviousData: true, // Garder les données précédentes pendant le chargement
+      ...swrConfig,
+    }
+  );
 
   return {
     clients: data?.data || [],
     stats: data?.stats || null,
     pagination: data?.pagination || null,
     isLoading,
+    isValidating,
     isError: error,
     error: error?.message,
     mutate, // Pour rafraîchir manuellement

@@ -272,8 +272,8 @@ export function PackagesTable({
     { key: "status", title: "Statut", options: statusOptions },
     { key: "priority", title: "Priorité", options: priorityOptions },
     { key: "paymentStatus", title: "Paiement", options: paymentStatusOptions },
-    // on s'appuie sur `typesText` pour filtrer visuellement par libellé
-    { key: "typesText", title: "Type", options: packageTypeOptions },
+    // on s'appuie sur la colonne `type` (qui se base sur un champ normalisé)
+    { key: "type", title: "Type", options: packageTypeOptions },
   ];
 
   const columns = useMemo(

@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Optimisations de compilation
-  swcMinify: true,
   
   // Optimiser les images
   images: {

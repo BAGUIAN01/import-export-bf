@@ -49,7 +49,7 @@ export default function Hero() {
       icon: Package,
       label: "Enlèvement Colis",
       price: "20€",
-      desc: "Collecte à domicile en France",
+      desc: "Collecte à domicile en Île de France",
     },
     {
       icon: Truck,
@@ -175,11 +175,11 @@ export default function Hero() {
               {/* Main Title */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-[0.95] tracking-tight">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
-                  Vos colis de la France
+                  Envoi de vos colis de la France
                 </span>
                 <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
-                  au Burkina Faso
+                  vers le Burkina Faso
                 </span>
                 <br />
                 <span className="text-blue-300">en toute sécurité</span>
@@ -220,10 +220,7 @@ export default function Hero() {
 
               {/* Key Benefits */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="flex items-center gap-2 text-green-400">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">Tarif fixe</span>
-                </div>
+        
                 <div className="flex items-center gap-2 text-green-400">
                   <CheckCircle className="w-4 h-4" />
                   <span className="text-sm font-medium">Suivi temps réel</span>

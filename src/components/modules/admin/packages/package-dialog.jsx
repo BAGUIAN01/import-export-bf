@@ -136,6 +136,35 @@ const PackageDialog = ({
       return;
     }
 
+    // MODE CRÉATION AVEC CLIENT PRÉSELECTIONNÉ
+    if (!editingPackage && !isAddingToShipment && prefilledClient) {
+      setCurrentStep(1);
+      setSearchClient("");
+      setSelectedClientId(prefilledClient.id || "");
+      setSelectedContainerId(prefilledContainer?.id || "");
+      setPackages([]);
+      setActivePackageIndex(-1);
+      setErrors({});
+      setSharedData({
+        pickupAddress:
+          prefilledSharedData?.pickupAddress ||
+          prefilledClient.address ||
+          "",
+        pickupDate: prefilledSharedData?.pickupDate
+          ? (typeof prefilledSharedData.pickupDate === "string"
+              ? prefilledSharedData.pickupDate.slice(0, 10)
+              : new Date(prefilledSharedData.pickupDate)
+                  .toISOString()
+                  .slice(0, 10))
+          : "",
+        pickupTime: prefilledSharedData?.pickupTime || "",
+        specialInstructions:
+          prefilledSharedData?.specialInstructions || "",
+      });
+      setForm(emptyForm);
+      return;
+    }
+
     // MODE CRÉATION (wizard)
     setCurrentStep(1);
     setSearchClient("");

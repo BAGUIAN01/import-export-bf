@@ -130,7 +130,7 @@ export default function ContactSection() {
     },
     {
       icon: Package,
-      title: "Tarifs fixes",
+      title: "Tarifs",
       value: "100€",
       note: "Carton ou barrique"
     },
@@ -138,7 +138,7 @@ export default function ContactSection() {
       icon: Truck,
       title: "Ramassage",
       value: "20€",
-      note: "Partout en France"
+      note: "Partout en Île de France"
     },
     {
       icon: Clock,
