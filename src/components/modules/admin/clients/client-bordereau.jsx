@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   FileText,
   Download,
@@ -344,7 +345,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[98vw] xs:w-[95vw] sm:w-full sm:max-w-[1100px] max-h-[95vh] xs:max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="flex flex-col w-[98vw] xs:w-[95vw] sm:w-full sm:max-w-[1100px] max-h-[95vh] xs:max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="px-3 xs:px-4 sm:px-6 pt-3 xs:pt-4 sm:pt-6 pb-2 xs:pb-3 sm:pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-base xs:text-lg sm:text-xl">
             <FileText className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-[#010066]" />
@@ -353,8 +354,9 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-3 xs:px-4 sm:px-6 py-2 xs:py-3 sm:py-4">
-          {/* ====== Carte de sélection conteneur (hors PDF) ====== */}
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="px-3 xs:px-4 sm:px-6 py-2 xs:py-3 sm:py-4">
+            {/* ====== Carte de sélection conteneur (hors PDF) ====== */}
           <Card className="mb-3 xs:mb-4 sm:mb-6" data-html2canvas-ignore>
             <CardContent className="p-2 xs:p-3 sm:p-4 space-y-2 xs:space-y-3 sm:space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 xs:gap-3 sm:gap-4">
@@ -362,21 +364,20 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                 <div className="flex-1 w-full">
                   <label className="text-xs xs:text-sm font-medium mb-1 xs:mb-2 block">Conteneur :</label>
                   <Select value={selectedContainer ?? ''} onValueChange={setSelectedContainer}>
-                    <SelectTrigger className="min-h-[44px] sm:min-h-[40px] text-xs xs:text-sm">
+                    <SelectTrigger className="w-full min-h-[44px] sm:min-h-[40px] text-xs xs:text-sm">
                       <SelectValue placeholder="Sélectionner un conteneur" />
                     </SelectTrigger>
                     <SelectContent>
                       {containers.map((container) => (
                         <SelectItem key={container.id} value={container.id}>
-                          <div className="flex flex-col xs:flex-row items-start xs:items-center gap-1 xs:gap-2">
-                            <span className="font-medium text-xs xs:text-sm">{container.containerNumber}</span>
-                            {container.name && <span className="text-gray-500 text-xs xs:text-sm">- {container.name}</span>}
+                          <span className="flex flex-col xs:flex-row xs:items-center xs:gap-2 font-medium text-xs xs:text-sm">
+                            {container.containerNumber}
                             {container.departureDate && (
-                              <Badge variant="outline" className="text-xs">
+                              <span className="text-gray-500 text-[11px] xs:text-xs font-normal">
                                 {new Date(container.departureDate).toLocaleDateString('fr-FR')}
-                              </Badge>
+                              </span>
                             )}
-                          </div>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -743,7 +744,8 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ScrollArea>
 
         {/* ====== Boutons d'action (hors PDF) ====== */}
         <DialogFooter className="border-t px-3 xs:px-4 sm:px-6 py-2 xs:py-3 sm:py-4 bg-gray-50" data-html2canvas-ignore>
