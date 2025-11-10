@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
 
@@ -69,7 +69,7 @@ export async function GET(request, { params }) {
     // Calcul des statistiques
     const stats = {
       totalPackages: packages.length,
-      totalAmount: packages.reduce((sum, pkg) => sum + pkg.totalAmount, 0),
+      totalAmount: packages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0),
       totalWeight: packages.reduce((sum, pkg) => sum + (pkg.weight || 0), 0),
       statusBreakdown: packages.reduce((acc, pkg) => {
         acc[pkg.status] = (acc[pkg.status] || 0) + 1;

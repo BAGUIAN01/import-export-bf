@@ -72,6 +72,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
   const [containers, setContainers] = useState([]);
   const [selectedContainer, setSelectedContainer] = useState(containerId);
   const [packages, setPackages] = useState([]);
+  const [shipmentInfo, setShipmentInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -92,7 +93,11 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
   }, []);
 
   const fetchPackages = useCallback(async () => {
-    if (!selectedContainer) return;
+    if (!selectedContainer) {
+      setPackages([]);
+      setShipmentInfo(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -121,6 +126,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
       
       // ⚠️ IMPORTANT: Récupérer le paiement depuis le SHIPMENT, pas les colis
       let paid = 0;
+      let shipment = null;
       if (client?.id && selectedContainer) {
         try {
           // Chercher le shipment pour ce client + conteneur
@@ -128,7 +134,8 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
           if (shipmentRes.ok) {
             const shipmentData = await shipmentRes.json();
             if (shipmentData.data && shipmentData.data.length > 0) {
-              paid = shipmentData.data[0].paidAmount || 0;
+              shipment = shipmentData.data[0];
+              paid = shipment.paidAmount || 0;
             }
           }
         } catch (err) {
@@ -136,6 +143,8 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
           // En cas d'erreur, on garde paid = 0
         }
       }
+
+      setShipmentInfo(shipment);
 
       setFormData((prev) => ({
         ...prev,
@@ -152,6 +161,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
       }
     } catch (error) {
       console.error(error);
+      setShipmentInfo(null);
       setError('Impossible de charger les colis');
       toast.error('Erreur lors du chargement des colis');
     } finally {
@@ -300,7 +310,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
   const handleShareLink = async () => {
     try {
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://import-export-bf.com';
-      const link = `${origin}/bordereau/${formData.factureClient}`;
+      const link = `${origin}/bordereau/${shipmentInfo?.shipmentNumber || formData.factureClient}`;
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(link);
         toast.success('Lien copié dans le presse-papiers');
@@ -494,12 +504,14 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                   <div className="flex items-center gap-2 xs:gap-3 w-full xs:w-auto justify-between xs:justify-end">
                     <div className="text-left xs:text-right">
                       <p className="text-xs text-gray-300">Shipment N°</p>
-                      <p className="text-sm xs:text-base sm:text-lg font-bold">SHP202500001</p>
+                      <p className="text-sm xs:text-base sm:text-lg font-bold">
+                        {shipmentInfo?.shipmentNumber || '—'}
+                      </p>
                       <p className="text-xs text-gray-300">Date: {formData.dateEdition}</p>
                     </div>
                     <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 bg-white rounded flex items-center justify-center">
                       <QRCode
-                        value={`${typeof window !== 'undefined' ? window.location.origin : 'https://import-export-bf.com'}/tracking?q=SHP202500001`}
+                        value={`${typeof window !== 'undefined' ? window.location.origin : 'https://import-export-bf.com'}/tracking?q=${shipmentInfo?.shipmentNumber || ''}`}
                         size={40}
                         level="M"
                       />
@@ -534,7 +546,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                     </div>
                     <div className="flex items-center justify-between text-xs font-semibold">
                       <span>Suivi:</span>
-                      <span className="font-bold truncate ml-2">SHP202500001</span>
+                      <span className="font-bold truncate ml-2">{shipmentInfo?.shipmentNumber || '—'}</span>
                     </div>
                   </div>
                   
@@ -550,7 +562,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                     </div>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                       <span className="font-bold">{packages.length} colis</span>
-                      <span>Suivi: <span className="font-bold">SHP202500001</span></span>
+                      <span>Suivi: <span className="font-bold">{shipmentInfo?.shipmentNumber || '—'}</span></span>
                     </div>
                   </div>
                 </div>
