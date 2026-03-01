@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { mutate } from "swr";
 import { useCaisse } from "@/contexts/caisse-context";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft, Download, Printer, CheckCircle2, FileText } from "lucide-react";
@@ -89,19 +90,27 @@ export default function ImpressionPage() {
 
         const data = await response.json();
         setOrderCreated(true);
-        
+
+        // Invalider le cache SWR pour que les pages admin voient les nouvelles données
+        mutate(
+          (key) =>
+            typeof key === "string" &&
+            (key.startsWith("/api/shipments") ||
+              key.startsWith("/api/containers") ||
+              key.startsWith("/api/packages") ||
+              key.startsWith("/api/dashboard")),
+          undefined,
+          { revalidate: true }
+        );
+
         // Mettre à jour le conteneur et le shipment
         if (data.container) {
           setLastContainer(data.container);
         }
-        
-        // Récupérer les détails complets du shipment
-        if (data.shipment?.id) {
-          const shipmentResponse = await fetch(`/api/shipments/${data.shipment.id}`);
-          if (shipmentResponse.ok) {
-            const shipmentData = await shipmentResponse.json();
-            setShipmentInfo(shipmentData);
-          }
+
+        // Le shipment est déjà dans la réponse du POST
+        if (data.shipment) {
+          setShipmentInfo(data.shipment);
         }
 
         toast.success(

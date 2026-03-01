@@ -7,56 +7,48 @@ import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { PackagesStats } from "@/components/modules/admin/packages/packages-stats";
 import { toast } from "sonner";
 import { PACKAGE_TYPES } from "@/lib/data/packages";
+import { usePackages, usePackagesStats } from "@/hooks/use-packages";
 
 /* ----------------------------- Helpers utils ----------------------------- */
 
-// Récupère le tableau des types à partir d'un package (supporte string JSON ou array)
 function getTypesArray(pkg) {
   if (!pkg) return [];
   if (Array.isArray(pkg.selectedTypes)) return pkg.selectedTypes;
   if (typeof pkg.types === "string") {
-    try {
-      return JSON.parse(pkg.types);
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(pkg.types); } catch { return []; }
   }
   if (Array.isArray(pkg.types)) return pkg.types;
   return [];
 }
 
-// Renvoie un libellé court pour un type
 function labelForType(value) {
   const meta = PACKAGE_TYPES.find((t) => t.value === value);
   return meta?.label || value || "";
 }
 
-// Texte joint pour affichage/CSV/filtre
 function buildTypesText(pkg) {
   const arr = getTypesArray(pkg);
   if (!arr.length) return "";
-  return arr
-    .map((t) => `${labelForType(t.type)}×${t.quantity ?? 1}`)
-    .join(", ");
+  return arr.map((t) => `${labelForType(t.type)}×${t.quantity ?? 1}`).join(", ");
 }
 
-// Premier type (pour compat colonnes existantes qui lisent encore `type`)
 function firstTypeValue(pkg) {
   const arr = getTypesArray(pkg);
   return arr[0]?.type || "";
 }
 
-// Normalise un package pour la table (ajoute champs calculés attendus par colonnes/filters)
 function normalizePackage(pkg, clients, containers) {
-  const client = pkg.client || (clients || []).find((c) => c.id === pkg.clientId) || null;
+  const client =
+    pkg.client || (clients || []).find((c) => c.id === pkg.clientId) || null;
   const container =
-    pkg.container || (containers || []).find((c) => c.id === pkg.containerId) || null;
+    pkg.container ||
+    (containers || []).find((c) => c.id === pkg.containerId) ||
+    null;
 
   return {
     ...pkg,
     client,
     container,
-    // champs utiles pour filtres / colonnes legacy
     type: pkg.type ?? firstTypeValue(pkg),
     typesText: buildTypesText(pkg),
     destination: pkg.destination ?? client?.recipientCity ?? "",
@@ -67,32 +59,31 @@ function normalizePackage(pkg, clients, containers) {
 /* --------------------------------- Options -------------------------------- */
 
 const statusOptions = [
-  { label: "Enregistré", value: "REGISTERED" },
-  { label: "Collecté", value: "COLLECTED" },
+  { label: "Enregistré",   value: "REGISTERED" },
+  { label: "Collecté",     value: "COLLECTED" },
   { label: "En conteneur", value: "IN_CONTAINER" },
-  { label: "En transit", value: "IN_TRANSIT" },
-  { label: "Douanes", value: "CUSTOMS" },
-  { label: "Livré", value: "DELIVERED" },
-  { label: "Retourné", value: "RETURNED" },
-  { label: "Annulé", value: "CANCELLED" },
+  { label: "En transit",   value: "IN_TRANSIT" },
+  { label: "Douanes",      value: "CUSTOMS" },
+  { label: "Livré",        value: "DELIVERED" },
+  { label: "Retourné",     value: "RETURNED" },
+  { label: "Annulé",       value: "CANCELLED" },
 ];
 
 const priorityOptions = [
-  { label: "Faible", value: "LOW" },
-  { label: "Normal", value: "NORMAL" },
-  { label: "Élevé", value: "HIGH" },
-  { label: "Urgent", value: "URGENT" },
+  { label: "Faible",  value: "LOW" },
+  { label: "Normal",  value: "NORMAL" },
+  { label: "Élevé",   value: "HIGH" },
+  { label: "Urgent",  value: "URGENT" },
 ];
 
 const paymentStatusOptions = [
   { label: "En attente", value: "PENDING" },
-  { label: "Partiel", value: "PARTIAL" },
-  { label: "Payé", value: "PAID" },
-  { label: "Annulé", value: "CANCELLED" },
-  { label: "Remboursé", value: "REFUNDED" },
+  { label: "Partiel",    value: "PARTIAL" },
+  { label: "Payé",       value: "PAID" },
+  { label: "Annulé",     value: "CANCELLED" },
+  { label: "Remboursé",  value: "REFUNDED" },
 ];
 
-// Options de type basées sur le référentiel PACKAGE_TYPES
 const packageTypeOptions = PACKAGE_TYPES.map((t) => ({
   label: t.label,
   value: t.value,
@@ -100,68 +91,48 @@ const packageTypeOptions = PACKAGE_TYPES.map((t) => ({
 
 /* ------------------------------- Composant -------------------------------- */
 
-export function PackagesTable({
-  initialPackages,
-  initialStats,
-  initialClients,
-  initialContainers,
-}) {
-  const [packages, setPackages] = useState(
-    (initialPackages || []).map((p) =>
-      normalizePackage(p, initialClients, initialContainers)
-    )
-  );
-  const [stats, setStats] = useState(initialStats);
-  const [clients] = useState(initialClients);
-  const [containers] = useState(initialContainers);
+export function PackagesTable({ initialClients, initialContainers }) {
+  const clients    = initialClients   || [];
+  const containers = initialContainers || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPackage, setEditingPackage] = useState(null); // édition simple éventuellement plus tard
+  const [editingPackage, setEditingPackage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showStats, setShowStats] = useState(true);
 
-  const refreshStats = (list = packages) => {
-    const statusCounts = list.reduce((acc, pkg) => {
-      acc[pkg.status] = (acc[pkg.status] || 0) + 1;
-      return acc;
-    }, {});
-    const paymentPendingCount = list.filter(
-      (pkg) => pkg.paymentStatus === "PENDING" || pkg.paymentStatus === "PARTIAL"
-    ).length;
-    const issuesCount = list.filter(
-      (pkg) => pkg.status === "RETURNED" || pkg.status === "CANCELLED"
-    ).length;
+  // ── SWR ──────────────────────────────────────────────────────────────────
+  const { packages: rawPackages, isLoading, mutate }     = usePackages({ limit: 500 });
+  const { stats, mutate: mutateStats } = usePackagesStats();
 
-    setStats({
-      total: list.length,
-      inTransit: statusCounts.IN_TRANSIT || 0,
-      delivered: statusCounts.DELIVERED || 0,
-      pending: statusCounts.REGISTERED || 0,
-      paymentPending: paymentPendingCount,
-      issues: issuesCount,
-    });
+  // Normalise les colis (ajoute typesText, type, destination…)
+  const packages = useMemo(
+    () => rawPackages.map((p) => normalizePackage(p, clients, containers)),
+    [rawPackages, clients, containers]
+  );
+
+  // Invalide les deux caches SWR après toute mutation
+  const invalidate = () => {
+    mutate();
+    mutateStats();
   };
+
+  /* ── Handlers ──────────────────────────────────────────────────────────── */
 
   const handleAdd = () => {
     setEditingPackage(null);
-    setIsDialogOpen(true); // Ouvre le dialog multi-colis / expédition
-  };
-
-  const handleEdit = (pkg) => {
-    // Option : ouvrir un autre dialog dédié à l’édition 1 colis
-    setEditingPackage(pkg);
-    toast.info("Édition d’un colis existant (mode simple).");
     setIsDialogOpen(true);
   };
 
-  const withLinkedEntities = (pkg) => normalizePackage(pkg, clients, containers);
+  const handleEdit = (pkg) => {
+    setEditingPackage(pkg);
+    setIsDialogOpen(true);
+  };
 
-  // Création expédition multi-colis (POST /api/packages => { shipment, packages })
   const handleSave = async (form) => {
     try {
       setLoading(true);
       let response;
 
-      // Si editingPackage est défini, on pourrait appeler PUT ici — laissé tel quel pour compat
       if (editingPackage) {
         response = await fetch(`/api/packages/${editingPackage.id}`, {
           method: "PUT",
@@ -170,46 +141,29 @@ export function PackagesTable({
         });
 
         if (response.ok) {
-          const data = await response.json();
-          setPackages((prev) => {
-            const next = prev.map((pkg) =>
-              pkg.id === editingPackage.id
-                ? withLinkedEntities(data.package ?? { ...pkg, ...form })
-                : pkg
-            );
-            refreshStats(next);
-            return next;
-          });
+          const data = await response.json().catch(() => ({}));
           toast.success(data.message || "Colis modifié avec succès");
           setIsDialogOpen(false);
+          invalidate();
         } else {
           const error = await response.json().catch(() => ({}));
           toast.error(error.message || "Erreur lors de la modification");
         }
       } else {
-        // CREATION multi-colis
         response = await fetch("/api/packages", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form), // { clientId, containerId, sharedData, packages:[...] }
+          body: JSON.stringify(form),
         });
 
         if (response.ok) {
           const data = await response.json();
-          const createdList = Array.isArray(data.packages) ? data.packages : [];
-          const normalized = createdList.map(withLinkedEntities);
-
-          setPackages((prev) => {
-            const next = [...prev, ...normalized];
-            refreshStats(next);
-            return next;
-          });
-
+          const count = Array.isArray(data.packages) ? data.packages.length : 1;
           toast.success(
-            data.message ||
-              `Expédition créée: ${createdList.length} colis enregistrés`
+            data.message || `${count} colis enregistré${count > 1 ? "s" : ""}`
           );
           setIsDialogOpen(false);
+          invalidate();
         } else {
           const error = await response.json().catch(() => ({}));
           toast.error(error.message || "Erreur lors de la création");
@@ -239,12 +193,8 @@ export function PackagesTable({
 
       if (response.ok) {
         const data = await response.json().catch(() => ({}));
-        setPackages((prev) => {
-          const next = prev.filter((p) => p.id !== pkg.id);
-          refreshStats(next);
-          return next;
-        });
         toast.success(data.message || "Colis supprimé avec succès");
+        invalidate();
       } else {
         const error = await response.json().catch(() => ({}));
         toast.error(error.message || "Erreur lors de la suppression");
@@ -259,7 +209,7 @@ export function PackagesTable({
 
   const handleView = (pkg) => {
     toast.info(
-      `Colis ${pkg.packageNumber} - ${pkg.client?.firstName} ${pkg.client?.lastName} → ${pkg.client?.recipientCity}`
+      `Colis ${pkg.packageNumber} — ${pkg.client?.firstName} ${pkg.client?.lastName} → ${pkg.client?.recipientCity}`
     );
   };
 
@@ -267,25 +217,7 @@ export function PackagesTable({
     toast.info(`Suivi du colis ${pkg.packageNumber}`);
   };
 
-  // Filtres : on conserve "type" mais il pointera vers un champ calculé `typesText` via mapping data
-  const filters = [
-    { key: "status", title: "Statut", options: statusOptions },
-    { key: "priority", title: "Priorité", options: priorityOptions },
-    { key: "paymentStatus", title: "Paiement", options: paymentStatusOptions },
-    // on s'appuie sur la colonne `type` (qui se base sur un champ normalisé)
-    { key: "type", title: "Type", options: packageTypeOptions },
-  ];
-
-  const columns = useMemo(
-    () =>
-      packagesColumns({
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-        onView: handleView,
-        onTrack: handleTrack,
-      }),
-    []
-  );
+  /* ── Export CSV ────────────────────────────────────────────────────────── */
 
   const handleExport = () => {
     try {
@@ -344,6 +276,28 @@ export function PackagesTable({
     }
   };
 
+  /* ── Config table ──────────────────────────────────────────────────────── */
+
+  const filters = [
+    { key: "status",        title: "Statut",   options: statusOptions },
+    { key: "priority",      title: "Priorité", options: priorityOptions },
+    { key: "paymentStatus", title: "Paiement", options: paymentStatusOptions },
+    { key: "type",          title: "Type",     options: packageTypeOptions },
+  ];
+
+  const columns = useMemo(
+    () =>
+      packagesColumns({
+        onEdit:   handleEdit,
+        onDelete: handleDelete,
+        onView:   handleView,
+        onTrack:  handleTrack,
+      }),
+    []
+  );
+
+  /* ── Rendu ─────────────────────────────────────────────────────────────── */
+
   return (
     <div className="space-y-6 p-6">
       {showStats && <PackagesStats stats={stats} />}
@@ -364,6 +318,7 @@ export function PackagesTable({
         onAdd={handleAdd}
         onExport={handleExport}
         addButtonText="Nouvelle expédition"
+        isLoading={isLoading}
         customActions={[
           {
             label: showStats ? "Masquer Stats" : "Voir Stats",

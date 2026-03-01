@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { DataTableColumnHeader } from "@/components/modules/data-table/data-table-column-header";
 import { DataTableRowActions } from "@/components/modules/data-table/data-table-row-actions";
-import { Container, MapPin, Calendar, Truck, Weight, Users } from "lucide-react";
+import { Container, MapPin, Calendar, Truck, Weight, Users, Pencil, Trash2, Eye } from "lucide-react";
 import Link from "next/link";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
@@ -208,20 +208,53 @@ export const containersColumns = ({ onEdit, onDelete, onView, onTrack }) => [
   },
   {
     id: "actions",
-    cell: ({ row }) => (
-      <DataTableRowActions
-        row={row}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onView={onView}
-        customActions={[
-          {
-            label: "Suivi GPS",
-            onClick: () => onTrack?.(row.original),
-            icon: "MapPin",
-          },
-        ]}
-      />
-    ),
+    cell: ({ row }) => {
+      const container = row.original;
+      const customActions = [];
+      
+      // Ajouter l'action Voir si disponible
+      if (onView) {
+        customActions.push({
+          label: "Voir",
+          onClick: () => onView(container),
+          icon: "Eye",
+        });
+      }
+      
+      // Ajouter l'action Modifier si disponible
+      if (onEdit) {
+        customActions.push({
+          label: "Modifier",
+          onClick: () => onEdit(container),
+          icon: "Pencil",
+        });
+      }
+      
+      // Ajouter l'action Suivi GPS si disponible
+      if (onTrack) {
+        customActions.push({
+          label: "Suivi GPS",
+          onClick: () => onTrack(container),
+          icon: "MapPin",
+        });
+      }
+      
+      // Ajouter l'action Supprimer si disponible
+      if (onDelete) {
+        customActions.push({
+          label: "Supprimer",
+          onClick: () => onDelete(container),
+          icon: "Trash2",
+          variant: "destructive",
+        });
+      }
+      
+      return (
+        <DataTableRowActions
+          row={row}
+          customActions={customActions}
+        />
+      );
+    },
   },
 ];

@@ -1,5 +1,6 @@
 "use client";
-import { useState, useCallback } from "react";
+// Container detail view component
+import { useState, useCallback, useEffect } from "react";
 import { 
   Package, 
   MapPin, 
@@ -13,7 +14,6 @@ import {
   BellOff,
   Save,
   Plus,
-  ArrowLeft,
   CheckCircle2,
   Activity,
   Edit2,
@@ -25,7 +25,6 @@ import {
   Users
 } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { useContainerDetails, useContainerMutations } from "@/hooks/use-containers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,8 +52,6 @@ const getStatusInfo = (status) => {
 };
 
 export function ContainerDetailView({ container: initialContainer, currentUser }) {
-  const router = useRouter();
-  
   // Hook SWR pour le cache et le rafraîchissement
   const { 
     container: serverContainer, 
@@ -66,8 +63,7 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
   
   // Hook pour les mutations
   const { 
-    updateContainer, 
-    updateContainerStatus,
+    updateContainer,
     isLoading: isMutating 
   } = useContainerMutations();
   
@@ -80,15 +76,22 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
   const actualPackagesCount = packages.length;
   
   const [showUpdateForm, setShowUpdateForm] = useState(false);
-  const [trackingUpdates, setTrackingUpdates] = useState(container.trackingUpdates || []);
+  const [trackingUpdates, setTrackingUpdates] = useState(container?.trackingUpdates || []);
   const [editingUpdate, setEditingUpdate] = useState(null);
   const [updateForm, setUpdateForm] = useState({
     location: '',
     description: '',
-    status: container.status,
+    status: container?.status || 'PREPARATION',
     isPublic: true,
     notifyClients: false
   });
+
+  // Synchroniser les tracking updates avec les données du serveur
+  useEffect(() => {
+    if (container?.trackingUpdates) {
+      setTrackingUpdates(container.trackingUpdates);
+    }
+  }, [container?.trackingUpdates]);
 
   const handleInputChange = (field, value) => {
     setUpdateForm(prev => ({
@@ -102,7 +105,7 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
     setUpdateForm({
       location: update.location,
       description: update.description,
-      status: container.status,
+      status: container?.status || 'PREPARATION',
       isPublic: update.isPublic,
       notifyClients: false
     });
@@ -114,7 +117,7 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
     setUpdateForm({
       location: '',
       description: '',
-      status: container.status,
+      status: container?.status || 'PREPARATION',
       isPublic: true,
       notifyClients: false
     });
@@ -146,6 +149,11 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
   const handleSubmitUpdate = useCallback(async () => {
     if (!updateForm.location || !updateForm.description) {
       toast.error('Localisation et description obligatoires');
+      return;
+    }
+
+    if (!container?.id) {
+      toast.error('Conteneur introuvable');
       return;
     }
 
@@ -238,7 +246,7 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
       console.error('Erreur:', error);
       toast.error(error.message || 'Erreur de connexion');
     }
-  }, [updateForm, editingUpdate, container.id, updateContainer, refresh]);
+  }, [updateForm, editingUpdate, container?.id, updateContainer, refresh]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Non défini';
@@ -250,78 +258,71 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
     });
   };
 
+  if (!container) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
   const statusInfo = getStatusInfo(container.status);
-  // Utiliser le nombre réel de packages au lieu de currentLoad
-  const loadPercentage = Math.min((actualPackagesCount / container.capacity) * 100, 100);
+  const loadPercentage = container.capacity 
+    ? Math.min((actualPackagesCount / container.capacity) * 100, 100)
+    : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.back()}
-                className="h-8 w-8 p-0"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <div className="flex items-center space-x-3">
-                  <h1 className="text-2xl font-semibold tracking-tight">{container.containerNumber}</h1>
-                  <Badge 
-                    variant={statusInfo.variant}
-                    className={statusInfo.className}
-                  >
-                    {statusInfo.label}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">{container.name}</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  toast.promise(
-                    refresh(),
-                    {
-                      loading: "Actualisation en cours...",
-                      success: "Données actualisées",
-                      error: "Erreur lors de l'actualisation",
-                    }
-                  );
-                }}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Actualiser
-              </Button>
-              
-              <Button
-                onClick={() => {
-                  if (showUpdateForm && !editingUpdate) {
-                    handleCancelEdit();
-                  } else {
-                    setShowUpdateForm(!showUpdateForm);
-                  }
-                }}
-                variant={showUpdateForm ? "outline" : "default"}
-                className="gap-2"
-              >
-                {showUpdateForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                {showUpdateForm ? 'Annuler' : 'Nouvelle mise à jour'}
-              </Button>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Actions bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Badge 
+            variant={statusInfo.variant}
+            className={statusInfo.className}
+          >
+            {statusInfo.label}
+          </Badge>
+          {container.name && (
+            <span className="text-sm text-muted-foreground">{container.name}</span>
+          )}
+        </div>
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              toast.promise(
+                refresh(),
+                {
+                  loading: "Actualisation en cours...",
+                  success: "Données actualisées",
+                  error: "Erreur lors de l'actualisation",
+                }
+              );
+            }}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+          
+          <Button
+            onClick={() => {
+              if (showUpdateForm && !editingUpdate) {
+                handleCancelEdit();
+              } else {
+                setShowUpdateForm(!showUpdateForm);
+              }
+            }}
+            variant={showUpdateForm ? "outline" : "default"}
+            className="gap-2"
+          >
+            {showUpdateForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {showUpdateForm ? 'Annuler' : 'Nouvelle mise à jour'}
+          </Button>
         </div>
       </div>
-
-      <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Cartes d'informations principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
@@ -691,7 +692,122 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
             )}
           </CardContent>
         </Card>
-      </div>
+
+        {/* Liste des colis du conteneur */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Colis dans le conteneur
+              <Badge variant="secondary" className="ml-2">
+                {actualPackagesCount}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, idx) => (
+                  <Skeleton key={idx} className="h-20 w-full" />
+                ))}
+              </div>
+            ) : packages.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="p-4 bg-muted/30 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Package className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">Aucun colis dans ce conteneur</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">N° Colis</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Client</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Description</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Statut</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Montant</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Poids</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {packages.map((pkg) => {
+                        const types = Array.isArray(pkg.types) ? pkg.types : (typeof pkg.types === 'string' ? JSON.parse(pkg.types || '[]') : []);
+                        const typeLabel = types.length > 0 ? types.map(t => `${t.type} (${t.quantity})`).join(', ') : pkg.description;
+                        
+                        return (
+                          <tr key={pkg.id} className="border-b hover:bg-muted/50 transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4 text-blue-600" />
+                                <span className="font-medium">{pkg.packageNumber}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              {pkg.client ? (
+                                <div>
+                                  <div className="font-medium">
+                                    {pkg.client.firstName} {pkg.client.lastName}
+                                  </div>
+                                  {pkg.client.clientCode && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {pkg.client.clientCode}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="max-w-xs truncate" title={pkg.description}>
+                                {typeLabel}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge 
+                                variant="outline"
+                                className={
+                                  pkg.status === 'DELIVERED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                  pkg.status === 'IN_TRANSIT' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                  pkg.status === 'CUSTOMS' ? 'bg-red-50 text-red-700 border-red-200' :
+                                  pkg.status === 'REGISTERED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                  'bg-gray-50 text-gray-700 border-gray-200'
+                                }
+                              >
+                                {pkg.status === 'REGISTERED' ? 'Enregistré' :
+                                 pkg.status === 'COLLECTED' ? 'Collecté' :
+                                 pkg.status === 'IN_CONTAINER' ? 'En conteneur' :
+                                 pkg.status === 'IN_TRANSIT' ? 'En transit' :
+                                 pkg.status === 'CUSTOMS' ? 'Douanes' :
+                                 pkg.status === 'DELIVERED' ? 'Livré' :
+                                 pkg.status === 'RETURNED' ? 'Retourné' :
+                                 pkg.status === 'CANCELLED' ? 'Annulé' :
+                                 pkg.status}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-medium">
+                                {pkg.totalAmount ? `${Number(pkg.totalAmount).toFixed(2)}€` : '-'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="text-muted-foreground">
+                                {pkg.weight ? `${Number(pkg.weight).toFixed(1)} kg` : '-'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
     </div>
   );
 }

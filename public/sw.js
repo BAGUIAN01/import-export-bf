@@ -1,11 +1,11 @@
 /* ============================================================
    Service Worker — Import Export BF
-   Version : 2
+   Version : 3
    Stratégies : Cache First (statique), Network First (pages),
                 Network Only (API), Background Sync, Push
    ============================================================ */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHES = {
   static:  `iebf-static-${CACHE_VERSION}`,
   dynamic: `iebf-dynamic-${CACHE_VERSION}`,

@@ -108,23 +108,59 @@ export async function POST(request) {
     // Créer un nouveau shipment si nécessaire
     if (!shipment) {
       const year = new Date().getFullYear();
-      const shCount = (await prisma.shipment.count()) + 1;
-      const shipmentNumber = `SHP${year}${String(shCount).padStart(5, "0")}`;
-
-      shipment = await prisma.shipment.create({
-        data: {
-          shipmentNumber,
-          client: { connect: { id: clientId } },
-          user: { connect: { id: user.id } },
-          container: { connect: { id: container.id } },
-          paymentMethod: mapPaymentMethod(paymentInfo?.modePaiement),
-          paidAmount: paymentInfo?.montantRecu || 0,
-          paidAt: paymentInfo?.paidAt ? new Date(paymentInfo.paidAt) : null,
-          paymentStatus: paymentInfo?.montantRecu >= orderTotal ? "PAID" : paymentInfo?.montantRecu > 0 ? "PARTIAL" : "PENDING",
-          specialInstructions: orderOptions?.specialInstructions || null,
-          notes: orderOptions?.notes || null,
+      
+      // Générer un numéro de shipment unique avec retry pour éviter les collisions
+      // Approche similaire à createPackageWithUniqueNumber
+      const baseCount = await prisma.shipment.count({
+        where: {
+          shipmentNumber: {
+            startsWith: `SHP${year}`,
+          },
         },
       });
+      
+      const maxAttempts = 10;
+      let createdShipment = null;
+      
+      for (let i = 0; i < maxAttempts; i++) {
+        const seq = baseCount + i + 1;
+        const shipmentNumber = `SHP${year}${String(seq).padStart(5, "0")}`;
+        
+        try {
+          createdShipment = await prisma.shipment.create({
+            data: {
+              shipmentNumber,
+              client: { connect: { id: clientId } },
+              user: { connect: { id: user.id } },
+              container: { connect: { id: container.id } },
+              paymentMethod: mapPaymentMethod(paymentInfo?.modePaiement),
+              paidAmount: paymentInfo?.montantRecu || 0,
+              paidAt: paymentInfo?.paidAt ? new Date(paymentInfo.paidAt) : null,
+              paymentStatus: paymentInfo?.montantRecu >= orderTotal ? "PAID" : paymentInfo?.montantRecu > 0 ? "PARTIAL" : "PENDING",
+              specialInstructions: orderOptions?.specialInstructions || null,
+              notes: orderOptions?.notes || null,
+            },
+          });
+          break; // Succès, sortir de la boucle
+        } catch (e) {
+          // Collision d'unicité → on tente le numéro suivant
+          if (
+            e?.code === "P2002" &&
+            Array.isArray(e.meta?.target) &&
+            e.meta.target.includes("shipmentNumber")
+          ) {
+            continue; // Essayer le numéro suivant
+          }
+          // Autre erreur → on remonte
+          throw e;
+        }
+      }
+      
+      if (!createdShipment) {
+        throw new Error("Impossible de générer un numéro de shipment unique après plusieurs tentatives");
+      }
+      
+      shipment = createdShipment;
     } else {
       // Mettre à jour le paiement si un shipment existe déjà
       const currentPaidAmount = shipment.paidAmount || 0;
@@ -142,40 +178,32 @@ export async function POST(request) {
       });
     }
 
-    // Récupérer les tarifs pour chaque type de colis
-    const pricings = await prisma.pricing.findMany({
-      where: { isActive: true },
-    });
-
-    const pricingMap = {};
-    pricings.forEach((p) => {
-      pricingMap[p.type] = p;
-    });
-
     // Créer les packages pour chaque item de la commande
+    // Les prix viennent directement du panier caisse (item.price, item.total)
+    // — on n'utilise pas la table Pricing pour ne pas bloquer la création.
     const createdPackages = [];
-    const discountPerPackage = orderOptions?.discount ? orderOptions.discount / orderItems.length : 0;
-    const additionalFeesPerPackage = orderOptions?.additionalFees ? orderOptions.additionalFees / orderItems.length : 0;
+    const discountPerPackage = orderOptions?.discount
+      ? orderOptions.discount / orderItems.length
+      : 0;
+    const additionalFeesPerPackage = orderOptions?.additionalFees
+      ? orderOptions.additionalFees / orderItems.length
+      : 0;
 
     for (const item of orderItems) {
       // Utiliser productId comme type de colis (correspond au value dans PACKAGE_TYPES)
       const packageType = item.type || item.productId || "CARTON";
-      
-      // Trouver le pricing correspondant au type
-      const pricing = pricingMap[packageType] || pricingMap["CARTON"]; // Fallback sur CARTON
 
-      if (!pricing) {
-        console.warn(`Pricing non trouvé pour le type: ${packageType}`);
-        continue;
-      }
-
-      // Calculer les montants
-      const basePrice = pricing.basePrice * item.quantity;
-      const pickupFee = pricing.pickupFee || 0;
-      const insuranceFee = item.isInsured && item.value ? Math.max(10, item.value * 0.02) : 0;
-      const customsFee = 15; // Frais douaniers par défaut
+      // Prix issus du panier caisse (déjà calculés côté client)
+      const basePrice = (item.price || 0) * (item.quantity || 1);
+      const pickupFee = 0;
+      const insuranceFee =
+        item.isInsured && item.value ? Math.max(10, item.value * 0.02) : 0;
+      const customsFee = 0;
       const discount = discountPerPackage;
-      const totalAmount = Math.max(0, basePrice + pickupFee + insuranceFee + customsFee - discount + additionalFeesPerPackage);
+      const totalAmount = Math.max(
+        0,
+        basePrice + pickupFee + insuranceFee + customsFee - discount + additionalFeesPerPackage
+      );
 
       // Générer un numéro de colis unique
       const year = new Date().getFullYear();
@@ -213,12 +241,21 @@ export async function POST(request) {
           customsFee,
           discount,
           totalAmount,
+          deliveryAddress: client.recipientAddress || client.address || "Non renseignée",
           status: "REGISTERED",
           paymentStatus: "PENDING", // Le paiement est géré au niveau du shipment
         },
       });
 
       createdPackages.push(newPackage);
+    }
+
+    // Vérifier qu'au moins un colis a été créé
+    if (createdPackages.length === 0) {
+      return NextResponse.json(
+        { error: "Aucun colis n'a pu être créé. Vérifiez les articles de la commande." },
+        { status: 400 }
+      );
     }
 
     // Recalculer les agrégats du shipment

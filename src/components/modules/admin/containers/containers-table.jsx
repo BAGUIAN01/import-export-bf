@@ -6,6 +6,16 @@ import { ContainerDialog } from "@/components/modules/admin/containers/container
 import { toast } from "sonner";
 import { ContainersStats } from "@/components/modules/admin/containers/containers-stats";
 import { useContainers, useContainerMutations } from "@/hooks/use-containers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusOptions = [
   { label: "Préparation", value: "PREPARATION" },
@@ -22,6 +32,7 @@ export function ContainersTable({
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContainer, setEditingContainer] = useState(null);
+  const [containerToDelete, setContainerToDelete] = useState(null);
   const [showStats, setShowStats] = useState(true);
 
   // Hook SWR pour les conteneurs avec cache
@@ -94,16 +105,19 @@ export function ContainersTable({
     }
   }, [editingContainer, createContainer, updateContainer, mutate]);
 
-  const handleDelete = useCallback(async (container) => {
-    if (!window.confirm(
-      `Supprimer le conteneur ${container.containerNumber} ? Cette action supprimera aussi tous les colis associés.`
-    )) return;
+  const handleDelete = useCallback((container) => {
+    setContainerToDelete(container);
+  }, []);
 
-    const result = await deleteContainer(container.id);
+  const confirmDelete = useCallback(async () => {
+    if (!containerToDelete) return;
+
+    const result = await deleteContainer(containerToDelete.id);
     if (result.success) {
+      setContainerToDelete(null);
       await mutate(); // Rafraîchir le cache
     }
-  }, [deleteContainer, mutate]);
+  }, [containerToDelete, deleteContainer, mutate]);
 
   const handleRefresh = useCallback(async () => {
     toast.promise(
@@ -230,6 +244,47 @@ export function ContainersTable({
         onSave={handleSave}
         loading={isMutating}
       />
+
+      {/* Confirmation de suppression */}
+      <AlertDialog 
+        open={!!containerToDelete} 
+        onOpenChange={(open) => !open && setContainerToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer le conteneur{" "}
+              <span className="font-bold text-foreground">
+                {containerToDelete?.containerNumber}
+              </span>
+              ?
+              <br />
+              <br />
+              Cette action supprimera également tous les{" "}
+              <span className="font-bold text-red-600">
+                {containerToDelete?.currentLoad || 0} colis
+              </span>{" "}
+              associés à ce conteneur.
+              <br />
+              <br />
+              <span className="text-red-600 font-semibold">
+                ⚠️ Cette action est irréversible.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isMutating}
+            >
+              {isMutating ? "Suppression..." : "Supprimer définitivement"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
