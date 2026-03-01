@@ -74,6 +74,10 @@ const nextConfig = {
 
     return config;
   },
+
+  // Turbopack config (empty to silence error if using Next.js 16+)
+  // Next.js 15.5.12 uses webpack by default, so this won't affect it
+  turbopack: {},
 };
 
 export default nextConfig;
