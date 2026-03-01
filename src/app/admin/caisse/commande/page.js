@@ -12,6 +12,8 @@ import { useCaisse } from "@/contexts/caisse-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 /* ── Utilitaires ─────────────────────────────────────────────── */
@@ -49,6 +51,11 @@ export default function CommandePage() {
   const [categorySearch, setCategorySearch]     = useState("");
   const [productSearch, setProductSearch]       = useState("");
 
+  /* ── Popover "Sur devis" ── */
+  const [openPopoverId, setOpenPopoverId] = useState(null); // type.value du popover ouvert
+  const [quotePrice, setQuotePrice]       = useState("");
+  const [quoteDesc, setQuoteDesc]         = useState("");
+
   /* ── Types de colis filtrés par catégorie sélectionnée ── */
   const products = PACKAGE_TYPES.filter((t) => t.category === selectedCategory?.key);
 
@@ -71,6 +78,30 @@ export default function CommandePage() {
       t.label?.toLowerCase().includes(productSearch.toLowerCase()) ||
       t.desc?.toLowerCase().includes(productSearch.toLowerCase())
   );
+
+  /* ── Ouvrir / fermer le popover devis ── */
+  function handlePopoverChange(open, typeValue) {
+    if (open) {
+      setOpenPopoverId(typeValue);
+      setQuotePrice("");
+      setQuoteDesc("");
+    } else {
+      setOpenPopoverId(null);
+    }
+  }
+
+  /* ── Confirmer un item "sur devis" ── */
+  function confirmQuoteItem(type) {
+    const price = parseFloat(quotePrice.replace(",", "."));
+    if (isNaN(price) || price <= 0) return;
+    addItem({
+      id:         `${type.value}-quote-${Date.now()}`,
+      name:       quoteDesc.trim() || type.label,
+      price,
+      categoryId: selectedCategory?.key,
+    });
+    setOpenPopoverId(null);
+  }
 
   /* ── État : pas de client ── */
   if (!selectedClient) {
@@ -244,57 +275,136 @@ export default function CommandePage() {
                 const qty  = getProductQty(type.value);
                 const Icon = type.icon ?? Package;
 
-                return (
-                  <div
-                    key={type.value}
-                    onClick={() =>
-                      addItem({
-                        id:         type.value,
-                        name:       type.label,
-                        price:      type.price,
-                        categoryId: selectedCategory?.key,
-                      })
-                    }
-                    className={cn(
-                      "relative bg-white border rounded-xl p-3 cursor-pointer transition-all select-none",
-                      qty > 0
-                        ? "border-orange-300 ring-1 ring-orange-200"
-                        : "border-zinc-200 hover:border-orange-300 hover:shadow-md"
-                    )}
-                  >
-                    {/* Badge quantité */}
-                    {qty > 0 && (
-                      <Badge className="absolute -top-2 -right-2 bg-orange-500 text-white h-5 min-w-5 rounded-full flex items-center justify-center p-0 text-[10px] font-bold shadow-lg">
-                        {qty}
-                      </Badge>
-                    )}
-
-                    {/* Icône */}
-                    <div className="w-full aspect-square rounded-lg bg-zinc-50 mb-2 overflow-hidden flex items-center justify-center">
-                      <Icon className="h-8 w-8 text-zinc-500" />
-                    </div>
-
-                    {/* Nom */}
-                    <p className="text-xs font-medium text-zinc-800 leading-tight line-clamp-2 mb-1">
-                      {type.label}
-                    </p>
-
-                    {/* Description */}
-                    {type.desc && (
-                      <p className="text-[10px] text-zinc-400 leading-tight line-clamp-1 mb-1">
-                        {type.desc}
+                /* ── Carte normale (prix fixe) ── */
+                if (!type.isQuoteOnly) {
+                  return (
+                    <div
+                      key={type.value}
+                      onClick={() =>
+                        addItem({
+                          id:         type.value,
+                          name:       type.label,
+                          price:      type.price,
+                          categoryId: selectedCategory?.key,
+                        })
+                      }
+                      className={cn(
+                        "relative bg-white border rounded-xl p-3 cursor-pointer transition-all select-none",
+                        qty > 0
+                          ? "border-orange-300 ring-1 ring-orange-200"
+                          : "border-zinc-200 hover:border-orange-300 hover:shadow-md"
+                      )}
+                    >
+                      {qty > 0 && (
+                        <Badge className="absolute -top-2 -right-2 bg-orange-500 text-white h-5 min-w-5 rounded-full flex items-center justify-center p-0 text-[10px] font-bold shadow-lg">
+                          {qty}
+                        </Badge>
+                      )}
+                      <div className="w-full aspect-square rounded-lg bg-zinc-50 mb-2 overflow-hidden flex items-center justify-center">
+                        <Icon className="h-8 w-8 text-zinc-500" />
+                      </div>
+                      <p className="text-xs font-medium text-zinc-800 leading-tight line-clamp-2 mb-1">
+                        {type.label}
                       </p>
-                    )}
-
-                    {/* Prix */}
-                    {type.isQuoteOnly ? (
-                      <p className="text-xs font-bold text-zinc-400 text-center">Sur devis</p>
-                    ) : (
+                      {type.desc && (
+                        <p className="text-[10px] text-zinc-400 leading-tight line-clamp-1 mb-1">
+                          {type.desc}
+                        </p>
+                      )}
                       <p className="text-sm font-semibold text-orange-600 text-center">
                         {formatPrice(type.price)} €
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  );
+                }
+
+                /* ── Carte "Sur devis" avec Popover ── */
+                return (
+                  <Popover
+                    key={type.value}
+                    open={openPopoverId === type.value}
+                    onOpenChange={(open) => handlePopoverChange(open, type.value)}
+                  >
+                    <PopoverTrigger asChild>
+                      <div
+                        className={cn(
+                          "relative bg-white border rounded-xl p-3 cursor-pointer transition-all select-none",
+                          openPopoverId === type.value
+                            ? "border-orange-400 ring-2 ring-orange-200"
+                            : "border-dashed border-zinc-300 hover:border-orange-300 hover:shadow-md"
+                        )}
+                      >
+                        <div className="w-full aspect-square rounded-lg bg-zinc-50 mb-2 overflow-hidden flex items-center justify-center">
+                          <Icon className="h-8 w-8 text-zinc-400" />
+                        </div>
+                        <p className="text-xs font-medium text-zinc-800 leading-tight line-clamp-2 mb-1">
+                          {type.label}
+                        </p>
+                        {type.desc && (
+                          <p className="text-[10px] text-zinc-400 leading-tight line-clamp-1 mb-1">
+                            {type.desc}
+                          </p>
+                        )}
+                        <p className="text-xs font-bold text-zinc-400 text-center">Sur devis</p>
+                      </div>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-64 p-4" side="top" align="center">
+                      <p className="text-sm font-semibold text-zinc-900 mb-3">{type.label}</p>
+
+                      <div className="space-y-2">
+                        {/* Prix */}
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-zinc-600">Prix (€) *</label>
+                          <Input
+                            autoFocus
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="Ex : 350"
+                            value={quotePrice}
+                            onChange={(e) => setQuotePrice(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && confirmQuoteItem(type)}
+                            className="h-9 text-sm"
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-zinc-600">
+                            Description <span className="text-zinc-400">(optionnel)</span>
+                          </label>
+                          <Input
+                            type="text"
+                            placeholder={type.label}
+                            value={quoteDesc}
+                            onChange={(e) => setQuoteDesc(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && confirmQuoteItem(type)}
+                            className="h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setOpenPopoverId(null)}
+                        >
+                          Annuler
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!quotePrice || parseFloat(quotePrice) <= 0}
+                          onClick={() => confirmQuoteItem(type)}
+                          className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                        >
+                          Ajouter
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 );
               })}
             </div>
@@ -340,12 +450,10 @@ export default function CommandePage() {
                     : "bg-white/10 text-white border border-white/20 hover:bg-white/15 hover:border-white/30"
                 )}
               >
-                {/* Indicateur gauche actif */}
                 {active && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-600 rounded-r-full" />
                 )}
 
-                {/* Badge quantité catégorie */}
                 {qty > 0 && (
                   <span className="absolute -top-1 -right-1 bg-white text-orange-600 text-[9px] font-bold min-w-5 h-5 rounded-full flex items-center justify-center px-1 border-2 border-orange-500 shadow-xl pointer-events-none">
                     {qty}
@@ -367,7 +475,6 @@ export default function CommandePage() {
           })}
         </div>
       </div>
-
 
     </div>
   );

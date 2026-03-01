@@ -34,10 +34,14 @@ async function getDashboardData() {
         }
       }),
 
+      // Conteneurs actifs = conteneurs avec des packages et non livrés/annulés
       prisma.container.count({
         where: {
           status: {
             in: ['PREPARATION', 'LOADED', 'IN_TRANSIT', 'CUSTOMS']
+          },
+          packages: {
+            some: {}
           }
         }
       }),
@@ -52,17 +56,59 @@ async function getDashboardData() {
       })
     ]);
 
-    // ⚠️ IMPORTANT: Calculer le revenu à partir des SHIPMENTS, pas des packages
-    const monthlyRevenue = await prisma.shipment.aggregate({
+    // ⚠️ IMPORTANT: Calculer le revenu à partir des SHIPMENTS créés ce mois
+    // Utiliser totalAmount pour le CA (chiffre d'affaires) et paidAmount pour les encaissements
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    
+    // Récupérer les shipments du mois avec leurs packages pour calculer le revenu
+    const monthlyShipments = await prisma.shipment.findMany({
+      where: {
+        createdAt: {
+          gte: monthStart
+        }
+      },
+      include: {
+        packages: {
+          select: {
+            totalAmount: true
+          }
+        }
+      }
+    });
+
+    // Calculer le CA mensuel : utiliser totalAmount du shipment ou calculer depuis les packages
+    const monthlyRevenue = monthlyShipments.reduce((sum, sh) => {
+      if (sh.totalAmount && sh.totalAmount > 0) {
+        return sum + sh.totalAmount;
+      }
+      // Calculer depuis les packages si le montant du shipment n'est pas disponible
+      const packagesTotal = sh.packages.reduce((pkgSum, pkg) => pkgSum + (pkg.totalAmount || 0), 0);
+      return sum + packagesTotal;
+    }, 0);
+
+    // Encaissements mensuels = paidAmount des shipments payés ce mois
+    const monthlyPaidResult = await prisma.shipment.aggregate({
       _sum: {
         paidAmount: true
       },
       where: {
-        paidAt: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        }
+        OR: [
+          {
+            paidAt: {
+              gte: monthStart
+            }
+          },
+          {
+            AND: [
+              { createdAt: { gte: monthStart } },
+              { paidAmount: { gt: 0 } }
+            ]
+          }
+        ]
       }
     });
+
+    const monthlyPaid = monthlyPaidResult._sum.paidAmount || 0;
 
     const recentContainers = await prisma.container.findMany({
       take: 3,
@@ -88,7 +134,8 @@ async function getDashboardData() {
       packagesThisMonth,
       activeContainers,
       totalClients,
-      monthlyRevenue: monthlyRevenue._sum.paidAmount || 0,
+      monthlyRevenue, // CA mensuel (calculé depuis shipments + packages)
+      monthlyPaid, // Encaissements mensuels
       deliveredThisWeek
     };
 

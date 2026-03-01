@@ -25,9 +25,9 @@ import { fr } from "date-fns/locale";
 
 function formatPrice(amount) {
   return new Intl.NumberFormat("fr-FR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(Math.round(amount || 0)) + " FCFA";
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.round((amount || 0) * 100) / 100) + " €";
 }
 
 
@@ -255,14 +255,14 @@ export default function CaissePage() {
           </CardContent>
         </Card>
 
-        {/* Articles vendus */}
+        {/* Colis vendus */}
         <Card
           className="transition-all hover:shadow-md border group bg-white border-orange-200 cursor-pointer hover:scale-[1.02]"
           onClick={() => router.push("/admin/caisse")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-700">
-              Articles vendus
+              Colis vendus
             </CardTitle>
             <div className="p-2 rounded-lg bg-orange-50 transition-all group-hover:scale-105">
               <Package className="h-4 w-4 text-orange-600" />

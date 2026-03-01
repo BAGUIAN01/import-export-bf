@@ -2,11 +2,15 @@
 
 import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
+import { PWAProvider }    from '@/contexts/pwa-context'
+import { PWAComponents }  from '@/components/pwa/pwa-components'
+import { Toaster }        from '@/components/ui/sonner'
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 })
 
 const poppins = Poppins({
@@ -175,12 +179,16 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#010066" />
         <meta name="msapplication-TileImage" content="/logo_short-144x144.png" />
       </head>
-      <body className={`font-sans min-h-screen bg-background antialiased`}>
-        <div className="min-h-screen flex flex-col">
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
+      <body className={`${inter.className} font-sans min-h-screen bg-background antialiased`}>
+        <PWAProvider>
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1">
+              {children}
+            </main>
+          </div>
+          <PWAComponents />
+          <Toaster richColors position="top-right" />
+        </PWAProvider>
       </body>
     </html>
   )

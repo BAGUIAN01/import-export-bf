@@ -268,10 +268,16 @@ export async function DELETE(request, { params }) {
 
     const { id } = await params;
 
-    // Vérifier que le shipment existe
+    // Vérifier que le shipment existe avec ses packages
     const shipment = await prisma.shipment.findUnique({
       where: { id },
       include: {
+        packages: {
+          include: {
+            payments: true,
+            invoiceItems: true,
+          },
+        },
         _count: {
           select: { packages: true }
         }
@@ -282,44 +288,73 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Expédition introuvable" }, { status: 404 });
     }
 
-    // Vérifier s'il y a des colis
-    if (shipment._count.packages > 0) {
+    // Vérifier si des packages ont des paiements (on ne peut pas supprimer)
+    const packagesWithPayments = shipment.packages.filter(pkg => pkg.payments && pkg.payments.length > 0);
+    if (packagesWithPayments.length > 0) {
       return NextResponse.json(
         { 
-          error: `Impossible de supprimer cette expédition car elle contient ${shipment._count.packages} colis. Supprimez d'abord tous les colis.` 
+          error: `Impossible de supprimer cette expédition car ${packagesWithPayments.length} colis ont des paiements associés. Supprimez d'abord les paiements.` 
         },
         { status: 400 }
       );
     }
 
-    // Suppression
-    await prisma.shipment.delete({
-      where: { id },
+    // Suppression en cascade dans une transaction
+    await prisma.$transaction(async (tx) => {
+      // Supprimer tous les packages associés et leurs dépendances
+      for (const pkg of shipment.packages) {
+        // Supprimer les éléments de facture liés
+        if (pkg.invoiceItems && pkg.invoiceItems.length > 0) {
+          await tx.invoiceItem.deleteMany({
+            where: { packageId: pkg.id },
+          });
+        }
+
+        // Supprimer les fichiers liés
+        await tx.file.deleteMany({
+          where: { packageId: pkg.id },
+        });
+
+        // Supprimer le colis
+        await tx.package.delete({
+          where: { id: pkg.id },
+        });
+      }
+
+      // Supprimer le shipment
+      await tx.shipment.delete({
+        where: { id },
+      });
     });
 
     // Log d'audit
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: "DELETE_SHIPMENT",
-        resource: "shipment",
-        resourceId: id,
-        details: {
-          shipmentId: id,
-          shipmentNumber: shipment.shipmentNumber,
-          packagesCount: shipment._count.packages,
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "DELETE_SHIPMENT",
+          resource: "shipment",
+          resourceId: id,
+          details: JSON.stringify({
+            shipmentId: id,
+            shipmentNumber: shipment.shipmentNumber,
+            packagesCount: shipment._count.packages,
+            deletedPackages: shipment.packages.map(p => p.packageNumber),
+          }),
         },
-      },
-    });
+      });
+    } catch (auditError) {
+      console.warn("Erreur lors de la création du log d'audit:", auditError);
+    }
 
     return NextResponse.json({
-      message: "Expédition supprimée avec succès",
+      message: `Expédition supprimée avec succès${shipment._count.packages > 0 ? ` (${shipment._count.packages} colis supprimés)` : ''}`,
     });
 
   } catch (error) {
     console.error("Erreur DELETE /api/shipments/[id]:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la suppression de l'expédition" },
+      { error: error.message || "Erreur lors de la suppression de l'expédition" },
       { status: 500 }
     );
   }

@@ -1,0 +1,54 @@
+{
+  "name": "Import Export BF",
+  "short_name": "IE BF",
+  "description": "Service d'envoi de colis de la France vers le Burkina Faso",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "categories": ["logistics", "business", "shopping"],
+  "lang": "fr",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/logo_short-16x16.png",  "sizes": "16x16",   "type": "image/png" },
+    { "src": "/logo_short-32x32.png",  "sizes": "32x32",   "type": "image/png" },
+    { "src": "/logo_short-96x96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "/logo_short-144x144.png","sizes": "144x144", "type": "image/png" },
+    { "src": "/logo_short.png",        "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo_short.png",        "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Caisse",
+      "short_name": "Caisse",
+      "description": "Accéder à la caisse",
+      "url": "/admin/caisse",
+      "icons": [{ "src": "/logo_short-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Expéditions",
+      "short_name": "Envois",
+      "description": "Gérer les expéditions",
+      "url": "/admin/shipments",
+      "icons": [{ "src": "/logo_short-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Clients",
+      "short_name": "Clients",
+      "description": "Gérer les clients",
+      "url": "/admin/clients",
+      "icons": [{ "src": "/logo_short-96x96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  }
+}

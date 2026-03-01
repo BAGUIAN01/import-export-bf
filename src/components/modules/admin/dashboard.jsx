@@ -74,8 +74,13 @@ export default function Dashboard({ user, data }) {
               <div>
                 <p className="text-sm text-muted-foreground">CA mensuel</p>
                 <p className="text-2xl font-bold">
-                  {(stats.monthlyRevenue || 0).toLocaleString()}€
+                  {Math.round(stats.monthlyRevenue || 0).toLocaleString('fr-FR')}€
                 </p>
+                {stats.monthlyPaid > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Encaissé: {Math.round(stats.monthlyPaid || 0).toLocaleString('fr-FR')}€
+                  </p>
+                )}
               </div>
               <div className="p-3 bg-yellow-50 rounded-lg">
                 <Euro className="h-6 w-6 text-yellow-600" />

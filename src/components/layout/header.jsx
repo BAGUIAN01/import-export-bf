@@ -144,26 +144,7 @@ export function Header() {
   ];
 
   // Menu compte pour utilisateur connecté
-  const accountMenuItems = [
-    {
-      name: "Mon Profil",
-      href: "/profile",
-      icon: User,
-      desc: "Gérer mes informations",
-    },
-    {
-      name: "Mes Envois",
-      href: "/shipments",
-      icon: Package,
-      desc: "Historique des expéditions",
-    },
-    {
-      name: "Paramètres",
-      href: "/settings",
-      icon: Settings,
-      desc: "Préférences du compte",
-    },
-  ];
+  const accountMenuItems = [];
 
   const ROLE_LABELS = {
     ADMIN: "Administrateur",

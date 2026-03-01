@@ -35,7 +35,9 @@ export default function ImpressionPage() {
   const [lastContainer, setLastContainer] = useState(null);
   const [shipmentInfo, setShipmentInfo]   = useState(null);
   const [isGenerating, setIsGenerating]   = useState(false);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [bordereauNum, setBordereauNum]   = useState("");
+  const [orderCreated, setOrderCreated] = useState(false);
   const dateEdition = new Date().toLocaleDateString("fr-FR");
 
   /* ── Numéro bordereau auto ── */
@@ -45,22 +47,98 @@ export default function ImpressionPage() {
     setBordereauNum(`BRD-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}${r}`);
   }, []);
 
+  /* ── Créer la commande et l'expédition automatiquement ── */
+  useEffect(() => {
+    if (!selectedClient || orderItems.length === 0 || orderCreated) return;
+    
+    const createOrder = async () => {
+      setIsCreatingOrder(true);
+      try {
+        const response = await fetch("/api/caisse/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clientId: selectedClient.id,
+            orderItems: orderItems.map(item => ({
+              type: item.productId || "CARTON", // productId correspond au value dans PACKAGE_TYPES
+              productId: item.productId,
+              name: item.name,
+              description: item.description,
+              quantity: item.quantity,
+              price: item.price,
+              total: item.total,
+              weight: item.weight,
+              dimensions: item.dimensions,
+              value: item.value,
+              isFragile: item.isFragile,
+              isInsured: item.isInsured,
+            })),
+            orderTotal,
+            orderSubtotal,
+            orderOptions,
+            paymentInfo,
+            containerId: lastContainer?.id,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.error || "Erreur lors de la création de la commande");
+        }
+
+        const data = await response.json();
+        setOrderCreated(true);
+        
+        // Mettre à jour le conteneur et le shipment
+        if (data.container) {
+          setLastContainer(data.container);
+        }
+        
+        // Récupérer les détails complets du shipment
+        if (data.shipment?.id) {
+          const shipmentResponse = await fetch(`/api/shipments/${data.shipment.id}`);
+          if (shipmentResponse.ok) {
+            const shipmentData = await shipmentResponse.json();
+            setShipmentInfo(shipmentData);
+          }
+        }
+
+        toast.success(
+          data.isExistingShipment 
+            ? "Colis ajoutés à l'expédition existante" 
+            : "Expédition créée avec succès",
+          {
+            description: `N° ${data.shipment?.shipmentNumber || ""}`,
+          }
+        );
+      } catch (error) {
+        console.error("Erreur création commande:", error);
+        toast.error(error.message || "Erreur lors de la création de la commande");
+      } finally {
+        setIsCreatingOrder(false);
+      }
+    };
+
+    createOrder();
+  }, [selectedClient, orderItems, orderTotal, orderSubtotal, orderOptions, paymentInfo, lastContainer, orderCreated]);
+
   /* ── Dernier conteneur (bandeau seulement) ── */
   useEffect(() => {
+    if (orderCreated) return; // Ne pas récupérer si on vient de créer
     fetch("/api/containers?limit=1&sort=createdAt&order=desc")
       .then((r) => r.json())
       .then((d) => setLastContainer((d.containers || [])[0] ?? null))
       .catch(() => {});
-  }, []);
+  }, [orderCreated]);
 
   /* ── Shipment du conteneur (SHP = tracking de tout le conteneur) ── */
   useEffect(() => {
-    if (!lastContainer?.id) return;
+    if (!lastContainer?.id || orderCreated) return;
     fetch(`/api/shipments?containerId=${lastContainer.id}&limit=1`)
       .then((r) => r.json())
       .then((d) => setShipmentInfo(d.data?.[0] ?? null))
       .catch(() => {});
-  }, [lastContainer]);
+  }, [lastContainer, orderCreated]);
 
   /* ── Totaux ── */
   const montantPaye  = paymentInfo?.montantRecu ?? 0;
@@ -155,6 +233,18 @@ export default function ImpressionPage() {
           <Button onClick={() => router.push("/admin/caisse/commande")} className="bg-orange-500 hover:bg-orange-600 text-white w-full">
             <ArrowLeft className="h-4 w-4 mr-2" />Retour à la commande
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isCreatingOrder) {
+    return (
+      <div className="flex items-center justify-center h-full p-6">
+        <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
+          <div className="h-12 w-12 mx-auto border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <p className="font-semibold text-zinc-900">Création de l'expédition...</p>
+          <p className="text-sm text-zinc-600">Veuillez patienter</p>
         </div>
       </div>
     );

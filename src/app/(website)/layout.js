@@ -10,6 +10,7 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 })
 
 const poppins = Poppins({
@@ -177,7 +178,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#010066" />
         <meta name="msapplication-TileImage" content="/logo_short-144x144.png" />
       </head>
-      <body suppressHydrationWarning>
+      <body className={`${inter.className}`} suppressHydrationWarning>
         <SessionProvider>
           <div className="min-h-screen flex flex-col font-sans bg-background antialiased">
             <Header />
