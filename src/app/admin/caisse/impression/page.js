@@ -243,7 +243,7 @@ export default function ImpressionPage() {
       <div className="flex items-center justify-center h-full p-6">
         <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
           <div className="h-12 w-12 mx-auto border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-          <p className="font-semibold text-zinc-900">Création de l'expédition...</p>
+          <p className="font-semibold text-zinc-900">Création de l&apos;expédition...</p>
           <p className="text-sm text-zinc-600">Veuillez patienter</p>
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function ImpressionPage() {
       <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0">
         <div className="px-4 py-3 border-b border-zinc-100 shrink-0 flex items-center gap-2">
           <FileText className="h-4 w-4 text-[#010066]" />
-          <p className="font-semibold text-zinc-900">Bordereau d'expédition</p>
+          <p className="font-semibold text-zinc-900">Bordereau d&apos;expédition</p>
           <span className="text-xs text-zinc-400 ml-auto">{bordereauNum}</span>
         </div>
 
@@ -435,7 +435,7 @@ export default function ImpressionPage() {
               <div className="flex items-end justify-between pt-3 border-t border-gray-300">
                 <div className="text-xs text-gray-500 space-y-1">
                   <p>Document généré le {dateEdition} — Réf. bordereau : {bordereauNum}</p>
-                  <p>IMPORT EXPORT BF - Service d'envoi de colis France-Burkina Faso</p>
+                  <p>IMPORT EXPORT BF - Service d&apos;envoi de colis France-Burkina Faso</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-gray-600 mb-2">Signature</p>

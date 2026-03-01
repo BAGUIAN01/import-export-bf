@@ -113,7 +113,7 @@ export default function CommandePage() {
             <div>
               <h3 className="font-semibold text-zinc-900">Aucun client sélectionné</h3>
               <p className="text-sm text-zinc-500 mt-1">
-                Sélectionnez d'abord un client pour commencer une commande.
+                Sélectionnez d&apos;abord un client pour commencer une commande.
               </p>
             </div>
             <Button

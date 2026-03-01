@@ -236,10 +236,12 @@ export function smartNormalizePhone(phone, context = 'france') {
 }
 
 // Export par défaut
-export default {
+const phoneNormalizer = {
   normalizePhoneNumber,
   isValidE164Phone,
   formatPhoneForDisplay,
   getCountryCode,
   smartNormalizePhone
-}
+};
+
+export default phoneNormalizer;
