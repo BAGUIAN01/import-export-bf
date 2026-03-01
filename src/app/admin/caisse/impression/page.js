@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useCaisse } from "@/contexts/caisse-context";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft, Download, Printer, CheckCircle2, FileText } from "lucide-react";
@@ -273,7 +274,7 @@ export default function ImpressionPage() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center p-1.5">
-                    <img src="/logo_short.png" alt="Logo" className="w-full h-full object-contain" />
+                    <Image src="/logo_short.png" alt="Logo" width={48} height={48} className="w-full h-full object-contain" unoptimized />
                   </div>
                   <div>
                     <div className="text-xs text-gray-300">IMPORT-EXPORT BF</div>

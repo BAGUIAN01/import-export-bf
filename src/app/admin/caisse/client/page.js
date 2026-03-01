@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -460,11 +460,11 @@ export default function ClientPage() {
   };
 
   /* ── Sélectionner ── */
-  const selectClient = (client) => {
+  const selectClient = useCallback((client) => {
     setSelectedClient(client);
     toast.success(`Client sélectionné : ${client.name}`);
     router.push("/admin/caisse/commande");
-  };
+  }, [setSelectedClient, router]);
 
   /* ── Créer ── */
   const handleCreate = async (form) => {
