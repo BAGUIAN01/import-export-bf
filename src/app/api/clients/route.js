@@ -21,12 +21,6 @@ const validateClientData = (data) => {
   if (!data.city?.trim()) errors.city = "La ville est requise";
   if (!data.country?.trim()) errors.country = "Le pays est requis";
   
-  // Destinataire
-  if (!data.recipientName?.trim()) errors.recipientName = "Le nom du destinataire est requis";
-  if (!data.recipientPhone?.trim()) errors.recipientPhone = "Le téléphone du destinataire est requis";
-  if (!data.recipientAddress?.trim()) errors.recipientAddress = "L'adresse du destinataire est requise";
-  if (!data.recipientCity?.trim()) errors.recipientCity = "La ville du destinataire est requise";
-  
   // Validation email
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     errors.email = "Email invalide";
@@ -57,20 +51,65 @@ export async function GET(request) {
     // Construction des filtres
     const where = {};
     
-    if (search) {
-      where.OR = [
-        { firstName: { contains: search, mode: "insensitive" } },
-        { lastName: { contains: search, mode: "insensitive" } },
-        { clientCode: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-      ];
-    }
-    
+    // Par défaut, ne pas filtrer par isActive pour la recherche (permet de trouver tous les clients)
+    // Sauf si le paramètre status est explicitement défini
     if (status === "active") where.isActive = true;
     if (status === "inactive") where.isActive = false;
     if (status === "vip") where.isVip = true;
     if (country && country !== "all") where.country = country;
+    
+    if (search) {
+      const searchQuery = search.trim();
+      const searchTerms = searchQuery.split(/\s+/).filter(t => t.length > 0);
+      
+      // Nettoyer le numéro de téléphone (enlever espaces, tirets, etc.)
+      const cleanPhone = searchQuery.replace(/[\s\-\(\)\.]/g, "");
+      
+      const searchConditions = [
+        // Recherche par prénom
+        { firstName: { contains: searchQuery, mode: "insensitive" } },
+        // Recherche par nom
+        { lastName: { contains: searchQuery, mode: "insensitive" } },
+        // Recherche par code client
+        { clientCode: { contains: searchQuery, mode: "insensitive" } },
+        // Recherche par téléphone (avec et sans formatage)
+        { phone: { contains: searchQuery, mode: "insensitive" } },
+        { phone: { contains: cleanPhone, mode: "insensitive" } },
+        // Recherche par email
+        { email: { contains: searchQuery, mode: "insensitive" } },
+      ];
+      
+      // Si plusieurs termes, chercher aussi la combinaison prénom + nom (dans les deux sens)
+      if (searchTerms.length >= 2) {
+        // Prénom + Nom
+        searchConditions.push({
+          AND: [
+            { firstName: { contains: searchTerms[0], mode: "insensitive" } },
+            { lastName: { contains: searchTerms.slice(1).join(" "), mode: "insensitive" } },
+          ]
+        });
+        // Nom + Prénom (si l'utilisateur tape nom puis prénom)
+        if (searchTerms.length === 2) {
+          searchConditions.push({
+            AND: [
+              { firstName: { contains: searchTerms[1], mode: "insensitive" } },
+              { lastName: { contains: searchTerms[0], mode: "insensitive" } },
+            ]
+          });
+        }
+      }
+      
+      // Si where a déjà des conditions, utiliser AND, sinon utiliser OR directement
+      const hasOtherConditions = Object.keys(where).length > 0;
+      if (hasOtherConditions) {
+        where.AND = [
+          ...(where.AND || []),
+          { OR: searchConditions }
+        ];
+      } else {
+        where.OR = searchConditions;
+      }
+    }
 
     // Récupération des clients avec les shipments et montants
     const clients = await prisma.client.findMany({
@@ -236,11 +275,11 @@ export async function POST(request) {
         country: body.country.trim(),
         postalCode: body.postalCode?.trim() || null,
         company: body.company?.trim() || null,
-        recipientName: body.recipientName.trim(),
-        recipientPhone: body.recipientPhone.trim(),
+        recipientName: body.recipientName?.trim() || null,
+        recipientPhone: body.recipientPhone?.trim() || null,
         recipientEmail: body.recipientEmail?.trim() || null,
-        recipientAddress: body.recipientAddress.trim(),
-        recipientCity: body.recipientCity.trim(),
+        recipientAddress: body.recipientAddress?.trim() || null,
+        recipientCity: body.recipientCity?.trim() || null,
         recipientRelation: body.recipientRelation?.trim() || null,
         isVip: !!body.isVip,
         notes: body.notes?.trim() || null,

@@ -45,8 +45,8 @@ export function DataTableFacetedFilter({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9">
-          <PlusCircle className="mr-2 h-4 w-4" />
+        <Button variant="outline" size="sm" className="h-7 text-xs">
+          <PlusCircle className="mr-1.5 h-3.5 w-3.5" />
           {title}
           {selectedValues.size > 0 && (
             <>
@@ -85,7 +85,8 @@ export function DataTableFacetedFilter({
                         const filtered = Array.from(selectedValues).filter(
                           (v) => String(v) !== String(option.value)
                         );
-                        column.setFilterValue(filtered);
+                        // Si le tableau est vide, définir undefined pour désactiver le filtre
+                        column.setFilterValue(filtered.length > 0 ? filtered : undefined);
                       } else {
                         column.setFilterValue([
                           ...Array.from(selectedValues),
@@ -120,7 +121,7 @@ export function DataTableFacetedFilter({
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start gap-2"
-                onClick={() => column.setFilterValue([])}
+                onClick={() => column.setFilterValue(undefined)}
               >
                 <X className="h-4 w-4" />
                 Réinitialiser

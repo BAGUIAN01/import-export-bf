@@ -9,17 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
+import { FloatingLabelTextarea } from "@/components/ui/floating-label-textarea";
+import { FloatingLabelSelect } from "@/components/ui/floating-label-select";
+import { FloatingCombobox } from "@/components/ui/floating-combobox";
+import { DatePicker } from "@/components/ui/date-picker";
+import { SelectItem } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
 const containerStatuses = [
@@ -169,204 +165,189 @@ export function ContainerDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Informations de base */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom du conteneur *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className={errors.name ? "border-red-500" : ""}
-                placeholder="Ex: Conteneur Janvier 2025"
-              />
-              {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-            </div>
+            <FloatingLabelInput
+              id="name"
+              label="Nom du conteneur *"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              error={errors.name}
+              disabled={loading}
+              placeholder="Ex: Conteneur Janvier 2025"
+            />
 
-            <div className="space-y-2">
-              <Label>Statut</Label>
-              <Select value={formData.status} onValueChange={(v) => handleChange("status", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {containerStatuses.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FloatingLabelSelect
+              id="status"
+              label="Statut"
+              value={formData.status}
+              onValueChange={(v) => handleChange("status", v)}
+              disabled={loading}
+            >
+              {containerStatuses.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </FloatingLabelSelect>
           </div>
 
           {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="departureDate">Date de départ prévue</Label>
-              <Input
-                id="departureDate"
-                type="date"
-                value={formData.departureDate}
-                onChange={(e) => handleChange("departureDate", e.target.value)}
-              />
-            </div>
+            <DatePicker
+              id="departureDate"
+              label="Date de départ prévue"
+              value={formData.departureDate}
+              onChange={(value) => handleChange("departureDate", value)}
+              disabled={loading}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="arrivalDate">Date d'arrivée prévue</Label>
-              <Input
-                id="arrivalDate"
-                type="date"
-                value={formData.arrivalDate}
-                onChange={(e) => handleChange("arrivalDate", e.target.value)}
-              />
-            </div>
+            <DatePicker
+              id="arrivalDate"
+              label="Date d'arrivée prévue"
+              value={formData.arrivalDate}
+              onChange={(value) => handleChange("arrivalDate", value)}
+              disabled={loading}
+            />
           </div>
 
           {/* Capacité et poids */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Capacité (nombre de colis)</Label>
-              <Input
-                id="capacity"
-                type="number"
-                min="1"
-                value={formData.capacity}
-                onChange={(e) => handleChange("capacity", e.target.value)}
-                className={errors.capacity ? "border-red-500" : ""}
-              />
-              {errors.capacity && <p className="text-sm text-red-500">{errors.capacity}</p>}
-            </div>
+            <FloatingLabelInput
+              id="capacity"
+              label="Capacité (nombre de colis)"
+              type="number"
+              min="1"
+              value={formData.capacity}
+              onChange={(e) => handleChange("capacity", e.target.value)}
+              error={errors.capacity}
+              disabled={loading}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="maxWeight">Poids maximum autorisé (kg)</Label>
-              <Input
-                id="maxWeight"
-                type="number"
-                step="0.1"
-                value={formData.maxWeight}
-                onChange={(e) => handleChange("maxWeight", e.target.value)}
-                className={errors.maxWeight ? "border-red-500" : ""}
-              />
-              {errors.maxWeight && <p className="text-sm text-red-500">{errors.maxWeight}</p>}
-            </div>
+            <FloatingLabelInput
+              id="maxWeight"
+              label="Poids maximum autorisé (kg)"
+              type="number"
+              step="0.1"
+              value={formData.maxWeight}
+              onChange={(e) => handleChange("maxWeight", e.target.value)}
+              error={errors.maxWeight}
+              disabled={loading}
+            />
           </div>
 
           {/* Localisation */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="origin">Origine</Label>
-              <Input
-                id="origin"
-                value={formData.origin}
-                onChange={(e) => handleChange("origin", e.target.value)}
-              />
-            </div>
+            <FloatingCombobox
+              id="origin"
+              label="Origine"
+              value={formData.origin}
+              onValueChange={(v) => handleChange("origin", v)}
+              disabled={loading}
+              placeholder="Sélectionnez ou saisissez l'origine"
+              options={[
+                { value: "France", label: "France" },
+                { value: "Burkina Faso", label: "Burkina Faso" },
+              ]}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="destination">Destination</Label>
-              <Input
-                id="destination"
-                value={formData.destination}
-                onChange={(e) => handleChange("destination", e.target.value)}
-              />
-            </div>
+            <FloatingCombobox
+              id="destination"
+              label="Destination"
+              value={formData.destination}
+              onValueChange={(v) => handleChange("destination", v)}
+              disabled={loading}
+              placeholder="Sélectionnez ou saisissez la destination"
+              options={[
+                { value: "Burkina Faso", label: "Burkina Faso" },
+                { value: "France", label: "France" },
+              ]}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="currentLocation">Localisation actuelle</Label>
-              <Input
-                id="currentLocation"
-                value={formData.currentLocation}
-                onChange={(e) => handleChange("currentLocation", e.target.value)}
-                placeholder="Ex: Port de Marseille"
-              />
-            </div>
+            <FloatingLabelInput
+              id="currentLocation"
+              label="Localisation actuelle"
+              value={formData.currentLocation}
+              onChange={(e) => handleChange("currentLocation", e.target.value)}
+              disabled={loading}
+              placeholder="Ex: Port de Marseille"
+            />
           </div>
 
           {/* Transport */}
           <div className="space-y-4">
             <h4 className="font-medium">Informations de transport</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="transportCompany">Compagnie de transport</Label>
-                <Input
-                  id="transportCompany"
-                  value={formData.transportCompany}
-                  onChange={(e) => handleChange("transportCompany", e.target.value)}
-                  placeholder="Ex: TransAfrica Logistics"
-                />
-              </div>
+              <FloatingLabelInput
+                id="transportCompany"
+                label="Compagnie de transport"
+                value={formData.transportCompany}
+                onChange={(e) => handleChange("transportCompany", e.target.value)}
+                disabled={loading}
+                placeholder="Ex: TransAfrica Logistics"
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="driverName">Nom du chauffeur</Label>
-                <Input
-                  id="driverName"
-                  value={formData.driverName}
-                  onChange={(e) => handleChange("driverName", e.target.value)}
-                />
-              </div>
+              <FloatingLabelInput
+                id="driverName"
+                label="Nom du chauffeur"
+                value={formData.driverName}
+                onChange={(e) => handleChange("driverName", e.target.value)}
+                disabled={loading}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="driverPhone">Téléphone du chauffeur</Label>
-                <Input
-                  id="driverPhone"
-                  value={formData.driverPhone}
-                  onChange={(e) => handleChange("driverPhone", e.target.value)}
-                  placeholder="+22670123456"
-                />
-              </div>
+              <FloatingLabelInput
+                id="driverPhone"
+                label="Téléphone du chauffeur"
+                value={formData.driverPhone}
+                onChange={(e) => handleChange("driverPhone", e.target.value)}
+                disabled={loading}
+                placeholder="+22670123456"
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="plateNumber">Numéro de plaque</Label>
-                <Input
-                  id="plateNumber"
-                  value={formData.plateNumber}
-                  onChange={(e) => handleChange("plateNumber", e.target.value)}
-                  placeholder="BF-1234-AA"
-                />
-              </div>
+              <FloatingLabelInput
+                id="plateNumber"
+                label="Numéro de plaque"
+                value={formData.plateNumber}
+                onChange={(e) => handleChange("plateNumber", e.target.value)}
+                disabled={loading}
+                placeholder="BF-1234-AA"
+              />
             </div>
           </div>
 
           {/* Coûts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="transportCost">Coût de transport (€)</Label>
-              <Input
-                id="transportCost"
-                type="number"
-                step="0.01"
-                value={formData.transportCost}
-                onChange={(e) => handleChange("transportCost", e.target.value)}
-                className={errors.transportCost ? "border-red-500" : ""}
-              />
-              {errors.transportCost && <p className="text-sm text-red-500">{errors.transportCost}</p>}
-            </div>
+            <FloatingLabelInput
+              id="transportCost"
+              label="Coût de transport (€)"
+              type="number"
+              step="0.01"
+              value={formData.transportCost}
+              onChange={(e) => handleChange("transportCost", e.target.value)}
+              error={errors.transportCost}
+              disabled={loading}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="customsCost">Coût des douanes (€)</Label>
-              <Input
-                id="customsCost"
-                type="number"
-                step="0.01"
-                value={formData.customsCost}
-                onChange={(e) => handleChange("customsCost", e.target.value)}
-                className={errors.customsCost ? "border-red-500" : ""}
-              />
-              {errors.customsCost && <p className="text-sm text-red-500">{errors.customsCost}</p>}
-            </div>
+            <FloatingLabelInput
+              id="customsCost"
+              label="Coût des douanes (€)"
+              type="number"
+              step="0.01"
+              value={formData.customsCost}
+              onChange={(e) => handleChange("customsCost", e.target.value)}
+              error={errors.customsCost}
+              disabled={loading}
+            />
           </div>
 
           {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              rows={3}
-              value={formData.notes}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              className="resize-none"
-              placeholder="Informations complémentaires..."
-            />
-          </div>
+          <FloatingLabelTextarea
+            id="notes"
+            label="Notes"
+            rows={3}
+            value={formData.notes}
+            onChange={(e) => handleChange("notes", e.target.value)}
+            disabled={loading}
+            placeholder="Informations complémentaires..."
+          />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>

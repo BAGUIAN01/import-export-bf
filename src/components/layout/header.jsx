@@ -16,9 +16,11 @@ import {
   LogOut,
   UserPlus,
   LogIn,
+  Shield,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 
 export function Header() {
@@ -28,34 +30,14 @@ export function Header() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [currentPath, setCurrentPath] = useState("/");
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // État de connexion
-  const [user, setUser] = useState(null); // Données utilisateur
   const dropdownTimeoutRef = useRef(null);
 
   const pathname = usePathname();
-  console.log("Pathname:", pathname);
   const router = useRouter();
-
-  // Simulation de l'état utilisateur (à remplacer par votre logique d'authentification)
-  useEffect(() => {
-    // Exemple de données utilisateur simulées
-    const mockUser = {
-      name: "Jean Dupont",
-      email: "jean.dupont@email.com",
-      avatar: null, // ou URL d'avatar
-    };
-    
-    // Simuler un utilisateur connecté (à remplacer par votre logique)
-    const checkAuthStatus = () => {
-      const token = localStorage?.getItem('authToken');
-      if (token) {
-        setIsLoggedIn(true);
-        setUser(mockUser);
-      }
-    };
-    
-    checkAuthStatus();
-  }, []);
+  const { data: session, status } = useSession();
+  
+  const isLoggedIn = !!session;
+  const user = session?.user;
 
   useEffect(() => {
     const updateCurrentPath = () => {
@@ -136,13 +118,9 @@ export function Header() {
   };
 
   // Fonction de déconnexion
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUser(null);
-    localStorage?.removeItem('authToken');
+  const handleLogout = async () => {
     setActiveDropdown(null);
-    // Rediriger vers la page d'accueil ou de connexion
-    router.push('/');
+    await signOut({ callbackUrl: '/', redirect: true });
   };
 
   const navLinks = [
@@ -186,6 +164,14 @@ export function Header() {
       desc: "Préférences du compte",
     },
   ];
+
+  const ROLE_LABELS = {
+    ADMIN: "Administrateur",
+    STAFF: "Personnel",
+    TRACKER: "Suiveur",
+    AGENT: "Agent",
+    CLIENT: "Client",
+  };
 
   const isActive = (href) => {
     if (typeof window === 'undefined') {
@@ -377,9 +363,9 @@ export function Header() {
                     onMouseLeave={handleDropdownLeave}
                   >
                     <button className="flex items-center space-x-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 group/account">
-                      {user?.avatar ? (
+                      {user?.image ? (
                         <img 
-                          src={user.avatar} 
+                          src={user.image} 
                           alt="Avatar" 
                           className="w-8 h-8 rounded-full object-cover"
                         />
@@ -389,7 +375,7 @@ export function Header() {
                         </div>
                       )}
                       <span className="text-sm font-medium text-gray-700 group-hover/account:text-[#010066] transition-colors">
-                        {user?.name?.split(' ')[0] || 'Compte'}
+                        {user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Compte'}
                       </span>
                       <ChevronDown
                         className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${
@@ -409,9 +395,9 @@ export function Header() {
                       <div className="p-4">
                         {/* En-tête utilisateur */}
                         <div className="flex items-center space-x-3 pb-4 border-b border-gray-100">
-                          {user?.avatar ? (
+                          {user?.image ? (
                             <img 
-                              src={user.avatar} 
+                              src={user.image} 
                               alt="Avatar" 
                               className="w-12 h-12 rounded-full object-cover"
                             />
@@ -420,14 +406,50 @@ export function Header() {
                               <User className="w-6 h-6 text-white" />
                             </div>
                           )}
-                          <div>
-                            <div className="font-semibold text-gray-800">{user?.name}</div>
-                            <div className="text-sm text-gray-500">{user?.email}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-gray-800 truncate">{user?.name || user?.email || "Utilisateur"}</div>
+                            <div className="text-sm text-gray-500 truncate">{user?.email}</div>
+                            {user?.role && (
+                              <div className="mt-1">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  user.role === "ADMIN" 
+                                    ? "bg-blue-100 text-blue-700" 
+                                    : user.role === "STAFF"
+                                    ? "bg-orange-100 text-orange-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }`}>
+                                  {ROLE_LABELS[user.role] || user.role}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {/* Menu items */}
                         <div className="py-3 space-y-1">
+                          {/* Bouton Administration pour les admins */}
+                          {user?.role === "ADMIN" && (
+                            <Link href="/admin">
+                              <button
+                                className="flex items-center space-x-3 w-full px-3 py-3 rounded-xl hover:bg-blue-50 transition-all duration-200 group/item mb-2 border border-blue-200"
+                                onClick={() => setActiveDropdown(null)}
+                              >
+                                <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center group-hover/item:bg-blue-200 transition-colors duration-200">
+                                  <Shield className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <div className="text-left flex-1">
+                                  <div className="text-gray-800 font-medium group-hover/item:text-[#010066] transition-colors">
+                                    Administration
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Accéder au panneau admin
+                                  </div>
+                                </div>
+                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover/item:text-[#010066] group-hover/item:translate-x-1 transition-all duration-200" />
+                              </button>
+                            </Link>
+                          )}
+                          
                           {accountMenuItems.map((item, index) => (
                             <Link href={item.href} key={item.name}>
                               <button
@@ -575,9 +597,9 @@ export function Header() {
               {isLoggedIn ? (
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-4">
                   <div className="flex items-center space-x-3 mb-3">
-                    {user?.avatar ? (
+                    {user?.image ? (
                       <img 
-                        src={user.avatar} 
+                        src={user.image} 
                         alt="Avatar" 
                         className="w-10 h-10 rounded-full object-cover"
                       />
@@ -586,12 +608,38 @@ export function Header() {
                         <User className="w-5 h-5 text-white" />
                       </div>
                     )}
-                    <div>
-                      <div className="font-semibold text-gray-800">{user?.name}</div>
-                      <div className="text-sm text-gray-600">{user?.email}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-800 truncate">{user?.name || user?.email || "Utilisateur"}</div>
+                      <div className="text-sm text-gray-600 truncate">{user?.email}</div>
+                      {user?.role && (
+                        <div className="mt-1">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            user.role === "ADMIN" 
+                              ? "bg-blue-100 text-blue-700" 
+                              : user.role === "STAFF"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}>
+                            {ROLE_LABELS[user.role] || user.role}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
+                    {/* Bouton Administration pour les admins */}
+                    {user?.role === "ADMIN" && (
+                      <Link href="/admin">
+                        <button
+                          className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:text-[#010066] hover:bg-white/70 rounded-lg transition-all duration-200 border border-blue-200 mb-2"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span className="text-sm font-medium">Administration</span>
+                        </button>
+                      </Link>
+                    )}
+                    
                     {accountMenuItems.map((item) => (
                       <Link href={item.href} key={item.name}>
                         <button

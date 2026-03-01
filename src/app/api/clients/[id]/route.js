@@ -14,12 +14,6 @@ const validateClientData = (data) => {
   if (!data.city?.trim()) errors.city = "La ville est requise";
   if (!data.country?.trim()) errors.country = "Le pays est requis";
   
-  // Destinataire
-  if (!data.recipientName?.trim()) errors.recipientName = "Le nom du destinataire est requis";
-  if (!data.recipientPhone?.trim()) errors.recipientPhone = "Le téléphone du destinataire est requis";
-  if (!data.recipientAddress?.trim()) errors.recipientAddress = "L'adresse du destinataire est requise";
-  if (!data.recipientCity?.trim()) errors.recipientCity = "La ville du destinataire est requise";
-  
   // Validation email
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     errors.email = "Email invalide";
@@ -237,11 +231,11 @@ export async function PUT(request, { params }) {
         country: body.country.trim(),
         postalCode: body.postalCode?.trim() || null,
         company: body.company?.trim() || null,
-        recipientName: body.recipientName.trim(),
-        recipientPhone: body.recipientPhone.trim(),
+        recipientName: body.recipientName?.trim() || null,
+        recipientPhone: body.recipientPhone?.trim() || null,
         recipientEmail: body.recipientEmail?.trim() || null,
-        recipientAddress: body.recipientAddress.trim(),
-        recipientCity: body.recipientCity.trim(),
+        recipientAddress: body.recipientAddress?.trim() || null,
+        recipientCity: body.recipientCity?.trim() || null,
         recipientRelation: body.recipientRelation?.trim() || null,
         isVip: !!body.isVip,
         isActive: body.isActive !== undefined ? !!body.isActive : existingClient.isActive,

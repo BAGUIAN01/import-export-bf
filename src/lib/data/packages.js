@@ -1,24 +1,25 @@
 // lib/data/packages.js
-import { 
-  Package as PackageIcon, 
-  Truck, 
-  Shield, 
+import {
+  Package as PackageIcon,
+  Truck,
+  Shield,
   Euro,
-  Car, 
-  Tv, 
-  Wine, 
-  Armchair, 
-  Refrigerator, 
-  ChefHat, 
-  Bike, 
-  WashingMachine, 
-  Zap, 
-  Bed, 
+  Car,
+  Tv,
+  Wine,
+  Armchair,
+  Refrigerator,
+  ChefHat,
+  Bike,
+  WashingMachine,
+  Zap,
+  Bed,
   Microwave,
   Luggage,
   ShoppingBag,
   Archive,
-  Cylinder
+  Cylinder,
+  MapPin
 } from "lucide-react";
 
 export const PACKAGE_TYPES = [
@@ -446,6 +447,17 @@ export const PACKAGE_TYPES = [
     category: "divers"
   },
 
+  // === ENLÈVEMENT ===
+  {
+    value: "ENLEVEMENT",
+    label: "Enlèvement",
+    desc: "Service d'enlèvement à domicile",
+    price: 20,
+    icon: MapPin,
+    image: "https://source.unsplash.com/300x300/?delivery+pickup",
+    category: "enlevement"
+  },
+
   // === SUR DEVIS ===
   {
     value: "OTHER",
@@ -536,6 +548,11 @@ export const PACKAGE_CATEGORIES = [
     key: "divers",
     label: "Divers",
     color: "bg-teal-50 border-teal-200 text-teal-800"
+  },
+  {
+    key: "enlevement",
+    label: "Enlèvement",
+    color: "bg-cyan-50 border-cyan-200 text-cyan-800"
   }
 ];
 

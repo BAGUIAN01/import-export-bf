@@ -344,17 +344,6 @@ export function PackagesTable({
     }
   };
 
-  const handleImport = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv";
-    input.onchange = (e) => {
-      const file = e.target.files?.[0];
-      if (file) toast.info("Fonctionnalité d'import en développement");
-    };
-    input.click();
-  };
-
   return (
     <div className="space-y-6 p-6">
       {showStats && <PackagesStats stats={stats} />}
@@ -374,7 +363,6 @@ export function PackagesTable({
         filters={filters}
         onAdd={handleAdd}
         onExport={handleExport}
-        onImport={handleImport}
         addButtonText="Nouvelle expédition"
         customActions={[
           {

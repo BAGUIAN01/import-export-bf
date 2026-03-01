@@ -48,7 +48,7 @@ export default function SignInMain() {
         setError('Identifiants incorrects')
       } else if (result?.ok) {
         console.log('Connexion réussie')
-        router.push('/admin/dashboard')
+        router.push('/admin')
       }
     } catch (err) {
       setError('Erreur lors de la connexion')

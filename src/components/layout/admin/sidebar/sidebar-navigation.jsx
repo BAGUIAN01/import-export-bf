@@ -4,9 +4,10 @@
 import React, { useState, useMemo, useDeferredValue } from "react";
 import { usePathname } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { navigationData } from "@/lib/data/sidebar";
 import { useRBAC } from "@/hooks/use-rbac";
-import { filterNavByRole } from "@/lib/rbac";
+import { filterNavByRole, canAccess as checkAccess } from "@/lib/rbac";
 import { useLayout } from "../layout-provider";
 import { SidebarSearch } from "./sidebar-search";
 import { SearchResults } from "./search-results";
@@ -48,7 +49,7 @@ function searchInNavigation(items, query) {
 
 export const SidebarNavigation = () => {
   const { sidebarMobileOpen, setSidebarMobileOpen } = useLayout();
-  const { role, canAccess } = useRBAC();
+  const { role } = useRBAC();
   const pathname = usePathname();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,25 +58,24 @@ export const SidebarNavigation = () => {
   const handleItemClick = () => setSidebarMobileOpen(false);
   const handleClearSearch = () => setSearchQuery("");
 
-  // Filtrage RBAC SANS CACHE
   const filteredNavigation = useMemo(() => {
     if (!role) return [];
     return filterNavByRole(navigationData.navMain, role, { hideUnknown: true });
   }, [role]);
 
-  // Résultats de recherche SANS CACHE
+  // Utilise checkAccess (fonction pure importée) pour éviter la recréation à chaque render
   const searchResults = useMemo(() => {
     const q = normalize(deferredQuery);
     if (!q || !filteredNavigation.length) return [];
     const base = searchInNavigation(filteredNavigation, q);
-    // sécurité RBAC
-    return base.filter((hit) => (hit.url ? canAccess(hit.url) : true));
-  }, [deferredQuery, filteredNavigation, canAccess]);
+    return base.filter((hit) => (hit.url ? checkAccess(role, hit.url) : true));
+  }, [deferredQuery, filteredNavigation, role]);
 
   const isSearching = normalize(deferredQuery).length > 0;
 
   return (
-    <>
+    // TooltipProvider au niveau parent pour tous les items du sidebar
+    <TooltipProvider>
       <SidebarSearch
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -93,7 +93,11 @@ export const SidebarNavigation = () => {
             <div className="px-3 py-2">
               <nav className="grid gap-1">
                 {filteredNavigation.map((item) => {
-                  const isActive = pathname.includes(item.url);
+                  // Pour Hub (/admin), on vérifie l'égalité exacte
+                  // Pour les autres, on utilise includes pour les sous-routes
+                  const isActive = item.url === "/admin" 
+                    ? pathname === "/admin" 
+                    : pathname === item.url || (item.url !== "/admin" && pathname.startsWith(item.url + "/"));
                   return (
                     <SidebarNavItem
                       key={item.url || item.title}
@@ -117,6 +121,6 @@ export const SidebarNavigation = () => {
           )}
         </ScrollArea>
       </div>
-    </>
+    </TooltipProvider>
   );
 };

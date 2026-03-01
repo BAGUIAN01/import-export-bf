@@ -3,7 +3,7 @@
 export const Roles = ["ADMIN", "STAFF", "TRACKER", "AGENT", "CLIENT"];
 
 export const roleHome = {
-  ADMIN: "/admin/dashboard",
+  ADMIN: "/admin",
   STAFF: "/staff/dashboard",
   TRACKER: "/tracker/dashboard", 
   AGENT: "/agent/dashboard",
@@ -20,6 +20,7 @@ export const accessMap = {
   
   // Tableaux de bord
   "/admin/dashboard": ["ADMIN"],
+  "/admin/hub": ["ADMIN"],
   "/client/dashboard": ["CLIENT"],
 
   // Clients (Admin seulement)
@@ -33,6 +34,8 @@ export const accessMap = {
 
   "/admin/shipments": ["ADMIN"],
 
+  // Caisse (Admin seulement)
+  "/admin/caisse": ["ADMIN"],
 
   // Conteneurs (Admin seulement)
   "/admin/containers": ["ADMIN"],

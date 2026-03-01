@@ -271,12 +271,12 @@ model Client {
   company String?
   siret   String?
 
-  // Destinataire au Burkina Faso
-  recipientName     String
-  recipientPhone    String
+  // Destinataire au Burkina Faso (optionnel)
+  recipientName     String?
+  recipientPhone    String?
   recipientEmail    String?
-  recipientAddress  String
-  recipientCity     String
+  recipientAddress  String?
+  recipientCity     String?
   recipientRelation String?
 
   // Métadonnées

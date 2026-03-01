@@ -22,7 +22,7 @@ export const Header = ({ children }) => {
 
       <div className="flex-1">
         <h1 className="text-lg font-semibold">
-          {headerTitle || "—"} {/* fallback si aucun titre n’a été défini */}
+          {headerTitle || "—"} {/* fallback si aucun titre n'a été défini */}
         </h1>
       </div>
 

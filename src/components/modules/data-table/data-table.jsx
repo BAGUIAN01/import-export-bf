@@ -23,79 +23,142 @@ import {
 
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DataTablePagination } from "./data-table-pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CustomDataTable({
   data = [],
   columns = [],
   searchPlaceholder = "Filtrer...",
+  searchLabel = "Rechercher",
   searchKey = "title",
+  searchKeys = [],
   filters = [],
+  initialFilters = {},
   onAdd,
   onExport,
-  onImport,
+  onExportPdf,
   addButtonText = "Ajouter",
   title,
   customActions = [],
-  initialHiddenColumns = [],
-  onRowClick, // Nouveau prop pour gérer le clic sur les lignes
+  defaultHiddenColumns = [],
+  onRowClick,
+  loading = false,
 }) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [columnFilters, setColumnFilters] = React.useState([]);
+  const [columnVisibility, setColumnVisibility] = React.useState(() => {
+    const initialVisibility = {};
+    defaultHiddenColumns.forEach(columnId => {
+      initialVisibility[columnId] = false;
+    });
+    return initialVisibility;
+  });
+  const [columnFilters, setColumnFilters] = React.useState(() => {
+    return Object.entries(initialFilters).map(([key, value]) => ({
+      id: key,
+      value: value
+    }));
+  });
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const [sorting, setSorting] = React.useState([]);
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const useGlobalSearch = searchKeys.length > 0;
+
+  const globalFilterFn = React.useCallback((row, columnId, filterValue) => {
+    if (!filterValue) return true;
+    const search = filterValue.toLowerCase();
+    return searchKeys.some((key) => {
+      // Utiliser row.original pour éviter les erreurs sur les colonnes inexistantes
+      let value = row.original;
+      
+      // Gérer les clés imbriquées (ex: "patient.nom", "medecin.nom")
+      const keys = key.split('.');
+      for (const k of keys) {
+        if (value == null || value === undefined) return false;
+        value = value[k];
+      }
+      
+      if (value == null || value === undefined) return false;
+      
+      // Si c'est un objet avec libelle
+      if (typeof value === "object" && value.libelle) {
+        return String(value.libelle).toLowerCase().includes(search);
+      }
+      
+      // Si c'est un objet avec nom et/ou prenom (médecin, patient, etc.)
+      if (typeof value === "object" && (value.nom || value.prenom)) {
+        const nom = String(value.nom || "").toLowerCase();
+        const prenom = String(value.prenom || "").toLowerCase();
+        const fullName = `${nom} ${prenom}`.trim();
+        return fullName.includes(search) || nom.includes(search) || prenom.includes(search);
+      }
+      
+      // Pour les autres valeurs, convertir en string et chercher
+      return String(value).toLowerCase().includes(search);
+    });
+  }, [searchKeys]);
+
+  // ✅ Stabiliser initialFilters avec useMemo et JSON.stringify pour comparaison profonde
+  const initialFiltersKey = React.useMemo(
+    () => JSON.stringify(initialFilters),
+    [initialFilters]
+  );
+
+  React.useEffect(() => {
+    const newFilters = Object.entries(initialFilters || {}).map(([key, value]) => ({
+      id: key,
+      value: value
+    }));
+    setColumnFilters(newFilters);
+  }, [initialFiltersKey]); // ✅ Utiliser la clé stringifiée au lieu de l'objet
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnVisibility, rowSelection, columnFilters },
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      columnFilters,
+      globalFilter: useGlobalSearch ? globalFilter : undefined,
+      pagination,
+    },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    onGlobalFilterChange: useGlobalSearch ? setGlobalFilter : undefined,
+    globalFilterFn: useGlobalSearch ? globalFilterFn : undefined,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    manualPagination: false,
+    autoResetPageIndex: false,
   });
 
-  // Appliquer les colonnes masquées par défaut une seule fois
-  const appliedInitialRef = React.useRef(false);
-  React.useEffect(() => {
-    if (appliedInitialRef.current) return;
-
-    if (initialHiddenColumns && initialHiddenColumns.length > 0) {
-      const next = {};
-      initialHiddenColumns.forEach((id) => {
-        next[id] = false; // false => masqué
-      });
-      setColumnVisibility((prev) => ({ ...next, ...prev }));
-    }
-
-    appliedInitialRef.current = true;
-  }, [initialHiddenColumns]);
-
-  // Auto-hide mobile: n’appliquer que si aucune valeur n’a déjà été posée
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 640px)");
-
+    // Breakpoint tablette-first: masquer sur mobile (< 768px)
+    const mq = window.matchMedia("(max-width: 767px)");
     const apply = () => {
-      setColumnVisibility((prev) => {
-        const next = { ...prev };
-        table.getAllLeafColumns().forEach((col) => {
-          if (col.columnDef?.meta?.hiddenOnMobile) {
-            if (typeof prev[col.id] === "undefined") {
-              next[col.id] = !mq.matches; // mobile => false, desktop => true
-            }
-          }
-        });
-        return next;
+      const next = {};
+      table.getAllLeafColumns().forEach((col) => {
+        if (col.columnDef?.meta?.hiddenOnMobile) {
+          next[col.id] = !mq.matches;
+        }
       });
+      if (Object.keys(next).length) {
+        setColumnVisibility((prev) => ({ ...prev, ...next }));
+      }
     };
-
     apply();
     mq.addEventListener?.("change", apply);
     return () => mq.removeEventListener?.("change", apply);
@@ -114,17 +177,19 @@ export function CustomDataTable({
       <DataTableToolbar
         table={table}
         searchPlaceholder={searchPlaceholder}
+        searchLabel={searchLabel}
         searchKey={searchKey}
+        useGlobalSearch={useGlobalSearch}
         filters={filters}
         onAdd={onAdd}
         onExport={onExport}
-        onImport={onImport}
+        onExportPdf={onExportPdf}
         addButtonText={addButtonText}
         customActions={customActions}
       />
 
-      <div className="rounded-md border w-full overflow-x-auto">
-        <Table className="min-w-[720px] sm:min-w-full hidden sm:table">
+      <div className="rounded-md border border-gray-200 w-full overflow-x-auto bg-white">
+        <Table className="min-w-[720px] sm:min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -132,7 +197,10 @@ export function CustomDataTable({
                   <TableHead key={header.id} colSpan={header.colSpan}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -140,16 +208,31 @@ export function CustomDataTable({
           </TableHeader>
 
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              // Skeleton loader
+              Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={`skeleton-${index}`}>
+                  {Array.from({ length: visibleLeafColumnCount }).map((_, cellIndex) => (
+                    <TableCell key={`skeleton-cell-${cellIndex}`}>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -168,44 +251,10 @@ export function CustomDataTable({
         </Table>
       </div>
 
-      {/* Version mobile avec cards */}
-      <div className="sm:hidden space-y-3">
-        {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
-            <div 
-              key={row.id} 
-              className={`border rounded-lg p-4 space-y-2 bg-card ${onRowClick ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
-              onClick={() => onRowClick?.(row.original)}
-            >
-              {row.getVisibleCells().map((cell) => {
-                const column = cell.column;
-                const header = column.columnDef.header;
-                const value = cell.getValue();
-                
-                // Masquer certaines colonnes sur mobile
-                if (column.id === 'select' || column.id === 'actions') return null;
-                
-                return (
-                  <div key={cell.id} className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {typeof header === 'string' ? header : column.id}
-                    </span>
-                    <div className="text-sm text-right max-w-[60%] truncate">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucun résultat trouvé.
-          </div>
-        )}
+      {/* Pagination en bas du tableau */}
+      <div className="mt-4">
+        <DataTablePagination table={table} />
       </div>
-
-      <DataTablePagination table={table} />
     </div>
   );
 }

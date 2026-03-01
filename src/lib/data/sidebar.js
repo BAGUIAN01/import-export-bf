@@ -27,11 +27,17 @@ import {
   Zap,
   Eye,
   BookOpen,
-  Tag
+  Tag,
+  LayoutDashboard
 } from 'lucide-react';
 
 export const navigationData = {
   navMain: [
+    {
+      title: "Hub",
+      url: "/admin",
+      icon: LayoutDashboard,
+    },
     {
       title: "Tableau de bord",
       url: "/admin/dashboard",
@@ -127,5 +133,6 @@ export {
   Zap,
   Eye,
   BookOpen,
-  Tag
+  Tag,
+  LayoutDashboard
 };

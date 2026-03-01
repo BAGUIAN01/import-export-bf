@@ -265,17 +265,6 @@ export function ShipmentsTable({
     }
   };
 
-  const handleImport = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv";
-    input.onchange = (e) => {
-      const file = e.target.files?.[0];
-      if (file) toast.info("Import Shipments en développement");
-    };
-    input.click();
-  };
-
   // Création via PackageDialog (wizard)
   const handleSaveFromWizard = useCallback(async (payload) => {
     const result = await createPackageBatch(payload);
@@ -409,7 +398,6 @@ export function ShipmentsTable({
         filters={filters}
         onAdd={handleCreate}
         onExport={handleExport}
-        onImport={handleImport}
         addButtonText="Nouvelle expédition"
         loading={isLoading}
         onRowClick={handleRowOpen} // Ajout du clic sur les lignes

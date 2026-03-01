@@ -4,6 +4,7 @@ import { Inter, Poppins } from 'next/font/google'
 import '../globals.css'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import SessionProvider from '@/components/modules/auth/session-provider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -177,13 +178,15 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/logo_short-144x144.png" />
       </head>
       <body suppressHydrationWarning>
-        <div className="min-h-screen flex flex-col font-sans bg-background antialiased">
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <SessionProvider>
+          <div className="min-h-screen flex flex-col font-sans bg-background antialiased">
+            <Header />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </SessionProvider>
       </body>
     </html>
   )
