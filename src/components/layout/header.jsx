@@ -125,22 +125,7 @@ export function Header() {
 
   const navLinks = [
     { name: "Accueil", href: "/" },
-    {
-      name: "Services",
-      href: "/services",
-      // dropdown: [
-      //   {
-      //     name: "Transport Maritime",
-      //     href: "/services#maritime",
-      //     icon: "🚢",
-      //     desc: "Fret maritime international",
-      //     color: "bg-blue-50 text-blue-600",
-      //   },
-      //   // ... autres services
-      // ],
-    },
-    { name: "À Propos", href: "/#about" },
-    { name: "Contact", href: "/#contact" },
+    { name: "Tarifs", href: "/#tarifs" },
   ];
 
   // Menu compte pour utilisateur connecté
@@ -161,13 +146,8 @@ export function Header() {
     
     if (href.includes('#')) {
       return pathname + window.location.hash === href;
-    } else {
-      if (href === '/services') {
-        const currentPathname = currentPath.split('#')[0];
-        return currentPathname === '/services';
-      }
-      return pathname === href && !window.location.hash;
     }
+    return pathname === href && !window.location.hash;
   };
 
   return (

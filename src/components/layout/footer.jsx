@@ -55,19 +55,17 @@ export  function Footer() {
   };
 
   const services = [
-    { name: 'Envoi de Colis', href: '/services', price: '100€' },
-    { name: 'Envoi Barrique', href: '/services', price: '100€' },
-    { name: 'Ramassage Domicile', href: '/services', price: '20€' },
+    { name: 'Envoi de Colis', href: '/#tarifs', price: '100€' },
+    { name: 'Envoi Barrique', href: '/#tarifs', price: '100€' },
+    { name: 'Ramassage Domicile', href: '/#tarifs', price: '20€' },
     { name: 'Suivi en Ligne', href: '/tracking', price: 'Gratuit' },
-    { name: 'Assurance Colis', href: '/services', price: 'Incluse' }
+    { name: 'Assurance Colis', href: '/#tarifs', price: 'Incluse' }
   ];
 
   const quickLinks = [
-    { name: 'À propos', href: '/#about' },
-    { name: 'Témoignages', href: '/#testimonials' },
-    { name: 'Tarifs', href: '/services' },
-    { name: 'Contact', href: '/#contact' },
-    { name: 'FAQ', href: '/services#faq' },
+    { name: 'Accueil', href: '/' },
+    { name: 'Tarifs', href: '/#tarifs' },
+    { name: 'Médiathèque', href: '/#mediatheque' },
     { name: 'Suivi Colis', href: '/tracking' }
   ];
 
