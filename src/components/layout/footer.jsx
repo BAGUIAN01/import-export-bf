@@ -1,23 +1,15 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { 
-  Globe, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Facebook, 
-  Twitter, 
-  Linkedin, 
+import {
+  Phone,
+  Mail,
+  Facebook,
   Instagram,
   Clock,
   ArrowRight,
-  Shield,
-  Award,
-  Package,
   Heart,
   Truck,
   Calendar,
-  Star,
   CheckCircle,
   Send
 } from 'lucide-react';
@@ -82,13 +74,6 @@ export  function Footer() {
     { name: 'Instagram', href: '#', icon: Instagram }
   ];
 
-  const stats = [
-    { number: '2500+', label: 'Colis envoyés', icon: Package },
-    { number: '850+', label: 'Clients satisfaits', icon: Heart },
-    { number: '99%', label: 'Livraisons réussies', icon: CheckCircle },
-    { number: '8', label: 'Années d\'expérience', icon: Award }
-  ];
-
   return (
     <footer className="bg-gradient-to-br from-[#010066] via-[#010088] to-[#010066] text-white relative overflow-hidden">
       
@@ -135,25 +120,6 @@ export  function Footer() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="py-12 lg:py-16 border-b border-white/10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20 group-hover:bg-orange-500/20 transition-all duration-300">
-                  <stat.icon className="w-8 h-8 lg:w-10 lg:h-10 text-orange-400" />
-                </div>
-                <div className="text-2xl lg:text-3xl font-black text-white mb-1">
-                  {stat.number}
-                </div>
-                <div className="text-blue-200 text-sm lg:text-base font-medium">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
@@ -249,28 +215,6 @@ export  function Footer() {
                   </li>
                 ))}
               </ul>
-              
-              {/* Certifications */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                <h4 className="font-bold mb-3 flex items-center text-white">
-                  <Shield className="mr-2 h-4 w-4 text-orange-400" />
-                  Garanties
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    <span className="text-blue-200">Transport sécurisé</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    <span className="text-blue-200">Assurance incluse</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    <span className="text-blue-200">Suivi en temps réel</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Quick Links */}
@@ -291,23 +235,6 @@ export  function Footer() {
                   </li>
                 ))}
               </ul>
-
-              {/* Rating */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                <h4 className="font-bold mb-3 flex items-center text-white">
-                  <Star className="mr-2 h-4 w-4 text-orange-400" />
-                  Satisfaction Client
-                </h4>
-                <div className="flex items-center gap-2 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                  ))}
-                  <span className="text-white font-bold ml-2">5.0/5</span>
-                </div>
-                <div className="text-blue-200 text-sm">
-                  Basé sur 850+ avis clients
-                </div>
-              </div>
             </div>
 
             {/* Contact Info */}
