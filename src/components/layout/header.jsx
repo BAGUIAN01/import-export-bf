@@ -17,6 +17,7 @@ import {
   UserPlus,
   LogIn,
   Shield,
+  Calendar,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,6 +31,7 @@ export function Header() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [currentPath, setCurrentPath] = useState("/");
+  const [nextDeparture, setNextDeparture] = useState(null);
   const dropdownTimeoutRef = useRef(null);
 
   const pathname = usePathname();
@@ -70,6 +72,28 @@ export function Header() {
       window.removeEventListener('popstate', handlePathnameChange);
     };
   }, [pathname]);
+
+  // Récupérer la date du prochain départ
+  useEffect(() => {
+    const fetchNextDeparture = async () => {
+      try {
+        const response = await fetch('/api/next-departure');
+        const data = await response.json();
+        setNextDeparture(data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du prochain départ:', error);
+      }
+    };
+
+    fetchNextDeparture();
+  }, []);
+
+  // N'afficher l'annonce que pour un départ futur valide
+  // (rien quand "à déterminer" ni quand la date est passée)
+  const hasUpcomingDeparture =
+    !!nextDeparture?.hasNextDeparture &&
+    !!nextDeparture?.departure?.date &&
+    new Date(nextDeparture.departure.date).getTime() > Date.now();
 
   // Gestion du scroll avec hide/show du header
   useEffect(() => {
@@ -152,6 +176,27 @@ export function Header() {
 
   return (
     <>
+      {/* Annonce du prochain départ : affichée uniquement si un départ futur est programmé */}
+      {hasUpcomingDeparture && (
+        <div className="bg-orange-500 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
+              <Calendar className="w-4 h-4 flex-shrink-0 animate-pulse" />
+              <span>
+                Prochain chargement : {nextDeparture.departure.formatted.short}
+              </span>
+              <Link
+                href="/tracking"
+                className="hidden sm:inline-flex items-center gap-1 underline underline-offset-2 hover:text-orange-100 transition-colors"
+              >
+                Réservez votre place
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Bar avec animation */}
       <div
         className={`bg-gradient-to-r from-blue-900 to-[#010066] text-white transition-all duration-300 ${

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Phone,
   Mail,
@@ -9,7 +9,6 @@ import {
   ArrowRight,
   Heart,
   Truck,
-  Calendar,
   CheckCircle,
   Send
 } from 'lucide-react';
@@ -19,22 +18,6 @@ import Link from 'next/link';
 export  function Footer() {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [nextDeparture, setNextDeparture] = useState(null);
-
-  // Récupérer la date du prochain départ
-  useEffect(() => {
-    const fetchNextDeparture = async () => {
-      try {
-        const response = await fetch('/api/next-departure');
-        const data = await response.json();
-        setNextDeparture(data);
-      } catch (error) {
-        console.error('Erreur lors de la récupération du prochain départ:', error);
-      }
-    };
-
-    fetchNextDeparture();
-  }, []);
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
@@ -152,21 +135,6 @@ export  function Footer() {
                 Depuis 8 ans, nous sommes le pont entre la France et le Burkina Faso. 
                 Chaque colis que nous transportons porte l'amour et l'espoir des familles.
               </p>
-
-              {/* Prochains chargements */}
-              <div className="bg-orange-500/20 border border-orange-400/30 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="w-4 h-4 text-orange-400" />
-                  <span className="font-bold text-orange-300">Prochain chargement</span>
-                </div>
-                <div className="text-white font-black text-lg">
-                  {nextDeparture?.hasNextDeparture 
-                    ? nextDeparture.departure.formatted.short 
-                    : "À déterminer"
-                  }
-                </div>
-                <div className="text-orange-200 text-sm">Réservez votre place maintenant</div>
-              </div>
 
               {/* Social Links */}
               <div className="space-y-3">
