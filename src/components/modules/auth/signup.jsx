@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import {
   Phone,
   MessageCircle,
-  ArrowLeft,
   Loader2,
   CheckCircle,
   AlertCircle,
@@ -61,36 +60,14 @@ export default function SignUpMain() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [code, setCode] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [countdown, setCountdown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    if (countdown > 0) {
-      timerRef.current = setTimeout(() => setCountdown((p) => p - 1), 1000);
-    }
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [countdown]);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
 
   function computePhoneState(raw, preferredIso2) {
     const parsedIntl = parsePhoneNumberFromString(raw);
@@ -154,7 +131,7 @@ export default function SignUpMain() {
     return true;
   };
 
-  const sendCode = async () => {
+  const handleRegister = async () => {
     setError("");
     setSuccess("");
     if (!validateForm()) return;
@@ -180,79 +157,25 @@ export default function SignUpMain() {
         throw new Error(data.error || "Erreur lors de la création du compte");
       }
 
-      setStep(2);
-      setSuccess("Code de vérification envoyé !");
-      setCountdown(60);
+      // Connexion automatique (téléphone + mot de passe), sans vérification SMS
+      const result = await signIn("credentials", {
+        login: phoneE164,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // Compte créé mais connexion automatique impossible : rediriger vers la connexion
+        setSuccess("Compte créé avec succès ! Veuillez vous connecter.");
+        setTimeout(() => router.push("/auth/signin"), 2000);
+        return;
+      }
+
+      setStep(3);
+      setSuccess("Compte créé avec succès !");
+      setTimeout(() => router.push("/admin"), 2000);
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyCode = async () => {
-    if (code.length !== 6) {
-      setError("Le code doit contenir 6 chiffres");
-      return;
-    }
-    setLoading(true);
-    setError("");
-
-    try {
-      const result = await signIn("phone-sms", {
-        phone: phoneE164,
-        code,
-        isRegistration: "true",
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError("Code invalide ou expiré");
-      } else if (result?.ok) {
-        setStep(3);
-        setSuccess("Compte créé avec succès !");
-        setTimeout(() => router.push("/admin"), 2000);
-      }
-    } catch {
-      setError("Erreur lors de la vérification");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (step === 2 && code.length === 6) {
-      const t = setTimeout(() => verifyCode(), 300);
-      return () => clearTimeout(t);
-    }
-  }, [code, step]);
-
-  const handleCodeInput = (e) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-    setCode(value);
-    setError("");
-  };
-
-  const resendCode = async () => {
-    if (countdown > 0 || loading) return;
-    setLoading(true);
-    setError("");
-
-    try {
-      const result = await signIn("phone", {
-        phone: phoneE164,
-        step: "request",
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError("Erreur lors du renvoi du code");
-      } else {
-        setSuccess("Nouveau code envoyé !");
-        setCountdown(60);
-      }
-    } catch {
-      setError("Erreur de connexion");
     } finally {
       setLoading(false);
     }
@@ -295,53 +218,12 @@ export default function SignUpMain() {
             Rejoignez Import Export BF
           </h1>
           <p className="text-gray-600 text-lg">
-            {step === 1
-              ? "Créez votre compte en quelques minutes"
-              : "Vérifiez votre numéro de téléphone"}
+            Créez votre compte en quelques minutes
           </p>
         </div>
 
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-8">
-          {/* Progress Stepper */}
-          <div className="flex items-center justify-center mb-8">
-            <div
-              className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                step >= 1
-                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg"
-                  : "bg-gray-200 text-gray-500"
-              }`}
-            >
-              <User className="w-6 h-6" />
-              {step > 1 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 text-white" />
-                </div>
-              )}
-            </div>
-            <div
-              className={`w-20 h-1 mx-4 rounded-full transition-all duration-500 ${
-                step >= 2
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                  : "bg-gray-200"
-              }`}
-            />
-            <div
-              className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                step >= 2
-                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg"
-                  : "bg-gray-200 text-gray-500"
-              }`}
-            >
-              <MessageCircle className="w-6 h-6" />
-              {step > 2 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 text-white" />
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Alerts */}
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
@@ -572,18 +454,18 @@ export default function SignUpMain() {
 
               {/* Submit Button */}
               <button
-                onClick={sendCode}
+                onClick={handleRegister}
                 disabled={loading}
                 className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    Envoi du code...
+                    Création du compte...
                   </>
                 ) : (
                   <>
-                    <MessageCircle className="w-5 h-5 mr-2" />
+                    <CheckCircle className="w-5 h-5 mr-2" />
                     Créer mon compte
                   </>
                 )}
@@ -597,92 +479,6 @@ export default function SignUpMain() {
                     Se connecter
                   </a>
                 </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: SMS Verification */}
-          {step === 2 && (
-            <div className="space-y-6">
-              <button
-                onClick={() => setStep(1)}
-                className="flex items-center text-orange-600 hover:text-orange-700 text-sm font-medium transition-colors group"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                Modifier les informations
-              </button>
-
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <MessageCircle className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Vérification SMS</h3>
-                  <p className="text-gray-600">Code envoyé au {phone}</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 text-center">
-                  Code de vérification
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  className="block w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-center text-3xl font-mono tracking-[0.5em] bg-white transition-all duration-200"
-                  placeholder="000000"
-                  value={code}
-                  onChange={handleCodeInput}
-                />
-              </div>
-
-              <button
-                onClick={verifyCode}
-                disabled={loading || code.length !== 6}
-                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    Création du compte...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Finaliser l'inscription
-                  </>
-                )}
-              </button>
-
-              <div className="text-center">
-                <button
-                  onClick={resendCode}
-                  disabled={countdown > 0 || loading}
-                  className="text-sm text-orange-600 hover:text-orange-700 font-medium disabled:text-gray-400 disabled:cursor-not-allowed transition-colors underline underline-offset-2"
-                >
-                  {countdown > 0 ? (
-                    <span className="flex items-center justify-center space-x-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Renvoyer dans {countdown}s</span>
-                    </span>
-                  ) : (
-                    "Renvoyer le code SMS"
-                  )}
-                </button>
-              </div>
-
-              {/* Security Notice */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
-                <div className="flex items-start">
-                  <Shield className="h-5 w-5 text-amber-500 mt-0.5 mr-3 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-amber-900 mb-1">Sécurité</h3>
-                    <p className="text-sm text-amber-700 leading-relaxed">
-                      Ce code expire dans 10 minutes. Ne le partagez jamais avec quelqu'un d'autre.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           )}

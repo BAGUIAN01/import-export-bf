@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
 import { prisma } from '../../../../lib/prisma'
-import { sendSMS } from '../../../../lib/twilio'
 import { isValidPhoneNumber, parsePhoneNumberFromString } from 'libphonenumber-js'
 
 export async function POST(request) {
@@ -142,13 +141,9 @@ export async function POST(request) {
     const detectedCountry = parsedPhone?.country
     const finalCountry = getCountryName(detectedCountry || country)
 
-    // Générer le code de vérification SMS
-    const verificationCode = generateVerificationCode()
-    const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
-
-    // Créer l'utilisateur et le code de vérification dans une transaction
+    // Créer l'utilisateur et son profil client dans une transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Créer l'utilisateur
+      // Créer l'utilisateur (actif immédiatement, sans vérification SMS)
       const user = await tx.user.create({
         data: {
           firstName: firstName.trim(),
@@ -160,13 +155,13 @@ export async function POST(request) {
           city: city?.trim() || null,
           country: finalCountry,
           role: 'CLIENT',
-          isActive: false, // Sera activé après vérification SMS
+          isActive: true,
         }
       })
 
       // Générer un code client unique
       const clientCode = await generateClientCode(tx)
-      
+
       // Créer automatiquement un profil client
       const client = await tx.client.create({
         data: {
@@ -186,96 +181,35 @@ export async function POST(request) {
         }
       })
 
-      // Supprimer les anciens codes de vérification pour ce numéro
-      await tx.phoneVerification.deleteMany({
-        where: { phone: normalizedPhone }
-      })
-
-      // Créer le code de vérification SMS
-      const verification = await tx.phoneVerification.create({
-        data: {
-          phone: normalizedPhone,
-          code: verificationCode,
-          expiresAt: codeExpiresAt,
-          attempts: 0,
-          verified: false
-        }
-      })
-
-      return { user, client, verification }
+      return { user, client }
     })
 
-    // Envoyer le SMS de vérification
-    try {
-      const countryName = getCountryName(detectedCountry)
-      const smsMessage = `Import Export BF: Votre code de vérification pour créer votre compte est ${verificationCode}. Valide 10 min. Ne le partagez jamais.`
-      
-      await sendSMS(normalizedPhone, smsMessage)
-
-      // Log de création de compte et envoi SMS
-      await prisma.auditLog.create({
-        data: {
-          userId: result.user.id,
-          action: 'USER_REGISTER',
-          resource: 'user',
-          resourceId: result.user.id,
-          details: JSON.stringify({
-            phone: normalizedPhone,
-            country: finalCountry,
-            clientCode: result.client.clientCode,
-            smsCodeSent: true
-          }),
-          ipAddress: clientIP,
-          userAgent: request.headers.get('user-agent') || 'unknown'
-        }
-      })
-
-    } catch (smsError) {
-      console.error('Erreur lors de l\'envoi SMS:', smsError)
-      
-      // Supprimer le code de vérification si l'envoi SMS a échoué
-      await prisma.phoneVerification.delete({
-        where: { id: result.verification.id }
-      })
-
-      // Log de l'erreur SMS
-      await prisma.auditLog.create({
-        data: {
-          userId: result.user.id,
-          action: 'SMS_SEND_FAILED',
-          resource: 'phone_verification',
-          details: JSON.stringify({
-            phone: normalizedPhone,
-            error: smsError.message
-          }),
-          ipAddress: clientIP,
-          userAgent: request.headers.get('user-agent') || 'unknown'
-        }
-      })
-
-      return NextResponse.json(
-        { 
-          error: 'Compte créé mais impossible d\'envoyer le SMS de vérification. Veuillez contacter le support.',
-          userId: result.user.id
-        },
-        { status: 201 } // Compte créé mais problème SMS
-      )
-    }
+    // Log de création de compte
+    await prisma.auditLog.create({
+      data: {
+        userId: result.user.id,
+        action: 'USER_REGISTER',
+        resource: 'user',
+        resourceId: result.user.id,
+        details: JSON.stringify({
+          phone: normalizedPhone,
+          country: finalCountry,
+          clientCode: result.client.clientCode
+        }),
+        ipAddress: clientIP,
+        userAgent: request.headers.get('user-agent') || 'unknown'
+      }
+    })
 
     // Retourner les données de l'utilisateur (sans le mot de passe)
     const { password: _, ...userWithoutPassword } = result.user
 
     return NextResponse.json({
       success: true,
-      message: 'Compte créé avec succès. Code de vérification envoyé par SMS.',
+      message: 'Compte créé avec succès.',
       user: {
         ...userWithoutPassword,
         clientCode: result.client.clientCode
-      },
-      verification: {
-        phone: normalizedPhone,
-        expiresIn: 600, // 10 minutes en secondes
-        codeLength: 6
       }
     }, { status: 201 })
 
@@ -348,11 +282,6 @@ async function generateClientCode(tx = prisma) {
   }
   
   return clientCode
-}
-
-// Fonction pour générer un code de vérification sécurisé
-function generateVerificationCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString() // 6 chiffres
 }
 
 // Fonction utilitaire pour convertir le code pays en nom
