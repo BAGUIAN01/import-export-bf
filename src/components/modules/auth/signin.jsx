@@ -4,16 +4,9 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { 
-  Loader2, 
-  AlertCircle, 
-  Eye, 
-  EyeOff, 
-  Lock,
-  User,
-  Shield,
-  Package
-} from 'lucide-react'
+import Image from 'next/image'
+import { Loader2, AlertCircle, Lock } from 'lucide-react'
+import { FloatingLabelInput } from '@/components/ui/floating-label-input'
 
 export default function SignInMain() {
   const [loading, setLoading] = useState(false)
@@ -22,11 +15,10 @@ export default function SignInMain() {
 
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    
+
     if (!login || !password) {
       setError('Veuillez remplir tous les champs')
       return
@@ -42,12 +34,9 @@ export default function SignInMain() {
         redirect: false,
       })
 
-      console.log(" Login result:", result)
-
       if (result?.error) {
         setError('Identifiants incorrects')
       } else if (result?.ok) {
-        console.log('Connexion réussie')
         router.push('/admin')
       }
     } catch (err) {
@@ -58,29 +47,25 @@ export default function SignInMain() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0E7A34] via-blue-900 to-[#0E7A34] p-4 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#0E7A34]/20 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
-            <Package className="w-10 h-10 text-white" />
+          <div className="mx-auto w-20 h-20 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-6 overflow-hidden">
+            <Image
+              src="/logo.jpeg"
+              alt="Naange Envoi"
+              width={80}
+              height={80}
+              className="object-contain"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-3">
-            Connexion
-          </h1>
-          <p className="text-blue-200">
-            Accédez à votre espace Naange Envoi
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Connexion</h1>
+          <p className="text-gray-500">Accédez à votre espace Naange Envoi</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
           {/* Error Alert */}
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
@@ -90,80 +75,48 @@ export default function SignInMain() {
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email/Phone Field */}
-            <div className="space-y-2">
-              <label htmlFor="login" className="block text-sm font-medium text-gray-700">
-                Email ou numéro de téléphone
-              </label>
-              <div className="relative">
-                <input
-                  id="login"
-                  name="login"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={login}
-                  onChange={(e) => {
-                    setLogin(e.target.value)
-                    setError('')
-                  }}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
-                  placeholder="email@exemple.com ou +226 70 12 34 56"
-                />
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              </div>
-            </div>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <FloatingLabelInput
+              id="login"
+              name="login"
+              type="text"
+              label="Email ou numéro de téléphone"
+              autoComplete="username"
+              value={login}
+              onChange={(e) => {
+                setLogin(e.target.value)
+                setError('')
+              }}
+            />
 
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    setError('')
-                  }}
-                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
-                  placeholder="Votre mot de passe"
-                />
-                <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            <FloatingLabelInput
+              id="password"
+              name="password"
+              type="password"
+              label="Mot de passe"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setError('')
+              }}
+            />
 
             {/* Forgot Password Link */}
             <div className="flex items-center justify-end">
-              <div className="text-sm">
-                <a 
-                  href="/auth/forgot-password" 
-                  className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors"
-                >
-                  Mot de passe oublié ?
-                </a>
-              </div>
+              <a
+                href="/auth/forgot-password"
+                className="text-sm text-[#0E7A34] hover:text-[#0B5C28] font-medium transition-colors"
+              >
+                Mot de passe oublié ?
+              </a>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || !login || !password}
-              className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full flex items-center justify-center py-3.5 px-6 rounded-xl text-base font-semibold text-white bg-[#0E7A34] hover:bg-[#0B5C28] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0E7A34] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <>
@@ -183,9 +136,9 @@ export default function SignInMain() {
           <div className="text-center mt-8 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               Pas encore de compte ?{' '}
-              <a 
-                href="/auth/signup" 
-                className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors"
+              <a
+                href="/auth/signup"
+                className="text-[#0E7A34] hover:text-[#0B5C28] font-medium transition-colors"
               >
                 Créer un compte
               </a>
@@ -195,11 +148,11 @@ export default function SignInMain() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm text-blue-200">
+          <p className="text-sm text-gray-500">
             Besoin d'aide ?{' '}
-            <a 
-              href="/contact" 
-              className="text-amber-400 hover:text-amber-300 font-medium underline underline-offset-2 transition-colors"
+            <a
+              href="/contact"
+              className="text-[#0E7A34] hover:text-[#0B5C28] font-medium transition-colors"
             >
               Contactez notre support
             </a>

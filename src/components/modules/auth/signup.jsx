@@ -3,25 +3,20 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import {
-  Phone,
   MessageCircle,
   Loader2,
   CheckCircle,
   AlertCircle,
-  User,
-  Mail,
-  Eye,
-  EyeOff,
   ChevronDown,
-  Shield,
-  Package,
 } from "lucide-react";
 import {
   AsYouType,
   parsePhoneNumberFromString,
   isValidPhoneNumber,
 } from "libphonenumber-js/min";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 
 // Countries supported
 const COUNTRY_OPTIONS = [
@@ -66,8 +61,6 @@ export default function SignUpMain() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function computePhoneState(raw, preferredIso2) {
     const parsedIntl = parsePhoneNumberFromString(raw);
@@ -188,16 +181,16 @@ export default function SignUpMain() {
 
   if (step === 3) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-8 text-center">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center shadow-lg">
-              <CheckCircle className="w-12 h-12 text-white" />
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+            <div className="w-20 h-20 mx-auto mb-6 bg-[#0E7A34]/10 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-[#0E7A34]" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenue !</h2>
             <p className="text-gray-600 mb-6">Votre compte a été créé avec succès</p>
             <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-[#0E7A34] rounded-full animate-pulse"></div>
               <span>Redirection vers votre tableau de bord...</span>
             </div>
           </div>
@@ -207,23 +200,29 @@ export default function SignUpMain() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 my-12">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 py-12">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
-            <Package className="w-10 h-10 text-white" />
+          <div className="mx-auto w-20 h-20 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-6 overflow-hidden">
+            <Image
+              src="/logo.jpeg"
+              alt="Naange Envoi"
+              width={80}
+              height={80}
+              className="object-contain"
+            />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Rejoignez Naange Envoi
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-500 text-lg">
             Créez votre compte en quelques minutes
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
           {/* Alerts */}
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
@@ -232,66 +231,47 @@ export default function SignUpMain() {
             </div>
           )}
           {success && (
-            <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-amber-700 text-sm leading-relaxed">{success}</p>
+            <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-[#0E7A34] flex-shrink-0 mt-0.5" />
+              <p className="text-green-800 text-sm leading-relaxed">{success}</p>
             </div>
           )}
 
           {/* Step 1: Registration Form */}
           {step === 1 && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Name Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Prénom <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      autoComplete="given-name"
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
-                      placeholder="Votre prénom"
-                      value={firstName}
-                      onChange={(e) => {
-                        setFirstName(e.target.value);
-                        setError("");
-                      }}
-                    />
-                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Nom <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      autoComplete="family-name"
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
-                      placeholder="Votre nom"
-                      value={lastName}
-                      onChange={(e) => {
-                        setLastName(e.target.value);
-                        setError("");
-                      }}
-                    />
-                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
+                <FloatingLabelInput
+                  id="firstName"
+                  type="text"
+                  label="Prénom *"
+                  autoComplete="given-name"
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    setError("");
+                  }}
+                />
+                <FloatingLabelInput
+                  id="lastName"
+                  type="text"
+                  label="Nom *"
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    setError("");
+                  }}
+                />
               </div>
 
               {/* Phone Number */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Numéro de téléphone <span className="text-red-500">*</span>
-                </label>
-                <div className="flex rounded-xl shadow-sm overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200">
-                  <div className="relative">
+                <div className="flex rounded-md overflow-hidden border-2 border-zinc-300 focus-within:border-zinc-900 focus-within:shadow-[0_0_0_3px_rgba(0,0,0,0.05)] transition-all duration-300">
+                  <div className="relative shrink-0">
                     <select
-                      className="appearance-none h-full pl-4 pr-8 py-3 bg-gray-50 border-0 focus:ring-0 text-sm font-medium text-gray-700 cursor-pointer"
+                      className="appearance-none h-14 pl-4 pr-8 bg-gray-50 border-0 focus:ring-0 focus:outline-none text-sm font-medium text-zinc-700 cursor-pointer"
                       value={selectedIso2}
                       onChange={handleCountryChange}
                       aria-label="Pays du numéro"
@@ -302,25 +282,22 @@ export default function SignUpMain() {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                   </div>
 
-                  <div className="relative flex-1">
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      className="w-full pl-12 pr-4 py-3 border-0 focus:ring-0 bg-white"
-                      placeholder={phonePlaceholder}
-                      value={phone}
-                      onChange={handlePhoneChange}
-                    />
-                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  </div>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className="flex-1 h-14 px-4 border-0 focus:ring-0 focus:outline-none bg-transparent text-sm text-zinc-900"
+                    placeholder={`Téléphone — ex. ${phonePlaceholder}`}
+                    value={phone}
+                    onChange={handlePhoneChange}
+                  />
                 </div>
 
                 {phone && (
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-xs px-1">
                     <span className="text-gray-500">
                       Format international:{" "}
                       <span className="font-mono text-gray-700">
@@ -328,7 +305,7 @@ export default function SignUpMain() {
                       </span>
                     </span>
                     {phoneValid && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-[#0B5C28]">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         Valide
                       </span>
@@ -338,81 +315,42 @@ export default function SignUpMain() {
               </div>
 
               {/* Email */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Email <span className="text-gray-400 text-xs">(optionnel)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
-                    placeholder="votre.email@exemple.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError("");
-                    }}
-                  />
-                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                </div>
-              </div>
+              <FloatingLabelInput
+                id="email"
+                type="email"
+                label="Email (optionnel)"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
+              />
 
               {/* Password Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Mot de passe <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
-                      placeholder="Minimum 6 caractères"
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        setError("");
-                      }}
-                    />
-                    <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <button
-                      type="button"
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Confirmer <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
-                      placeholder="Répétez le mot de passe"
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        setError("");
-                      }}
-                    />
-                    <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <button
-                      type="button"
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
+                <FloatingLabelInput
+                  id="password"
+                  type="password"
+                  label="Mot de passe *"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
+                />
+                <FloatingLabelInput
+                  id="confirmPassword"
+                  type="password"
+                  label="Confirmer *"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setError("");
+                  }}
+                />
               </div>
 
               {/* Terms Acceptance */}
@@ -425,27 +363,27 @@ export default function SignUpMain() {
                     setAcceptTerms(e.target.checked);
                     setError("");
                   }}
-                  className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                  className="mt-1 h-4 w-4 text-[#0E7A34] focus:ring-[#0E7A34] border-gray-300 rounded"
                 />
                 <label htmlFor="acceptTerms" className="text-sm text-gray-700 leading-relaxed">
                   J'accepte les{" "}
-                  <a href="/terms" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2">
+                  <a href="/terms" className="text-[#0E7A34] hover:text-[#0B5C28] font-medium underline underline-offset-2">
                     conditions d'utilisation
                   </a>{" "}
                   et la{" "}
-                  <a href="/privacy" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2">
+                  <a href="/privacy" className="text-[#0E7A34] hover:text-[#0B5C28] font-medium underline underline-offset-2">
                     politique de confidentialité
                   </a>
                 </label>
               </div>
 
               {/* Info Box */}
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                 <div className="flex items-start">
-                  <MessageCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <MessageCircle className="h-5 w-5 text-[#0E7A34] mt-0.5 mr-3 flex-shrink-0" />
                   <div>
-                    <h3 className="text-sm font-semibold text-blue-900 mb-1">Information</h3>
-                    <p className="text-sm text-blue-700 leading-relaxed">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">Information</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
                       Les informations de livraison seront demandées lors de l'enregistrement de votre premier colis.
                     </p>
                   </div>
@@ -456,7 +394,7 @@ export default function SignUpMain() {
               <button
                 onClick={handleRegister}
                 disabled={loading}
-                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full flex items-center justify-center py-3.5 px-6 rounded-xl text-base font-semibold text-white bg-[#0E7A34] hover:bg-[#0B5C28] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0E7A34] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <>
@@ -475,7 +413,7 @@ export default function SignUpMain() {
               <div className="text-center pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600">
                   Déjà un compte ?{" "}
-                  <a href="/auth/signin" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors">
+                  <a href="/auth/signin" className="text-[#0E7A34] hover:text-[#0B5C28] font-medium transition-colors">
                     Se connecter
                   </a>
                 </p>
@@ -486,9 +424,9 @@ export default function SignUpMain() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-500">
             Besoin d'aide ?{" "}
-            <a href="/contact" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors">
+            <a href="/contact" className="text-[#0E7A34] hover:text-[#0B5C28] font-medium transition-colors">
               Contactez notre support
             </a>
           </p>
