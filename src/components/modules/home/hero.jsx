@@ -86,7 +86,7 @@ export default function Hero() {
                         isActive ? 1.06 : 1
                       })`,
                       transformOrigin: "bottom center",
-                      zIndex: isActive ? 50 : 10 + i,
+                      zIndex: isActive ? 30 : 10 + i,
                     }}
                   >
                     <Image
