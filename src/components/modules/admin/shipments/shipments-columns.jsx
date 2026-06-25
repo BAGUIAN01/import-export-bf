@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/modules/data-table/data-table-column-header";
 import { DataTableRowActions } from "@/components/modules/data-table/data-table-row-actions";
-import { User, Euro, Package, PackageCheck } from "lucide-react";
+import { User, Euro, Package, PackageCheck, CreditCard } from "lucide-react";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 const formatCurrency = (amount) =>
@@ -23,7 +23,7 @@ const PaymentStatusBadge = ({ status }) => {
   return <Badge variant="outline" className={`${conf.cls} text-xs xs:text-sm`}>{conf.label}</Badge>;
 };
 
-export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit }) => [
+export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit, onPay }) => [
   // Sélecteur
   {
     id: "select",
@@ -127,36 +127,57 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit }) => [
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
 
-  // Remise au destinataire
+  // Paiement / Remise (actions rapides)
   {
     id: "remit",
-    header: () => <span className="text-sm">Remise</span>,
+    header: () => <span className="text-sm">Paiement / Remise</span>,
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => {
       const sh = row.original;
       const remis = Boolean(sh.deliveredAt);
-      return remis ? (
-        <button
-          onClick={() => onRemit?.(sh)}
-          title={`Remis le ${formatDate(sh.deliveredAt)}${sh.receivedBy ? ` à ${sh.receivedBy}` : ""}`}
-          className="inline-flex items-center"
-        >
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 cursor-pointer">
-            <PackageCheck className="h-3 w-3 mr-1" />
-            Remis
-          </Badge>
-        </button>
-      ) : (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onRemit?.(sh)}
-          className="h-8 border-[#0E7A34]/30 text-[#0E7A34] hover:bg-[#0E7A34]/5 hover:text-[#0B5C28]"
-        >
-          <PackageCheck className="h-4 w-4 mr-1" />
-          Remettre
-        </Button>
+      const unpaid = !["PAID", "CANCELLED", "REFUNDED"].includes(sh.paymentStatus);
+      // Empêche la navigation vers le détail (clic de ligne)
+      const stop = (fn) => (e) => {
+        e.stopPropagation();
+        fn();
+      };
+      return (
+        <div className="flex items-center gap-2">
+          {unpaid && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={stop(() => onPay?.(sh))}
+              className="h-8 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+            >
+              <CreditCard className="h-4 w-4 mr-1" />
+              Payer
+            </Button>
+          )}
+          {remis ? (
+            <button
+              onClick={stop(() => onRemit?.(sh))}
+              title={`Remis le ${formatDate(sh.deliveredAt)}${sh.receivedBy ? ` à ${sh.receivedBy}` : ""}`}
+              className="inline-flex items-center"
+            >
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 cursor-pointer">
+                <PackageCheck className="h-3 w-3 mr-1" />
+                Remis
+              </Badge>
+            </button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={stop(() => onRemit?.(sh))}
+              className="h-8 border-[#0E7A34]/30 text-[#0E7A34] hover:bg-[#0E7A34]/5 hover:text-[#0B5C28]"
+            >
+              <PackageCheck className="h-4 w-4 mr-1" />
+              Remettre
+            </Button>
+          )}
+        </div>
       );
     },
   },

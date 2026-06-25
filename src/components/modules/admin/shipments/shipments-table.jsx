@@ -409,6 +409,7 @@ export function ShipmentsTable({
         onEdit: handleEdit,
         onDelete: handleDelete,
         onRemit: handleRemit,
+        onPay: handleEdit, // ouvre le dialog "Gérer le paiement"
       }),
     [handleRowOpen, handleEdit, handleDelete, handleRemit]
   );
