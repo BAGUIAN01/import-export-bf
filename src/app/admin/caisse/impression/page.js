@@ -176,7 +176,7 @@ export default function ImpressionPage() {
 
     const [qrCodeDataUrl, logoDataUrl] = await Promise.all([
       QRCodeLib.toDataURL(trackingUrl, { margin: 1, width: 200 }).catch(() => null),
-      toDataUrl("/logo.png").catch(() => null),
+      toDataUrl("/logo.jpeg").catch(() => null),
     ]);
 
     return await pdf(
@@ -329,7 +329,7 @@ export default function ImpressionPage() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center p-1.5">
-                    <Image src="/logo_short.png" alt="Logo" width={48} height={48} className="w-full h-full object-contain" unoptimized />
+                    <Image src="/logo.jpeg" alt="Logo" width={48} height={48} className="w-full h-full object-contain" unoptimized />
                   </div>
                   <div>
                     <div className="text-xs text-gray-300">NAANGE ENVOI</div>

@@ -241,11 +241,11 @@ export function Header() {
               <div className="flex items-center space-x-3 group cursor-pointer">
                 <div className="relative overflow-hidden rounded-md">
                   <Image
-                    src="/logo.jpg"
+                    src="/logo.jpeg"
                     alt="Naange Envoi Logo"
-                    width={60}
+                    width={48}
                     height={48}
-                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="object-contain transition-transform duration-300 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
                 </div>

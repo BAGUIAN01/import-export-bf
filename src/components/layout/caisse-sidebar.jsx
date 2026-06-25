@@ -39,9 +39,9 @@ export function CaisseSidebar() {
     <>
       {/* Logo */}
       <div className="flex justify-center pt-5 pb-3 flex-shrink-0">
-        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-black ring-2 ring-white/30 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white ring-2 ring-white/30 flex items-center justify-center">
           <Image
-            src="/logo.png"
+            src="/logo.jpeg"
             alt="Naange Envoi"
             width={56}
             height={56}

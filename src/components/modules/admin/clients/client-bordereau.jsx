@@ -481,7 +481,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                 <div className="flex items-center gap-2 xs:gap-3">
                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center p-1 xs:p-2">
                     <img
-                      src="/logo_short.png"
+                      src="/logo.jpeg"
                       alt="Logo NAANGE ENVOI"
                       className="w-full h-full object-contain"
                       style={{ maxWidth: '100%', maxHeight: '100%' }}

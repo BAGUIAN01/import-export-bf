@@ -55,7 +55,7 @@ export default async function AdminPage() {
         <div className="flex items-center justify-between h-16 px-3 sm:px-4 max-w-5xl mx-auto">
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/logo.png"
+              src="/logo.jpeg"
               alt="Logo"
               width={32}
               height={32}

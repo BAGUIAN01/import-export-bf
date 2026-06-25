@@ -52,7 +52,7 @@ export  function Footer() {
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm">
                   <Image
-                    src="/logo.png"
+                    src="/logo.jpeg"
                     alt="Naange Envoi Logo"
                     width={40}
                     height={40}
