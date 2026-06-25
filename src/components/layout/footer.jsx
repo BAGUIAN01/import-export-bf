@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Phone,
   Mail,
@@ -8,27 +8,12 @@ import {
   Clock,
   ArrowRight,
   Heart,
-  Truck,
-  CheckCircle,
-  Send
+  Truck
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export  function Footer() {
-  const [email, setEmail] = useState('');
-  const [isSubscribed, setIsSubscribed] = useState(false);
-
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    // Simulate subscription
-    setIsSubscribed(true);
-    setTimeout(() => {
-      setIsSubscribed(false);
-      setEmail('');
-    }, 3000);
-  };
-
   const services = [
     { name: 'Envoi de Colis', href: '/#tarifs', price: '100€' },
     { name: 'Envoi Barrique', href: '/#tarifs', price: '100€' },
@@ -67,48 +52,10 @@ export  function Footer() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Newsletter Section */}
-        <div className="py-12 lg:py-16 border-b border-white/10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h3 className="text-2xl md:text-3xl lg:text-4xl font-black mb-4">
-              Restez informé de nos prochains chargements
-            </h3>
-            <p className="text-blue-200 mb-6 lg:mb-8 text-lg">
-              Recevez les dates de chargement, promotions spéciales et conseils d'envoi vers le Burkina Faso
-            </p>
-            
-            {!isSubscribed ? (
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Votre adresse email"
-                  className="flex-1 px-4 py-3 rounded-2xl text-gray-800 bg-white border-0 focus:ring-2 focus:ring-orange-500 outline-none font-medium"
-                />
-                <button 
-                  onClick={handleNewsletterSubmit}
-                  className="bg-orange-500 hover:bg-orange-400 text-white px-6 py-3 rounded-2xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <Send className="w-4 h-4" />
-                  S'abonner
-                </button>
-              </div>
-            ) : (
-              <div className="max-w-md mx-auto bg-green-500/20 border border-green-400/30 rounded-2xl p-4">
-                <div className="flex items-center justify-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                  <span className="text-green-300 font-semibold">Merci ! Vous êtes inscrit.</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Main Footer Content */}
-        <div className="py-12 lg:py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div className="py-10 sm:py-12 lg:py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12">
             
             {/* Company Info */}
             <div className="lg:col-span-1 space-y-6">
