@@ -233,6 +233,7 @@ export  function Footer() {
                   <div>
                     <div className="font-bold text-white">Burkina Faso</div>
                     <div className="text-blue-200">+226 766 019 81</div>
+                    <div className="text-blue-200">00226 46 10 00 09</div>
                     <div className="text-xs text-blue-300">Livraison & support</div>
                   </div>
                 </div>
