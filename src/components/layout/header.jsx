@@ -176,9 +176,12 @@ export function Header() {
 
   return (
     <>
+      {/* En-tête épinglé (sticky) : bandeau + top-bar + navigation forment un seul bloc
+          → le bandeau reste visible (le nav ne le recouvre plus) sur mobile comme desktop */}
+      <header className="sticky top-0 z-50">
       {/* Annonce du prochain départ : affichée uniquement si un départ futur est programmé */}
       {hasUpcomingDeparture && (
-        <div className="sticky top-0 z-50 bg-orange-500 text-white">
+        <div className="bg-orange-500 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
               <Calendar className="w-4 h-4 flex-shrink-0 animate-pulse" />
@@ -236,9 +239,7 @@ export function Header() {
 
       {/* Main Navigation avec animation de slide */}
       <nav
-        className={`fixed w-full z-50 transition-all duration-500 transform ${
-          isVisible ? "translate-y-0" : "-translate-y-full"
-        } ${
+        className={`w-full transition-all duration-300 ${
           scrolled
             ? "bg-white/95 backdrop-blur-xl shadow-2xl border-b border-gray-100 py-2"
             : "bg-white/90 backdrop-blur-md py-4"
@@ -763,6 +764,7 @@ export function Header() {
           </div>
         </div>
       </nav>
+      </header>
     </>
   );
 }

@@ -215,7 +215,7 @@ export default function TrackPackagePage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white mt-16">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       
       {/* Hero Section */}
       <section className="relative py-16 lg:py-24 bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] overflow-hidden">
