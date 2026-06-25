@@ -27,10 +27,16 @@ export function CaisseHeader() {
       .then((r) => r.json())
       .then((d) => {
         if (!active) return;
-        const list = d.containers || [];
+        // On exclut les conteneurs déjà livrés (et annulés) : on n'y ajoute plus de colis
+        const list = (d.containers || []).filter(
+          (c) => c.status !== "DELIVERED" && c.status !== "CANCELLED"
+        );
         setContainers(list);
-        // Pré-sélection : conteneur le plus récent si aucun choisi
-        if (!selectedContainer && list.length) {
+        // Pré-sélection : conteneur le plus récent valide si rien de choisi,
+        // ou si le conteneur mémorisé n'est plus disponible (livré/annulé).
+        const stillValid =
+          selectedContainer && list.some((c) => c.id === selectedContainer.id);
+        if (!stillValid && list.length) {
           setSelectedContainer(list[0]);
         }
       })
