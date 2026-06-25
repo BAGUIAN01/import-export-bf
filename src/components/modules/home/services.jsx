@@ -163,19 +163,20 @@ export default function Tarifs() {
                   </div>
                 )}
 
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${
-                    cat.highlighted ? "bg-white/10" : "bg-[#0E7A34]/5"
-                  }`}
-                >
-                  <Icon
-                    className={`w-6 h-6 ${
-                      cat.highlighted ? "text-amber-400" : "text-[#0E7A34]"
+                <div className="flex items-center gap-3 mb-1.5">
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                      cat.highlighted ? "bg-white/10" : "bg-[#0E7A34]/5"
                     }`}
-                  />
+                  >
+                    <Icon
+                      className={`w-6 h-6 ${
+                        cat.highlighted ? "text-amber-400" : "text-[#0E7A34]"
+                      }`}
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold">{cat.title}</h3>
                 </div>
-
-                <h3 className="text-xl font-bold mb-1">{cat.title}</h3>
                 <p
                   className={`text-sm mb-5 ${
                     cat.highlighted ? "text-white/70" : "text-gray-500"
