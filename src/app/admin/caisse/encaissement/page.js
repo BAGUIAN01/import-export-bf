@@ -134,7 +134,7 @@ export default function EncaissementPage() {
             </div>
             <Button
               onClick={() => router.push("/admin/caisse/client")}
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+              className="bg-amber-500 hover:bg-amber-600 text-white w-full"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Sélectionner un client
@@ -159,7 +159,7 @@ export default function EncaissementPage() {
             </div>
             <Button
               onClick={() => router.push("/admin/caisse/commande")}
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+              className="bg-amber-500 hover:bg-amber-600 text-white w-full"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour à la commande
@@ -185,7 +185,7 @@ export default function EncaissementPage() {
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs text-zinc-400">Total à payer</p>
-            <p className="text-2xl font-bold text-orange-600">{formatPrice(orderTotal)} €</p>
+            <p className="text-2xl font-bold text-amber-600">{formatPrice(orderTotal)} €</p>
           </div>
         </div>
 
@@ -200,7 +200,7 @@ export default function EncaissementPage() {
                 <span className="text-sm text-zinc-700 truncate">
                   {item.name} <span className="text-zinc-400">× {item.quantity}</span>
                 </span>
-                <span className="text-sm font-semibold text-orange-600 shrink-0">{formatPrice(item.total)} €</span>
+                <span className="text-sm font-semibold text-amber-600 shrink-0">{formatPrice(item.total)} €</span>
               </div>
             ))}
           </div>
@@ -215,7 +215,7 @@ export default function EncaissementPage() {
                 key={value}
                 className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
                   modePaiement === value
-                    ? "border-orange-500 bg-orange-50"
+                    ? "border-amber-500 bg-amber-50"
                     : "border-zinc-200 hover:border-zinc-300"
                 }`}
                 onClick={() => setModePaiement(value)}
@@ -232,9 +232,9 @@ export default function EncaissementPage() {
 
         {/* Montant reçu (espèces uniquement) */}
         {modePaiement === "ESPECES" && (
-          <div className="bg-white rounded-xl border-2 border-orange-300 p-4 sm:p-5">
+          <div className="bg-white rounded-xl border-2 border-amber-300 p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Calculator className="h-5 w-5 text-orange-600" />
+              <Calculator className="h-5 w-5 text-amber-600" />
               <p className="font-semibold text-zinc-900">Montant reçu</p>
             </div>
 
@@ -246,7 +246,7 @@ export default function EncaissementPage() {
                 placeholder="0"
                 value={montantRecu}
                 onChange={handleMontantChange}
-                className="w-full h-16 text-3xl font-bold text-center rounded-xl border-2 border-zinc-200 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-colors pr-20 bg-zinc-50"
+                className="w-full h-16 text-3xl font-bold text-center rounded-xl border-2 border-zinc-200 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-colors pr-20 bg-zinc-50"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-400 font-medium">€</span>
             </div>
@@ -255,7 +255,7 @@ export default function EncaissementPage() {
               type="button"
               variant="outline"
               onClick={() => handleQuickAmount(orderTotal)}
-              className="w-full h-10 sm:h-11 text-xs sm:text-sm font-semibold border-orange-200 hover:border-orange-500 hover:bg-orange-50 mb-4"
+              className="w-full h-10 sm:h-11 text-xs sm:text-sm font-semibold border-amber-200 hover:border-amber-500 hover:bg-amber-50 mb-4"
             >
               Exact — {formatPrice(orderTotal)} €
             </Button>
@@ -286,7 +286,7 @@ export default function EncaissementPage() {
             onChange={(e) => setObservations(e.target.value)}
             placeholder="Notes optionnelles sur cette vente…"
             rows={2}
-            className="w-full p-3 text-sm border border-zinc-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
+            className="w-full p-3 text-sm border border-zinc-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-colors"
           />
         </div>
 

@@ -24,9 +24,9 @@ export const services = [
       'Dédouanement inclus',
       'Livraison à domicile'
     ],
-    color: 'from-[#010066] to-blue-900',
+    color: 'from-[#0E7A34] to-blue-900',
     bgColor: 'bg-blue-50',
-    textColor: 'text-[#010066]',
+    textColor: 'text-[#0E7A34]',
     stats: { satisfaction: '98%', livraisons: '1500+' },
     subServices: [
       {
@@ -70,9 +70,9 @@ export const services = [
       'Étiquetage professionnel',
       'Suivi personnalisé'
     ],
-    color: 'from-orange-500 to-red-600',
-    bgColor: 'bg-orange-50',
-    textColor: 'text-orange-600',
+    color: 'from-amber-500 to-red-600',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-600',
     stats: { satisfaction: '95%', livraisons: '500+' }
   },
   {
@@ -99,9 +99,9 @@ export const services = [
       'Paperasse administrative',
       'Confirmation SMS'
     ],
-    color: 'from-[#010066] to-blue-900',
+    color: 'from-[#0E7A34] to-blue-900',
     bgColor: 'bg-blue-50',
-    textColor: 'text-[#010066]',
+    textColor: 'text-[#0E7A34]',
     stats: { satisfaction: '99%', livraisons: '800+' }
   }
 ];
@@ -111,25 +111,25 @@ export const whyChooseUs = [
     icon: Shield,
     title: 'Sécurité Garantie',
     desc: 'Assurance tous risques incluse sur chaque envoi',
-    color: 'text-[#010066]'
+    color: 'text-[#0E7A34]'
   },
   {
     icon: Clock,
     title: 'Délais Respectés',
     desc: 'Livraison dans les temps, 98% de ponctualité',
-    color: 'text-orange-500'
+    color: 'text-amber-500'
   },
   {
     icon: Users,
     title: 'Service Familial',
     desc: '8 ans d\'expérience, relation de confiance',
-    color: 'text-[#010066]'
+    color: 'text-[#0E7A34]'
   },
   {
     icon: Globe,
     title: 'Réseau Établi',
     desc: 'Partenaires fiables en France et au Burkina',
-    color: 'text-orange-500'
+    color: 'text-amber-500'
   }
 ];
 
@@ -149,9 +149,9 @@ export const additionalServices = {
   fridges: {
     title: 'Tarifs Frigos',
     icon: Package,
-    color: 'from-[#010066] to-blue-900',
+    color: 'from-[#0E7A34] to-blue-900',
     bgColor: 'bg-blue-50',
-    textColor: 'text-[#010066]',
+    textColor: 'text-[#0E7A34]',
     items: [
       { name: 'Frigo Standard', price: '100€', note: 'à partir de' },
       { name: 'Frigo Grand', price: '200€', note: 'à partir de' },
@@ -161,9 +161,9 @@ export const additionalServices = {
   electronics: {
     title: 'Électroménager',
     icon: Zap,
-    color: 'from-orange-500 to-orange-700',
-    bgColor: 'bg-orange-50',
-    textColor: 'text-orange-700',
+    color: 'from-amber-500 to-amber-700',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
     items: [
       { name: 'Gazinière', price: '120€' },
       { name: 'Vélo', price: '30€', note: 'à partir de' },

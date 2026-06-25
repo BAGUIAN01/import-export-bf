@@ -31,7 +31,7 @@ const CountryBadge = ({ country }) => {
   const conf = {
     France: { label: "France", color: "bg-blue-50 text-blue-700 border-blue-200" },
     "Burkina Faso": { label: "Burkina Faso", color: "bg-red-50 text-red-700 border-red-200" },
-    "Côte d'Ivoire": { label: "Côte d'Ivoire", color: "bg-orange-50 text-orange-700 border-orange-200" },
+    "Côte d'Ivoire": { label: "Côte d'Ivoire", color: "bg-amber-50 text-amber-700 border-amber-200" },
   }[country] || { label: country || "Non défini", color: "bg-gray-50 text-gray-700 border-gray-200" };
 
   return <Badge variant="outline" className={conf.color}>{conf.label}</Badge>;

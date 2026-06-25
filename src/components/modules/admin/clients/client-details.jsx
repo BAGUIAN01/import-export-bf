@@ -241,15 +241,15 @@ export default function ClientDetail({
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-orange-500">
+        <Card className="border-2 border-amber-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Reste à payer</p>
                 <p className="text-2xl font-bold">{currency(remainingAmount)}</p>
               </div>
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <Clock className="h-6 w-6 text-orange-600" />
+              <div className="p-3 bg-amber-50 rounded-lg">
+                <Clock className="h-6 w-6 text-amber-600" />
               </div>
             </div>
           </CardContent>

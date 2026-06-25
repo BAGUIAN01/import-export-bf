@@ -94,7 +94,7 @@ export default function ContactSection() {
       icon: Mail,
       title: "Email",
       details: [
-        { label: "Contact", value: "contact@ieBF.fr", primary: true }
+        { label: "Contact", value: "contact@naange-envoi.fr", primary: true }
       ],
       color: "from-blue-500 to-blue-600",
       description: "Pour vos demandes détaillées"
@@ -105,7 +105,7 @@ export default function ContactSection() {
       details: [
         { label: "Zone", value: "Toute la France", primary: true }
       ],
-      color: "from-orange-500 to-orange-600",
+      color: "from-amber-500 to-amber-600",
       description: "Nous venons chercher vos colis"
     }
   ];
@@ -157,7 +157,7 @@ export default function ContactSection() {
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-80 h-80 bg-blue-50/40 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-orange-50/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-amber-50/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,14 +165,14 @@ export default function ContactSection() {
         {/* Header */}
         <div className={`text-center mb-12 lg:mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 shadow-sm">
-            <MessageCircle className="w-4 h-4 lg:w-5 lg:h-5" style={{ color: '#010066' }} />
-            <span className="font-semibold text-sm lg:text-base" style={{ color: '#010066' }}>Contactez-nous</span>
+            <MessageCircle className="w-4 h-4 lg:w-5 lg:h-5" style={{ color: '#0E7A34' }} />
+            <span className="font-semibold text-sm lg:text-base" style={{ color: '#0E7A34' }}>Contactez-nous</span>
           </div>
           
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 leading-tight" style={{ color: '#010066' }}>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 leading-tight" style={{ color: '#0E7A34' }}>
             Une question ?
             <br />
-            <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
               Nous sommes là pour vous
             </span>
           </h2>
@@ -187,10 +187,10 @@ export default function ContactSection() {
         <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12 lg:mb-16 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           {quickInfo.map((info, index) => (
             <div key={index} className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-[#010066] to-[#010088] rounded-xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-[#0E7A34] to-[#0B5C28] rounded-xl flex items-center justify-center mx-auto mb-3">
                 <info.icon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
               </div>
-              <div className="text-lg lg:text-xl font-black mb-1" style={{ color: '#010066' }}>
+              <div className="text-lg lg:text-xl font-black mb-1" style={{ color: '#0E7A34' }}>
                 {info.value}
               </div>
               <div className="text-sm font-semibold text-gray-800 mb-1">
@@ -208,7 +208,7 @@ export default function ContactSection() {
           
           {/* Left - Contact Methods */}
           <div className={`transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-            <h3 className="text-2xl lg:text-3xl font-black mb-8" style={{ color: '#010066' }}>
+            <h3 className="text-2xl lg:text-3xl font-black mb-8" style={{ color: '#0E7A34' }}>
               Comment nous joindre
             </h3>
             
@@ -221,7 +221,7 @@ export default function ContactSection() {
                     </div>
                     
                     <div className="flex-1">
-                      <h4 className="text-xl font-bold mb-2" style={{ color: '#010066' }}>
+                      <h4 className="text-xl font-bold mb-2" style={{ color: '#0E7A34' }}>
                         {method.title}
                       </h4>
                       
@@ -229,7 +229,7 @@ export default function ContactSection() {
                         {method.details.map((detail, detailIndex) => (
                           <div key={detailIndex} className="flex items-center justify-between">
                             <span className="text-sm text-gray-600">{detail.label}:</span>
-                            <span className={`font-semibold ${detail.primary ? 'text-lg' : 'text-base'}`} style={{ color: detail.primary ? '#010066' : '#666' }}>
+                            <span className={`font-semibold ${detail.primary ? 'text-lg' : 'text-base'}`} style={{ color: detail.primary ? '#0E7A34' : '#666' }}>
                               {detail.value}
                             </span>
                           </div>
@@ -249,7 +249,7 @@ export default function ContactSection() {
           {/* Right - Contact Form */}
           <div className={`transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
             <div className="bg-white rounded-3xl p-6 lg:p-8 shadow-2xl border border-gray-100">
-              <h3 className="text-2xl lg:text-3xl font-black mb-2" style={{ color: '#010066' }}>
+              <h3 className="text-2xl lg:text-3xl font-black mb-2" style={{ color: '#0E7A34' }}>
                 Envoyez-nous un message
               </h3>
               <p className="text-gray-600 mb-6 lg:mb-8">
@@ -271,7 +271,7 @@ export default function ContactSection() {
                         value={formData.name}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
                         placeholder="Votre nom et prénom"
                       />
                     </div>
@@ -290,7 +290,7 @@ export default function ContactSection() {
                         value={formData.phone}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
                         placeholder="+33 6 12 34 56 78"
                       />
                     </div>
@@ -308,7 +308,7 @@ export default function ContactSection() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
                         placeholder="votre@email.com"
                       />
                     </div>
@@ -326,7 +326,7 @@ export default function ContactSection() {
                         value={formData.service}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors appearance-none bg-white"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors appearance-none bg-white"
                       >
                         <option value="">Sélectionnez un service</option>
                         {services.map((service) => (
@@ -349,7 +349,7 @@ export default function ContactSection() {
                       onChange={handleInputChange}
                       required
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors resize-none"
                       placeholder="Décrivez votre demande en détail..."
                     />
                   </div>
@@ -357,7 +357,7 @@ export default function ContactSection() {
                   {/* Submit */}
                   <button
                     onClick={handleSubmit}
-                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-3"
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-3"
                   >
                     <Send className="w-5 h-5" />
                     <span>Envoyer le message</span>
@@ -383,11 +383,11 @@ export default function ContactSection() {
 
         {/* Bottom CTA */}
         <div className={`text-center mt-12 lg:mt-16 transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="bg-gradient-to-r from-[#010066] to-[#010088] rounded-3xl p-8 lg:p-10 text-white shadow-2xl">
+          <div className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] rounded-3xl p-8 lg:p-10 text-white shadow-2xl">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Besoin d'une réponse immédiate ?
             </h3>
-            <p className="text-blue-100 mb-6 lg:mb-8 text-lg">
+            <p className="text-green-50 mb-6 lg:mb-8 text-lg">
               Appelez-nous directement, nous sommes disponibles 7j/7
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -15,7 +15,7 @@ const StatusBadge = ({ status }) => {
   const statusConfig = {
     PREPARATION: { label: "Préparation", color: "bg-blue-50 text-blue-700 border-blue-200" },
     LOADED: { label: "Chargé", color: "bg-purple-50 text-purple-700 border-purple-200" },
-    IN_TRANSIT: { label: "En transit", color: "bg-orange-50 text-orange-700 border-orange-200" },
+    IN_TRANSIT: { label: "En transit", color: "bg-amber-50 text-amber-700 border-amber-200" },
     CUSTOMS: { label: "Douanes", color: "bg-red-50 text-red-700 border-red-200" },
     DELIVERED: { label: "Livré", color: "bg-green-50 text-green-700 border-green-200" },
     CANCELLED: { label: "Annulé", color: "bg-gray-50 text-gray-700 border-gray-200" },

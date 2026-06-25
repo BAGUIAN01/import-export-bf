@@ -1,5 +1,5 @@
 /* ============================================================
-   Service Worker — Import Export BF
+   Service Worker — Naange Envoi
    Version : 3
    Stratégies : Cache First (statique), Network First (pages),
                 Network Only (API), Background Sync, Push
@@ -7,9 +7,9 @@
 
 const CACHE_VERSION = 'v3';
 const CACHES = {
-  static:  `iebf-static-${CACHE_VERSION}`,
-  dynamic: `iebf-dynamic-${CACHE_VERSION}`,
-  images:  `iebf-images-${CACHE_VERSION}`,
+  static:  `naange-envoi-static-${CACHE_VERSION}`,
+  dynamic: `naange-envoi-dynamic-${CACHE_VERSION}`,
+  images:  `naange-envoi-images-${CACHE_VERSION}`,
 };
 
 const MAX_DYNAMIC = 40;
@@ -172,7 +172,7 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data.json();
   } catch {
-    data = { title: 'Import Export BF', body: event.data.text() };
+    data = { title: 'Naange Envoi', body: event.data.text() };
   }
 
   const options = {
@@ -181,7 +181,7 @@ self.addEventListener('push', (event) => {
     badge:              '/logo_short-96x96.png',
     image:              data.image   || undefined,
     vibrate:            [200, 100, 200, 100, 200],
-    tag:                data.tag     || 'iebf-notif',
+    tag:                data.tag     || 'naange-envoi-notif',
     renotify:           data.renotify       || false,
     requireInteraction: data.requireInteraction || false,
     silent:             data.silent  || false,
@@ -193,7 +193,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Import Export BF', options)
+    self.registration.showNotification(data.title || 'Naange Envoi', options)
   );
 });
 
@@ -312,7 +312,7 @@ self.addEventListener('message', (event) => {
 /* ── IndexedDB helpers ─────────────────────────────────────── */
 function openIDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('iebf-sw-db', 1);
+    const req = indexedDB.open('naange-envoi-sw-db', 1);
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('pending-requests')) {

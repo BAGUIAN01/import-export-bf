@@ -191,13 +191,13 @@ export default function SignUpMain() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-8 text-center">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center shadow-lg">
               <CheckCircle className="w-12 h-12 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenue !</h2>
             <p className="text-gray-600 mb-6">Votre compte a été créé avec succès</p>
             <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
               <span>Redirection vers votre tableau de bord...</span>
             </div>
           </div>
@@ -211,11 +211,11 @@ export default function SignUpMain() {
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
             <Package className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            Rejoignez Import Export BF
+            Rejoignez Naange Envoi
           </h1>
           <p className="text-gray-600 text-lg">
             Créez votre compte en quelques minutes
@@ -232,9 +232,9 @@ export default function SignUpMain() {
             </div>
           )}
           {success && (
-            <div className="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-              <p className="text-orange-700 text-sm leading-relaxed">{success}</p>
+            <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <p className="text-amber-700 text-sm leading-relaxed">{success}</p>
             </div>
           )}
 
@@ -251,7 +251,7 @@ export default function SignUpMain() {
                     <input
                       type="text"
                       autoComplete="given-name"
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
                       placeholder="Votre prénom"
                       value={firstName}
                       onChange={(e) => {
@@ -270,7 +270,7 @@ export default function SignUpMain() {
                     <input
                       type="text"
                       autoComplete="family-name"
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
                       placeholder="Votre nom"
                       value={lastName}
                       onChange={(e) => {
@@ -288,7 +288,7 @@ export default function SignUpMain() {
                 <label className="block text-sm font-medium text-gray-700">
                   Numéro de téléphone <span className="text-red-500">*</span>
                 </label>
-                <div className="flex rounded-xl shadow-sm overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500 transition-all duration-200">
+                <div className="flex rounded-xl shadow-sm overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-200">
                   <div className="relative">
                     <select
                       className="appearance-none h-full pl-4 pr-8 py-3 bg-gray-50 border-0 focus:ring-0 text-sm font-medium text-gray-700 cursor-pointer"
@@ -328,7 +328,7 @@ export default function SignUpMain() {
                       </span>
                     </span>
                     {phoneValid && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         Valide
                       </span>
@@ -346,7 +346,7 @@ export default function SignUpMain() {
                   <input
                     type="email"
                     autoComplete="email"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
                     placeholder="votre.email@exemple.com"
                     value={email}
                     onChange={(e) => {
@@ -368,7 +368,7 @@ export default function SignUpMain() {
                     <input
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
                       placeholder="Minimum 6 caractères"
                       value={password}
                       onChange={(e) => {
@@ -395,7 +395,7 @@ export default function SignUpMain() {
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+                      className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
                       placeholder="Répétez le mot de passe"
                       value={confirmPassword}
                       onChange={(e) => {
@@ -425,15 +425,15 @@ export default function SignUpMain() {
                     setAcceptTerms(e.target.checked);
                     setError("");
                   }}
-                  className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                  className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
                 />
                 <label htmlFor="acceptTerms" className="text-sm text-gray-700 leading-relaxed">
                   J'accepte les{" "}
-                  <a href="/terms" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2">
+                  <a href="/terms" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2">
                     conditions d'utilisation
                   </a>{" "}
                   et la{" "}
-                  <a href="/privacy" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2">
+                  <a href="/privacy" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2">
                     politique de confidentialité
                   </a>
                 </label>
@@ -456,7 +456,7 @@ export default function SignUpMain() {
               <button
                 onClick={handleRegister}
                 disabled={loading}
-                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <>
@@ -475,7 +475,7 @@ export default function SignUpMain() {
               <div className="text-center pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600">
                   Déjà un compte ?{" "}
-                  <a href="/auth/signin" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors">
+                  <a href="/auth/signin" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors">
                     Se connecter
                   </a>
                 </p>
@@ -488,7 +488,7 @@ export default function SignUpMain() {
         <div className="text-center mt-8">
           <p className="text-sm text-gray-600">
             Besoin d'aide ?{" "}
-            <a href="/contact" className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors">
+            <a href="/contact" className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors">
               Contactez notre support
             </a>
           </p>

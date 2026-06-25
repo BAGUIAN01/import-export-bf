@@ -88,7 +88,7 @@ export async function POST(request) {
     })
 
     // Envoyer le SMS
-    const message = `Import Export BF: Votre code de vérification pour activer la 2FA est ${verificationCode}. Valide 10 min. Ne le partagez jamais.`
+    const message = `Naange Envoi: Votre code de vérification pour activer la 2FA est ${verificationCode}. Valide 10 min. Ne le partagez jamais.`
     
     try {
       await sendSMS(normalizedPhone, message)

@@ -532,7 +532,7 @@ export const PACKAGE_CATEGORIES = [
   {
     key: "mobilier",
     label: "Mobilier",
-    color: "bg-orange-50 border-orange-200 text-orange-800"
+    color: "bg-amber-50 border-amber-200 text-amber-800"
   },
   {
     key: "vins",
@@ -578,7 +578,7 @@ export const getPackageTypesByCategory = () => {
 export const PRIORITIES = [
   { value: "LOW", label: "Faible", className: "bg-gray-100 text-gray-800 border-gray-200" },
   { value: "NORMAL", label: "Normal", className: "bg-blue-100 text-blue-800 border-blue-200" },
-  { value: "HIGH", label: "Élevé", className: "bg-orange-100 text-orange-800 border-orange-200" },
+  { value: "HIGH", label: "Élevé", className: "bg-amber-100 text-amber-800 border-amber-200" },
   { value: "URGENT", label: "Urgent", className: "bg-red-100 text-red-800 border-red-200" },
 ];
 

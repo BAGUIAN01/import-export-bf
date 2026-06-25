@@ -241,8 +241,8 @@ export default function Mediatheque() {
         
         {/* Section Header */}
         <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-6 text-[#010066]">
-            Notre <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Médiathèque</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-6 text-[#0E7A34]">
+            Notre <span className="bg-gradient-to-r from-amber-500 to-red-500 bg-clip-text text-transparent">Médiathèque</span>
           </h2>
           <p className="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Découvrez nos services en images et vidéos : de la préparation à la livraison, 
@@ -383,7 +383,7 @@ export default function Mediatheque() {
               }}
               className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group z-10"
             >
-              <ChevronLeft className="w-6 h-6 text-gray-800 group-hover:text-orange-500" />
+              <ChevronLeft className="w-6 h-6 text-gray-800 group-hover:text-amber-500" />
             </button>
             
             <button
@@ -393,7 +393,7 @@ export default function Mediatheque() {
               }}
               className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group z-10"
             >
-              <ChevronRight className="w-6 h-6 text-gray-800 group-hover:text-orange-500" />
+              <ChevronRight className="w-6 h-6 text-gray-800 group-hover:text-amber-500" />
             </button>
 
             {/* Autoplay Control */}
@@ -417,14 +417,14 @@ export default function Mediatheque() {
                 onClick={() => goToSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 relative ${
                   index === currentIndex
-                    ? 'bg-orange-500 scale-125'
+                    ? 'bg-amber-500 scale-125'
                     : 'bg-gray-300 hover:bg-gray-400'
                 }`}
               >
                 {/* Media type indicator on dots */}
                 {media.type === 'video' && index === currentIndex && (
                   <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
-                    <Video className="w-3 h-3 text-orange-500" />
+                    <Video className="w-3 h-3 text-amber-500" />
                   </div>
                 )}
               </button>
@@ -439,7 +439,7 @@ export default function Mediatheque() {
                 onClick={() => goToSlide(index)}
                 className={`aspect-video rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 relative ${
                   index === currentIndex
-                    ? 'ring-3 ring-orange-500 ring-offset-2'
+                    ? 'ring-3 ring-amber-500 ring-offset-2'
                     : 'ring-1 ring-gray-200 hover:ring-gray-300'
                 }`}
               >
@@ -514,9 +514,9 @@ export default function Mediatheque() {
                 <div className="p-6 bg-white">
                   <div className="flex items-center gap-3 mb-2">
                     {medias[lightboxIndex].type === 'video' ? (
-                      <Video className="w-5 h-5 text-orange-500" />
+                      <Video className="w-5 h-5 text-amber-500" />
                     ) : (
-                      <Image className="w-5 h-5 text-orange-500" />
+                      <Image className="w-5 h-5 text-amber-500" />
                     )}
                     <h3 className="text-xl font-bold text-gray-900">
                       {medias[lightboxIndex].caption}

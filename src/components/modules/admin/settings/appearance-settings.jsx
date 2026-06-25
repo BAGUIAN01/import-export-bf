@@ -47,7 +47,7 @@ export function AppearanceSettings() {
     { value: 'green', label: 'Vert', color: 'bg-green-500' },
     { value: 'purple', label: 'Violet', color: 'bg-purple-500' },
     { value: 'red', label: 'Rouge', color: 'bg-red-500' },
-    { value: 'orange', label: 'Orange', color: 'bg-orange-500' },
+    { value: 'orange', label: 'Orange', color: 'bg-amber-500' },
     { value: 'pink', label: 'Rose', color: 'bg-pink-500' }
   ]
 

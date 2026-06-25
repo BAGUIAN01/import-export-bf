@@ -309,7 +309,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
 
   const handleShareLink = async () => {
     try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://import-export-bf.com';
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://naange-envoi.com';
       const link = `${origin}/bordereau/${shipmentInfo?.shipmentNumber || formData.factureClient}`;
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(link);
@@ -336,7 +336,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
       case 'PAID':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'PARTIAL':
-        return <Clock className="h-4 w-4 text-orange-600" />;
+        return <Clock className="h-4 w-4 text-amber-600" />;
       default:
         return <XCircle className="h-4 w-4 text-red-600" />;
     }
@@ -358,7 +358,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
       <DialogContent className="flex flex-col w-[98vw] xs:w-[95vw] sm:w-full sm:max-w-[1100px] max-h-[95vh] xs:max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="px-3 xs:px-4 sm:px-6 pt-3 xs:pt-4 sm:pt-6 pb-2 xs:pb-3 sm:pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-base xs:text-lg sm:text-xl">
-            <FileText className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-[#010066]" />
+            <FileText className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-[#0E7A34]" />
             <span className="hidden xs:inline">Bordereau d'expédition professionnel</span>
             <span className="xs:hidden">Bordereau</span>
           </DialogTitle>
@@ -370,7 +370,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
           <Card className="mb-3 xs:mb-4 sm:mb-6" data-html2canvas-ignore>
             <CardContent className="p-2 xs:p-3 sm:p-4 space-y-2 xs:space-y-3 sm:space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 xs:gap-3 sm:gap-4">
-                <ContainerIcon className="h-4 w-4 xs:h-5 xs:w-5 text-[#010066] flex-shrink-0" />
+                <ContainerIcon className="h-4 w-4 xs:h-5 xs:w-5 text-[#0E7A34] flex-shrink-0" />
                 <div className="flex-1 w-full">
                   <label className="text-xs xs:text-sm font-medium mb-1 xs:mb-2 block">Conteneur :</label>
                   <Select value={selectedContainer ?? ''} onValueChange={setSelectedContainer}>
@@ -396,32 +396,32 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
               </div>
 
               {selectedContainerData && (
-                <div className="p-2 xs:p-3 sm:p-4 bg-gradient-to-r from-[#010066]/5 to-[#010066]/10 rounded-xl border border-[#010066]/20">
+                <div className="p-2 xs:p-3 sm:p-4 bg-gradient-to-r from-[#0E7A34]/5 to-[#0E7A34]/10 rounded-xl border border-[#0E7A34]/20">
                   {/* Version mobile - cartes empilées */}
                   <div className="xs:hidden space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-medium text-gray-600">Conteneur</span>
-                      <span className="text-xs font-bold text-[#010066] truncate">{selectedContainerData.containerNumber}</span>
+                      <span className="text-xs font-bold text-[#0E7A34] truncate">{selectedContainerData.containerNumber}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-medium text-gray-600">Destination</span>
-                      <span className="text-xs font-bold text-[#010066] truncate">{selectedContainerData.destination}</span>
+                      <span className="text-xs font-bold text-[#0E7A34] truncate">{selectedContainerData.destination}</span>
                     </div>
                     {selectedContainerData.departureDate && (
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-medium text-gray-600">Départ</span>
-                        <span className="text-xs font-bold text-[#010066]">
+                        <span className="text-xs font-bold text-[#0E7A34]">
                           {new Date(selectedContainerData.departureDate).toLocaleDateString('fr-FR')}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-medium text-gray-600">Colis</span>
-                      <span className="text-xs font-bold text-[#010066]">{packages.length}</span>
+                      <span className="text-xs font-bold text-[#0E7A34]">{packages.length}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-medium text-gray-600">Poids/Volume</span>
-                      <span className="text-xs font-bold text-[#010066]">
+                      <span className="text-xs font-bold text-[#0E7A34]">
                         {(totalWeight || 0) > 0 ? `${totalWeight.toFixed(1)}kg` : '-'} • {(totalVolume || 0) > 0 ? `${totalVolume.toFixed(2)}m³` : '-'}
                       </span>
                     </div>
@@ -431,27 +431,27 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                   <div className="hidden xs:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 xs:gap-3 sm:gap-4 text-xs xs:text-sm">
                     <div>
                       <span className="font-medium text-gray-600">Conteneur</span>
-                      <p className="font-bold text-[#010066] truncate">{selectedContainerData.containerNumber}</p>
+                      <p className="font-bold text-[#0E7A34] truncate">{selectedContainerData.containerNumber}</p>
                     </div>
                     <div>
                       <span className="font-medium text-gray-600">Destination</span>
-                      <p className="font-bold text-[#010066] truncate">{selectedContainerData.destination}</p>
+                      <p className="font-bold text-[#0E7A34] truncate">{selectedContainerData.destination}</p>
                     </div>
                     {selectedContainerData.departureDate && (
                       <div>
                         <span className="font-medium text-gray-600">Départ</span>
-                        <p className="font-bold text-[#010066]">
+                        <p className="font-bold text-[#0E7A34]">
                           {new Date(selectedContainerData.departureDate).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                     )}
                     <div>
                       <span className="font-medium text-gray-600">Colis</span>
-                      <p className="font-bold text-[#010066]">{packages.length}</p>
+                      <p className="font-bold text-[#0E7A34]">{packages.length}</p>
                     </div>
                     <div>
                       <span className="font-medium text-gray-600">Poids/Volume</span>
-                      <p className="font-bold text-[#010066] text-xs sm:text-sm">
+                      <p className="font-bold text-[#0E7A34] text-xs sm:text-sm">
                         {(totalWeight || 0) > 0 ? `${totalWeight.toFixed(1)}kg` : '-'} • {(totalVolume || 0) > 0 ? `${totalVolume.toFixed(2)}m³` : '-'}
                       </p>
                     </div>
@@ -475,21 +475,21 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
             style={{ fontFamily: 'Arial, sans-serif', width: '210mm', margin: '0 auto' }}
           >
             {/* En-tête exact comme l'image */}
-            <div className="bg-[#010066] text-white px-3 xs:px-4 sm:px-6 py-2 xs:py-3 sm:py-4">
+            <div className="bg-[#0E7A34] text-white px-3 xs:px-4 sm:px-6 py-2 xs:py-3 sm:py-4">
               <div className="flex flex-col gap-3 xs:gap-4">
                 {/* Logo et nom de l'entreprise */}
                 <div className="flex items-center gap-2 xs:gap-3">
                   <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center p-1 xs:p-2">
                     <img
                       src="/logo_short.png"
-                      alt="Logo IMPORT EXPORT BF"
+                      alt="Logo NAANGE ENVOI"
                       className="w-full h-full object-contain"
                       style={{ maxWidth: '100%', maxHeight: '100%' }}
                     />
                   </div>
                   <div>
-                    <div className="text-xs text-gray-300 mb-1">IMPORT-EXPORT BF</div>
-                    <h1 className="text-sm xs:text-lg sm:text-2xl font-bold">IMPORT EXPORT BF</h1>
+                    <div className="text-xs text-gray-300 mb-1">NAANGE ENVOI</div>
+                    <h1 className="text-sm xs:text-lg sm:text-2xl font-bold">NAANGE ENVOI</h1>
                   </div>
                 </div>
                 
@@ -498,7 +498,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                   <div className="text-xs text-gray-300 space-y-0.5 xs:space-y-1">
                     <p className="hidden xs:block">+33 6 70 69 98 23</p>
                     <p className="hidden xs:block">+226 76 60 19 81</p>
-                    <p className="hidden xs:block">contact@ieBF.fr</p>
+                    <p className="hidden xs:block">contact@naange-envoi.fr</p>
                     <p className="xs:hidden">+33 6 70 69 98 23 • +226 76 60 19 81</p>
                   </div>
                   <div className="flex items-center gap-2 xs:gap-3 w-full xs:w-auto justify-between xs:justify-end">
@@ -511,7 +511,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                     </div>
                     <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 bg-white rounded flex items-center justify-center">
                       <QRCode
-                        value={`${typeof window !== 'undefined' ? window.location.origin : 'https://import-export-bf.com'}/tracking?q=${shipmentInfo?.shipmentNumber || ''}`}
+                        value={`${typeof window !== 'undefined' ? window.location.origin : 'https://naange-envoi.com'}/tracking?q=${shipmentInfo?.shipmentNumber || ''}`}
                         size={40}
                         level="M"
                       />
@@ -653,7 +653,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                     {/* Version desktop - tableau */}
                     <div className="hidden sm:block">
                       {/* En-tête tableau */}
-                      <div className="bg-[#010066] text-white text-xs font-bold">
+                      <div className="bg-[#0E7A34] text-white text-xs font-bold">
                         <div className="grid grid-cols-4 gap-1 sm:gap-2 px-2 sm:px-3 py-2">
                           <div>N° Colis</div>
                           <div>Description</div>
@@ -707,10 +707,10 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                       <span className="text-lg font-bold text-green-800">{formData.acompte.toFixed(2)}€</span>
                     </div>
                   </div>
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-orange-700">Reste à payer</span>
-                      <span className="text-lg font-bold text-orange-800">{formData.reste.toFixed(2)}€</span>
+                      <span className="text-sm font-medium text-amber-700">Reste à payer</span>
+                      <span className="text-lg font-bold text-amber-800">{formData.reste.toFixed(2)}€</span>
                     </div>
                   </div>
                 </div>
@@ -747,7 +747,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between pt-2 xs:pt-3 sm:pt-4 border-t border-gray-300 gap-3 sm:gap-0">
                 <div className="text-xs text-gray-500 space-y-1">
                   <p className="break-words">Document généré le {formData.dateEdition} par {client?.firstName || ''} {client?.lastName || ''}</p>
-                  <p className="break-words">IMPORT EXPORT BF - Service d'envoi de colis France-Burkina Faso</p>
+                  <p className="break-words">NAANGE ENVOI - Service d'envoi de colis France-Burkina Faso</p>
                 </div>
                 <div className="text-center w-full sm:w-auto">
                   <p className="text-xs text-gray-600 mb-2">Signature</p>
@@ -768,7 +768,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                 onClick={handleDownload} 
                 variant="default" 
                 disabled={!isValid || isGenerating} 
-                className="w-full min-h-[44px] bg-[#010066] hover:bg-[#010088]"
+                className="w-full min-h-[44px] bg-[#0E7A34] hover:bg-[#0B5C28]"
               >
                 <Download className="h-4 w-4 mr-2" />
                 {isGenerating ? 'Génération...' : 'Télécharger PDF'}
@@ -812,7 +812,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimer
               </Button>
-              <Button onClick={handleDownload} variant="default" disabled={!isValid || isGenerating} className="bg-[#010066] hover:bg-[#010088]">
+              <Button onClick={handleDownload} variant="default" disabled={!isValid || isGenerating} className="bg-[#0E7A34] hover:bg-[#0B5C28]">
                 <Download className="h-4 w-4 mr-2" />
                 {isGenerating ? 'Génération...' : 'Télécharger PDF'}
               </Button>

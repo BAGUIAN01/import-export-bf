@@ -21,14 +21,14 @@ const poppins = Poppins({
 
 export const metadata = {
   title: {
-    default: 'Import Export BF - Transport France Burkina Faso | Envoi de Colis',
-    template: '%s | Import Export BF'
+    default: 'Naange Envoi - Transport France Burkina Faso | Envoi de Colis',
+    template: '%s | Naange Envoi'
   },
   description: 'Entreprise d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Colis standard 100€, Transport barrique 100€, Ramassage domicile disponible.',
   keywords: [
     'envoi colis Burkina Faso',
     'transport France Burkina',
-    'Import Export BF',
+    'Naange Envoi',
     'colis Ouagadougou',
     'colis Bobo-Dioulasso',
     'ramassage domicile',
@@ -36,54 +36,54 @@ export const metadata = {
     'livraison Burkina Faso',
     'diaspora burkinabè'
   ],
-  authors: [{ name: 'Import Export BF' }],
-  creator: 'Import Export BF',
-  publisher: 'Import Export BF',
+  authors: [{ name: 'Naange Envoi' }],
+  creator: 'Naange Envoi',
+  publisher: 'Naange Envoi',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://import-export-bf.vercel.app'),
+  metadataBase: new URL('https://naange-envoi.fr'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://import-export-bf.vercel.app',
-    title: 'Import Export BF - Transport France Burkina Faso',
+    url: 'https://naange-envoi.fr',
+    title: 'Naange Envoi - Transport France Burkina Faso',
     description: 'Service d\'envoi de colis de la France vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
-    siteName: 'Import Export BF',
+    siteName: 'Naange Envoi',
     images: [
       {
-        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', 
+        url: 'https://naange-envoi.fr/logo-1200x630.jpg', 
         width: 1200,
         height: 630,
-        alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
+        alt: 'Naange Envoi - Service d\'envoi de colis France Burkina Faso',
         type: 'image/jpeg',
       },
       {
-        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg', 
+        url: 'https://naange-envoi.fr/logo-1200x630.jpg', 
         width: 1200,
         height: 630,
-        alt: 'Import Export BF - Transport et logistique',
+        alt: 'Naange Envoi - Transport et logistique',
         type: 'image/jpeg',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Import Export BF - Transport France Burkina Faso',
+    title: 'Naange Envoi - Transport France Burkina Faso',
     description: 'Service d\'envoi de colis vers le Burkina Faso depuis 8 ans. Tarifs transparents dès 100€.',
     images: [
       {
-        url: 'https://import-export-bf.vercel.app/logo-1200x630.jpg',
-        alt: 'Import Export BF - Service d\'envoi de colis France Burkina Faso',
+        url: 'https://naange-envoi.fr/logo-1200x630.jpg',
+        alt: 'Naange Envoi - Service d\'envoi de colis France Burkina Faso',
       }
     ],
-    creator: '@ImportExportBF',
-    site: '@ImportExportBF',
+    creator: '@NaangeEnvoi',
+    site: '@NaangeEnvoi',
   },
   robots: {
     index: true,
@@ -112,7 +112,7 @@ export const metadata = {
       {
         rel: 'mask-icon',
         url: '/safari-pinned-tab.svg',
-        color: '#010066',
+        color: '#0E7A34',
       },
     ],
   },
@@ -122,21 +122,21 @@ export const metadata = {
     'application/ld+json': JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'Import Export BF',
+      name: 'Naange Envoi',
       description: 'Service d\'envoi de colis de la France vers le Burkina Faso',
-      url: 'https://import-export-bf.vercel.app',
-      logo: 'https://import-export-bf.vercel.app/logo-1200x630.jpg',
-      image: 'https://import-export-bf.vercel.app/og-image.jpg',
+      url: 'https://naange-envoi.fr',
+      logo: 'https://naange-envoi.fr/logo-1200x630.jpg',
+      image: 'https://naange-envoi.fr/og-image.jpg',
       telephone: ['+33670699823', '+22676601981'],
-      email: 'contact@ieBF.fr',
+      email: 'contact@naange-envoi.fr',
       address: {
         '@type': 'PostalAddress',
         addressCountry: 'FR',
         addressLocality: 'France',
       },
       sameAs: [
-        'https://facebook.com/ieBF',
-        'https://instagram.com/ieBF',
+        'https://facebook.com/naange-envoi',
+        'https://instagram.com/naange-envoi',
       ],
       serviceArea: ['France', 'Burkina Faso'],
       hasOfferCatalog: {
@@ -174,8 +174,8 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="96x96" href="/logo_short-96x96.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/logo_short.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#010066" />
-        <meta name="msapplication-TileColor" content="#010066" />
+        <meta name="theme-color" content="#0E7A34" />
+        <meta name="msapplication-TileColor" content="#0E7A34" />
         <meta name="msapplication-TileImage" content="/logo_short-144x144.png" />
       </head>
       <body className={`${inter.className} font-sans min-h-screen bg-background antialiased`}>

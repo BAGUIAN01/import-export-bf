@@ -79,7 +79,7 @@ export const authOptions = {
 
             const parsed = parsePhoneNumberFromString(normalizedPhone)
             const countryName = getCountryNameFromPhone(parsed?.country)
-            const message = `Import Export BF: Votre code de connexion est ${code}. Valide 10 min. Ne le partagez jamais.`
+            const message = `Naange Envoi: Votre code de connexion est ${code}. Valide 10 min. Ne le partagez jamais.`
 
             await sendSMS(normalizedPhone, message)
 

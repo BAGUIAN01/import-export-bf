@@ -64,7 +64,7 @@ export default function Testimonials() {
         "J'envoie des médicaments et des produits pour mon commerce. Tout arrive en sécurité et mes clients sont contents des délais. Relation de confiance établie depuis des années.",
       type: "Usage commercial",
       avatar: "SC",
-      color: "from-orange-500 to-orange-600",
+      color: "from-amber-500 to-amber-600",
     },
     {
       id: 5,
@@ -155,7 +155,7 @@ export default function Testimonials() {
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-80 h-80 bg-orange-50/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-20 left-20 w-80 h-80 bg-amber-50/30 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-50/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
@@ -166,20 +166,20 @@ export default function Testimonials() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          <div className="inline-flex items-center gap-2 bg-orange-50 backdrop-blur-sm border border-orange-200 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 shadow-sm">
-            <Heart className="w-4 h-4 lg:w-5 lg:h-5 text-orange-600" />
-            <span className="font-semibold text-sm lg:text-base text-orange-800">
+          <div className="inline-flex items-center gap-2 bg-amber-50 backdrop-blur-sm border border-amber-200 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 shadow-sm">
+            <Heart className="w-4 h-4 lg:w-5 lg:h-5 text-amber-600" />
+            <span className="font-semibold text-sm lg:text-base text-amber-800">
               Témoignages Clients
             </span>
           </div>
 
           <h2
             className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 leading-tight"
-            style={{ color: "#010066" }}
+            style={{ color: "#0E7A34" }}
           >
             Ils nous font
             <br />
-            <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
               confiance depuis des années
             </span>
           </h2>
@@ -202,21 +202,21 @@ export default function Testimonials() {
               onClick={prevTestimonial}
               className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all duration-300 z-10"
             >
-              <ChevronLeft className="w-6 h-6" style={{ color: "#010066" }} />
+              <ChevronLeft className="w-6 h-6" style={{ color: "#0E7A34" }} />
             </button>
 
             <button
               onClick={nextTestimonial}
               className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all duration-300 z-10"
             >
-              <ChevronRight className="w-6 h-6" style={{ color: "#010066" }} />
+              <ChevronRight className="w-6 h-6" style={{ color: "#0E7A34" }} />
             </button>
 
             {/* Testimonial Card */}
             <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-2xl border border-gray-100 relative overflow-hidden">
               {/* Quote Icon */}
               <div className="absolute top-8 right-8 opacity-10">
-                <Quote className="w-20 h-20" style={{ color: "#010066" }} />
+                <Quote className="w-20 h-20" style={{ color: "#0E7A34" }} />
               </div>
 
               {/* Client Info */}
@@ -231,7 +231,7 @@ export default function Testimonials() {
                   <div className="flex items-center gap-4 mb-2">
                     <h3
                       className="text-xl lg:text-2xl font-bold"
-                      style={{ color: "#010066" }}
+                      style={{ color: "#0E7A34" }}
                     >
                       {current.name}
                     </h3>
@@ -281,7 +281,7 @@ export default function Testimonials() {
               onClick={() => goToTestimonial(index)}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index === currentTestimonial
-                  ? "bg-orange-500 w-8"
+                  ? "bg-amber-500 w-8"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
             />
@@ -304,12 +304,12 @@ export default function Testimonials() {
               key={index}
               className="text-center bg-gray-50 rounded-2xl p-6 hover:bg-gray-100 transition-colors duration-300"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-[#010066] to-[#010088] rounded-xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#0E7A34] to-[#0B5C28] rounded-xl flex items-center justify-center mx-auto mb-3">
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
               <div
                 className="text-2xl lg:text-3xl font-black mb-1"
-                style={{ color: "#010066" }}
+                style={{ color: "#0E7A34" }}
               >
                 {stat.number}
               </div>
@@ -326,16 +326,16 @@ export default function Testimonials() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
+          <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Rejoignez nos clients satisfaits
             </h3>
-            <p className="text-orange-100 mb-6 lg:mb-8 text-lg">
+            <p className="text-amber-100 mb-6 lg:mb-8 text-lg">
               Commencez dès aujourd'hui et découvrez pourquoi ils nous
               recommandent
             </p>
             <Link href={"/#contact"}>
-              <button className="bg-white text-orange-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
+              <button className="bg-white text-amber-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg">
                 Envoyer mon premier colis
               </button>
             </Link>

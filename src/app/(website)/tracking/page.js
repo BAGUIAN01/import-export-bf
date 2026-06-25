@@ -191,8 +191,8 @@ export default function TrackPackagePage() {
     const statusLower = status?.toLowerCase();
     const colors = {
       'delivered': 'text-green-600 bg-green-100',
-      'in_transit': 'text-blue-600 bg-blue-100',
-      'customs': 'text-orange-600 bg-orange-100',
+      'in_transit': 'text-blue-600 bg-green-100',
+      'customs': 'text-amber-600 bg-amber-100',
       'loaded': 'text-purple-600 bg-purple-100',
       'preparation': 'text-yellow-600 bg-yellow-100',
       'registered': 'text-gray-600 bg-gray-100',
@@ -218,26 +218,26 @@ export default function TrackPackagePage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       
       {/* Hero Section */}
-      <section className="relative py-16 lg:py-24 bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] overflow-hidden">
+      <section className="relative py-16 lg:py-24 bg-gradient-to-br from-[#0E7A34] via-blue-900 to-[#0E7A34] overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-20 right-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#010066]/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-20 right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#0E7A34]/20 rounded-full blur-3xl"></div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className={`text-center mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-2 mb-6">
-              <Package className="w-4 h-4 text-orange-400" />
+              <Package className="w-4 h-4 text-amber-400" />
               <span className="text-sm font-semibold text-white/80">Suivi de Colis</span>
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-green-200">
                 Suivez votre colis
               </span>
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-red-500">
                 en temps réel
               </span>
             </h1>
@@ -257,14 +257,14 @@ export default function TrackPackagePage() {
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      className="w-full px-6 py-4 bg-white/90 border-0 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 text-lg font-medium"
+                      className="w-full px-6 py-4 bg-white/90 border-0 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-lg font-medium"
                     />
                     <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   </div>
                   <button
                     onClick={handleSearch}
                     disabled={isLoading || !trackingNumber.trim()}
-                    className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
+                    className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
                   >
                     {isLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -299,11 +299,11 @@ export default function TrackPackagePage() {
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button 
                       onClick={() => {setSearchResults(null); setTrackingNumber(''); setError(null);}}
-                      className="bg-gradient-to-r from-[#010066] to-blue-900 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105"
+                      className="bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105"
                     >
                       Nouvelle recherche
                     </button>
-                    <a href="tel:+33670699823" className="border-2 border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600 font-bold px-6 py-3 rounded-xl transition-all duration-300">
+                    <a href="tel:+33670699823" className="border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 font-bold px-6 py-3 rounded-xl transition-all duration-300">
                       Nous contacter
                     </a>
                   </div>
@@ -318,7 +318,7 @@ export default function TrackPackagePage() {
                     
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-16 h-16 bg-gradient-to-br from-[#010066] to-blue-900 rounded-2xl flex items-center justify-center">
+                        <div className="w-16 h-16 bg-gradient-to-br from-[#0E7A34] to-blue-900 rounded-2xl flex items-center justify-center">
                           <Package className="w-8 h-8 text-white" />
                         </div>
                         <div>
@@ -343,7 +343,7 @@ export default function TrackPackagePage() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                           <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <User className="w-4 h-4 text-[#010066]" />
+                            <User className="w-4 h-4 text-[#0E7A34]" />
                             Expéditeur
                           </h4>
                           <p className="text-gray-700 font-medium">{searchResults.sender.name}</p>
@@ -353,7 +353,7 @@ export default function TrackPackagePage() {
                         
                         <div>
                           <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-orange-500" />
+                            <MapPin className="w-4 h-4 text-amber-500" />
                             Destinataire
                           </h4>
                           <p className="text-gray-700 font-medium">{searchResults.recipient.name}</p>
@@ -376,7 +376,7 @@ export default function TrackPackagePage() {
                     <div className="lg:w-80">
                       <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 border border-gray-200">
                         <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <Calendar className="w-5 h-5 text-orange-500" />
+                          <Calendar className="w-5 h-5 text-amber-500" />
                           Livraison
                         </h4>
                         
@@ -415,11 +415,11 @@ export default function TrackPackagePage() {
                           <div className="flex items-center gap-2">
                             <div className="flex-1 bg-gray-200 rounded-full h-2">
                               <div 
-                                className="bg-gradient-to-r from-[#010066] to-blue-900 h-2 rounded-full transition-all duration-500"
+                                className="bg-gradient-to-r from-[#0E7A34] to-blue-900 h-2 rounded-full transition-all duration-500"
                                 style={{ width: `${(currentStep / searchResults.timeline.length) * 100}%` }}
                               ></div>
                             </div>
-                            <span className="text-sm font-bold text-[#010066]">
+                            <span className="text-sm font-bold text-[#0E7A34]">
                               {currentStep}/{searchResults.timeline.length}
                             </span>
                           </div>
@@ -433,7 +433,7 @@ export default function TrackPackagePage() {
                 {searchResults.isShipment && searchResults.packagesList && (
                   <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 mb-8">
                     <h3 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
-                      <Package className="w-6 h-6 text-orange-500" />
+                      <Package className="w-6 h-6 text-amber-500" />
                       Colis dans cet envoi ({searchResults.packagesList.length})
                     </h3>
                     
@@ -467,7 +467,7 @@ export default function TrackPackagePage() {
                               <div className="text-xs text-gray-500 mb-1">Types:</div>
                               <div className="flex flex-wrap gap-1">
                                 {pkg.types.map((type, i) => (
-                                  <span key={i} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                  <span key={i} className="text-xs bg-green-100 text-blue-700 px-2 py-1 rounded">
                                     {type.type} (x{type.quantity})
                                   </span>
                                 ))}
@@ -483,7 +483,7 @@ export default function TrackPackagePage() {
                 {/* Timeline */}
                 <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
                   <h3 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-3">
-                    <Clock className="w-6 h-6 text-orange-500" />
+                    <Clock className="w-6 h-6 text-amber-500" />
                     Historique de livraison
                   </h3>
 
@@ -496,9 +496,9 @@ export default function TrackPackagePage() {
                           
                           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center z-10 shadow-lg transition-all duration-300 ${
                             step.completed 
-                              ? 'bg-gradient-to-br from-[#010066] to-blue-900' 
+                              ? 'bg-gradient-to-br from-[#0E7A34] to-blue-900' 
                               : step.current
-                                ? 'bg-gradient-to-br from-orange-500 to-red-600 animate-pulse'
+                                ? 'bg-gradient-to-br from-amber-500 to-red-600 animate-pulse'
                                 : 'bg-gray-200'
                           }`}>
                             <step.icon className={`w-8 h-8 ${
@@ -524,7 +524,7 @@ export default function TrackPackagePage() {
                             <div className="flex flex-col sm:flex-row gap-4 text-sm">
                               <div className="flex items-center gap-2">
                                 <MapPin className={`w-4 h-4 ${
-                                  step.completed || step.current ? 'text-[#010066]' : 'text-gray-300'
+                                  step.completed || step.current ? 'text-[#0E7A34]' : 'text-gray-300'
                                 }`} />
                                 <span className={step.completed || step.current ? 'text-gray-700 font-medium' : 'text-gray-400'}>
                                   {step.location}
@@ -534,7 +534,7 @@ export default function TrackPackagePage() {
                               {step.date && (
                                 <div className="flex items-center gap-2">
                                   <Calendar className={`w-4 h-4 ${
-                                    step.completed || step.current ? 'text-orange-500' : 'text-gray-300'
+                                    step.completed || step.current ? 'text-amber-500' : 'text-gray-300'
                                   }`} />
                                   <span className={step.completed || step.current ? 'text-gray-700 font-medium' : 'text-gray-400'}>
                                     {step.date} {step.time && `• ${step.time}`}
@@ -553,7 +553,7 @@ export default function TrackPackagePage() {
                 <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
                   <button 
                     onClick={() => {setSearchResults(null); setTrackingNumber(''); setError(null);}}
-                    className="bg-gradient-to-r from-[#010066] to-blue-900 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 justify-center"
+                    className="bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 justify-center"
                   >
                     <Search className="w-5 h-5" />
                     Nouvelle recherche
@@ -564,7 +564,7 @@ export default function TrackPackagePage() {
                     className={`border-2 font-bold px-8 py-4 rounded-2xl transition-all duration-300 flex items-center gap-2 justify-center ${
                       copied 
                         ? 'border-green-500 text-green-600 bg-green-50' 
-                        : 'border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600 hover:bg-orange-50'
+                        : 'border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50'
                     }`}
                   >
                     {copied ? (
@@ -587,7 +587,7 @@ export default function TrackPackagePage() {
       )}
 
       {/* Help Section */}
-      <section className="py-16 lg:py-24 bg-gradient-to-r from-[#010066] to-blue-900">
+      <section className="py-16 lg:py-24 bg-gradient-to-r from-[#0E7A34] to-blue-900">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl lg:text-4xl font-black text-white mb-6">
             Besoin d&apos;aide avec votre colis ?
@@ -598,22 +598,22 @@ export default function TrackPackagePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <a href="tel:+33670699823" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-2xl p-6 transition-all duration-300 hover:scale-105 group">
-              <Phone className="w-8 h-8 text-orange-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+              <Phone className="w-8 h-8 text-amber-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
               <div className="text-white font-bold mb-1">France</div>
               <div className="text-white/80">+33 6 70 69 98 23</div>
             </a>
             
             <a href="tel:+22676601981" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-2xl p-6 transition-all duration-300 hover:scale-105 group">
-              <Phone className="w-8 h-8 text-orange-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+              <Phone className="w-8 h-8 text-amber-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
               <div className="text-white font-bold mb-1">Burkina Faso</div>
               <div className="text-white/80">+226 76 60 19 81</div>
             </a>
           </div>
           
           <div className="mt-8">
-            <a href="mailto:contact@ieBF.fr" className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 font-medium transition-colors">
+            <a href="mailto:contact@naange-envoi.fr" className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 font-medium transition-colors">
               <Mail className="w-5 h-5" />
-              contact@ieBF.fr
+              contact@naange-envoi.fr
             </a>
           </div>
         </div>

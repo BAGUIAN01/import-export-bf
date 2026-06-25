@@ -58,23 +58,23 @@ export function PWAInstallPrompt() {
     >
       <div className="bg-white rounded-2xl shadow-2xl border border-zinc-100 overflow-hidden">
         {/* Bande orange top */}
-        <div className="h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600" />
+        <div className="h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600" />
 
         <div className="p-4">
           {/* Header */}
           <div className="flex items-start gap-3 mb-3">
             {/* Icône app */}
-            <div className="w-12 h-12 rounded-xl overflow-hidden border border-zinc-100 shrink-0 flex items-center justify-center bg-orange-50">
+            <div className="w-12 h-12 rounded-xl overflow-hidden border border-zinc-100 shrink-0 flex items-center justify-center bg-amber-50">
               <img
                 src="/logo_short-96x96.png"
-                alt="IE BF"
+                alt="Naange Envoi"
                 className="w-10 h-10 object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                   e.currentTarget.nextElementSibling.style.display = "flex";
                 }}
               />
-              <Smartphone className="hidden h-6 w-6 text-orange-500" />
+              <Smartphone className="hidden h-6 w-6 text-amber-500" />
             </div>
 
             <div className="flex-1 min-w-0">
@@ -82,7 +82,7 @@ export function PWAInstallPrompt() {
                 Installer l'application
               </p>
               <p className="text-xs text-zinc-500 mt-0.5">
-                Import Export BF
+                Naange Envoi
               </p>
             </div>
 
@@ -111,7 +111,7 @@ export function PWAInstallPrompt() {
             </Button>
             <Button
               size="sm"
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white gap-1.5 text-xs"
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white gap-1.5 text-xs"
               onClick={handleInstall}
               disabled={isInstalling}
             >

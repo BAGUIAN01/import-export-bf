@@ -16,7 +16,7 @@ const initials = (client) =>
 const PaymentStatusBadge = ({ status }) => {
   const paymentConfig = {
     PENDING:  { label: "En attente", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-    PARTIAL:  { label: "Partiel",    cls: "bg-orange-50 text-orange-700 border-orange-200" },
+    PARTIAL:  { label: "Partiel",    cls: "bg-amber-50 text-amber-700 border-amber-200" },
     PAID:     { label: "Payé",       cls: "bg-green-50 text-green-700 border-green-200" },
     CANCELLED:{ label: "Annulé",     cls: "bg-red-50 text-red-700 border-red-200" },
     REFUNDED: { label: "Remboursé",  cls: "bg-purple-50 text-purple-700 border-purple-200" },
@@ -29,7 +29,7 @@ const ContainerStatusBadge = ({ status }) => {
   const map = {
     PREPARATION: { label: "Préparation", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
     LOADED:      { label: "Chargé",      cls: "bg-blue-50 text-blue-700 border-blue-200" },
-    IN_TRANSIT:  { label: "En transit",  cls: "bg-orange-50 text-orange-700 border-orange-200" },
+    IN_TRANSIT:  { label: "En transit",  cls: "bg-amber-50 text-amber-700 border-amber-200" },
     CUSTOMS:     { label: "Douanes",     cls: "bg-red-50 text-red-700 border-red-200" },
     DELIVERED:   { label: "Livré",       cls: "bg-green-50 text-green-700 border-green-200" },
   };

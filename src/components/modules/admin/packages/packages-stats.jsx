@@ -17,8 +17,8 @@ export function PackagesStats({ stats }) {
       title: "En Transit", 
       value: stats?.inTransit || 0, 
       icon: Truck, 
-      color: "text-orange-600", 
-      bg: "bg-orange-50" 
+      color: "text-amber-600", 
+      bg: "bg-amber-50" 
     },
     { 
       title: "Livrés", 

@@ -50,13 +50,13 @@ export default function About() {
       icon: Shield,
       title: "Fiabilité",
       description: "8 ans d'expérience sans faille",
-      color: "from-[#010066] to-[#010088]",
+      color: "from-[#0E7A34] to-[#0B5C28]",
     },
     {
       icon: Clock,
       title: "Ponctualité",
       description: "Chargements réguliers et délais respectés",
-      color: "from-orange-500 to-orange-600",
+      color: "from-amber-500 to-amber-600",
     },
     {
       icon: Users,
@@ -81,7 +81,7 @@ export default function About() {
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-72 h-72 bg-blue-50/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-orange-50/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-amber-50/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -94,11 +94,11 @@ export default function About() {
           <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 shadow-sm">
             <Heart
               className="w-4 h-4 lg:w-5 lg:h-5"
-              style={{ color: "#010066" }}
+              style={{ color: "#0E7A34" }}
             />
             <span
               className="font-semibold text-sm lg:text-base"
-              style={{ color: "#010066" }}
+              style={{ color: "#0E7A34" }}
             >
               À Propos
             </span>
@@ -106,11 +106,11 @@ export default function About() {
 
           <h2
             className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 leading-tight"
-            style={{ color: "#010066" }}
+            style={{ color: "#0E7A34" }}
           >
             Un pont entre
             <br />
-            <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
               la France et le Burkina Faso
             </span>
           </h2>
@@ -133,7 +133,7 @@ export default function About() {
           <div>
             <h3
               className="text-2xl lg:text-3xl font-black mb-6"
-              style={{ color: "#010066" }}
+              style={{ color: "#0E7A34" }}
             >
               Notre Mission
             </h3>
@@ -145,16 +145,16 @@ export default function About() {
                 besoins des familles burkinabées installées en France.
               </p>
 
-              <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
+              <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Heart className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-orange-800 mb-2">
+                    <h4 className="font-bold text-amber-800 mb-2">
                       Chaque colis compte
                     </h4>
-                    <p className="text-orange-700">
+                    <p className="text-amber-700">
                       Nous transportons bien plus que des objets : nous
                       acheminons l'amour, le soutien et les rêves de familles
                       séparées par la distance.
@@ -172,11 +172,11 @@ export default function About() {
                   >
                     <item.icon
                       className="w-6 h-6 mx-auto mb-2"
-                      style={{ color: "#010066" }}
+                      style={{ color: "#0E7A34" }}
                     />
                     <div
                       className="text-xl font-black"
-                      style={{ color: "#010066" }}
+                      style={{ color: "#0E7A34" }}
                     >
                       {item.number}
                     </div>
@@ -191,7 +191,7 @@ export default function About() {
           <div>
             <h3
               className="text-2xl lg:text-3xl font-black mb-8"
-              style={{ color: "#010066" }}
+              style={{ color: "#0E7A34" }}
             >
               Nos Valeurs
             </h3>
@@ -208,7 +208,7 @@ export default function About() {
                   <div
                     className={`bg-white rounded-2xl p-5 shadow-lg border-2 transition-all duration-300 h-full ${
                       activeValue === index
-                        ? "border-orange-200 shadow-xl"
+                        ? "border-amber-200 shadow-xl"
                         : "border-gray-100 hover:border-gray-200"
                     }`}
                   >
@@ -220,7 +220,7 @@ export default function About() {
 
                     <h4
                       className="text-base font-bold mb-2"
-                      style={{ color: "#010066" }}
+                      style={{ color: "#0E7A34" }}
                     >
                       {value.title}
                     </h4>
@@ -241,18 +241,18 @@ export default function About() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          <div className="bg-gradient-to-r from-[#010066] to-[#010088] rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
+          <div className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Faites-nous confiance pour vos envois
             </h3>
 
-            <p className="text-blue-100 mb-6 lg:mb-8 text-lg">
+            <p className="text-green-50 mb-6 lg:mb-8 text-lg">
               Rejoignez les centaines de familles satisfaites
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href={"/#contact"}>
-                <button className="bg-orange-500 hover:bg-orange-400 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-3">
+                <button className="bg-amber-500 hover:bg-amber-400 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-3">
                   <span>Envoyer un colis</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>

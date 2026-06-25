@@ -57,7 +57,7 @@ export function CaisseHeader() {
 
   return (
     <header className="sticky top-0 z-30 h-12 shrink-0 flex items-center gap-2 bg-white/95 backdrop-blur border-b border-zinc-200 px-3 sm:px-4">
-      <ContainerIcon className="h-4 w-4 text-orange-600 shrink-0" />
+      <ContainerIcon className="h-4 w-4 text-amber-600 shrink-0" />
       <span className="text-xs font-medium text-zinc-500 hidden sm:inline">
         Conteneur de destination
       </span>

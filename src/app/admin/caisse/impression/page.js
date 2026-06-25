@@ -171,8 +171,8 @@ export default function ImpressionPage() {
   /* ── Génération PDF vectoriel (react-pdf) — retourne un Blob ── */
   const buildPdfBlob = async () => {
     const trackingUrl = shipmentInfo?.shipmentNumber
-      ? `${typeof window !== "undefined" ? window.location.origin : "https://import-export-bf.com"}/tracking?q=${shipmentInfo.shipmentNumber}`
-      : "https://import-export-bf.com";
+      ? `${typeof window !== "undefined" ? window.location.origin : "https://naange-envoi.com"}/tracking?q=${shipmentInfo.shipmentNumber}`
+      : "https://naange-envoi.com";
 
     const [qrCodeDataUrl, logoDataUrl] = await Promise.all([
       QRCodeLib.toDataURL(trackingUrl, { margin: 1, width: 200 }).catch(() => null),
@@ -247,7 +247,7 @@ export default function ImpressionPage() {
         <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
           <ShoppingCart className="h-12 w-12 mx-auto text-zinc-300" />
           <p className="font-semibold text-zinc-900">Aucun client sélectionné</p>
-          <Button onClick={() => router.push("/admin/caisse/client")} className="bg-orange-500 hover:bg-orange-600 text-white w-full">
+          <Button onClick={() => router.push("/admin/caisse/client")} className="bg-amber-500 hover:bg-amber-600 text-white w-full">
             <ArrowLeft className="h-4 w-4 mr-2" />Sélectionner un client
           </Button>
         </div>
@@ -261,7 +261,7 @@ export default function ImpressionPage() {
         <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
           <ShoppingCart className="h-12 w-12 mx-auto text-zinc-300" />
           <p className="font-semibold text-zinc-900">Commande vide</p>
-          <Button onClick={() => router.push("/admin/caisse/commande")} className="bg-orange-500 hover:bg-orange-600 text-white w-full">
+          <Button onClick={() => router.push("/admin/caisse/commande")} className="bg-amber-500 hover:bg-amber-600 text-white w-full">
             <ArrowLeft className="h-4 w-4 mr-2" />Retour à la commande
           </Button>
         </div>
@@ -273,7 +273,7 @@ export default function ImpressionPage() {
     return (
       <div className="flex items-center justify-center h-full p-6">
         <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
-          <div className="h-12 w-12 mx-auto border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="h-12 w-12 mx-auto border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
           <p className="font-semibold text-zinc-900">Création de l&apos;expédition...</p>
           <p className="text-sm text-zinc-600">Veuillez patienter</p>
         </div>
@@ -287,7 +287,7 @@ export default function ImpressionPage() {
       {/* ══ Bordereau ══════════════════════════════════════════════════════ */}
       <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0">
         <div className="px-3 sm:px-4 py-2.5 border-b border-zinc-100 shrink-0 flex items-center gap-2 flex-wrap">
-          <FileText className="h-4 w-4 text-[#010066] shrink-0" />
+          <FileText className="h-4 w-4 text-[#0E7A34] shrink-0" />
           <p className="font-semibold text-zinc-900 text-sm sm:text-base">Bordereau</p>
           <span className="text-xs text-zinc-400 hidden md:inline">{bordereauNum}</span>
 
@@ -297,7 +297,7 @@ export default function ImpressionPage() {
               onClick={handleDownload}
               disabled={isGenerating}
               size="sm"
-              className="bg-[#010066] hover:bg-[#010088] text-white"
+              className="bg-[#0E7A34] hover:bg-[#0B5C28] text-white"
             >
               <Download className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{isGenerating ? "Génération…" : "Télécharger PDF"}</span>
@@ -325,22 +325,22 @@ export default function ImpressionPage() {
             style={{ fontFamily: "Arial, sans-serif", width: "100%", maxWidth: "210mm", margin: "0 auto" }}
           >
             {/* En-tête bleu */}
-            <div className="bg-[#010066] text-white px-4 sm:px-6 py-3 sm:py-4">
+            <div className="bg-[#0E7A34] text-white px-4 sm:px-6 py-3 sm:py-4">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center p-1.5">
                     <Image src="/logo_short.png" alt="Logo" width={48} height={48} className="w-full h-full object-contain" unoptimized />
                   </div>
                   <div>
-                    <div className="text-xs text-gray-300">IMPORT-EXPORT BF</div>
-                    <h1 className="text-lg sm:text-2xl font-bold">IMPORT EXPORT BF</h1>
+                    <div className="text-xs text-gray-300">NAANGE ENVOI</div>
+                    <h1 className="text-lg sm:text-2xl font-bold">NAANGE ENVOI</h1>
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="text-xs text-gray-300 space-y-0.5">
                     <p>+33 6 70 69 98 23</p>
                     <p>+226 76 60 19 81</p>
-                    <p>contact@ieBF.fr</p>
+                    <p>contact@naange-envoi.fr</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
@@ -350,7 +350,7 @@ export default function ImpressionPage() {
                     </div>
                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded flex items-center justify-center">
                       <QRCode
-                        value={shipmentInfo?.shipmentNumber ? `${typeof window !== "undefined" ? window.location.origin : "https://import-export-bf.com"}/tracking?q=${shipmentInfo.shipmentNumber}` : "https://import-export-bf.com"}
+                        value={shipmentInfo?.shipmentNumber ? `${typeof window !== "undefined" ? window.location.origin : "https://naange-envoi.com"}/tracking?q=${shipmentInfo.shipmentNumber}` : "https://naange-envoi.com"}
                         size={44}
                         level="M"
                       />
@@ -378,7 +378,7 @@ export default function ImpressionPage() {
                 </div>
                 <div className="text-right">
                   <span className="text-gray-500 font-normal">N° de suivi : </span>
-                  <span className="font-bold text-[#010066]">{shipmentInfo?.shipmentNumber || "—"}</span>
+                  <span className="font-bold text-[#0E7A34]">{shipmentInfo?.shipmentNumber || "—"}</span>
                 </div>
               </div>
             </div>
@@ -411,7 +411,7 @@ export default function ImpressionPage() {
                   Détail de la commande ({orderItems.reduce((s, i) => s + i.quantity, 0)} colis)
                 </h3>
                 <div className="border border-gray-300">
-                  <div className="bg-[#010066] text-white text-xs font-bold">
+                  <div className="bg-[#0E7A34] text-white text-xs font-bold">
                     <div className="grid grid-cols-12 gap-2 px-3 py-2">
                       <div className="col-span-6">Désignation</div>
                       <div className="col-span-2 text-center">Qté</div>
@@ -491,7 +491,7 @@ export default function ImpressionPage() {
               <div className="flex items-end justify-between pt-3 border-t border-gray-300">
                 <div className="text-xs text-gray-500 space-y-1">
                   <p>Document généré le {dateEdition} — Réf. bordereau : {bordereauNum}</p>
-                  <p>IMPORT EXPORT BF - Service d&apos;envoi de colis France-Burkina Faso</p>
+                  <p>NAANGE ENVOI - Service d&apos;envoi de colis France-Burkina Faso</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-gray-600 mb-2">Signature</p>

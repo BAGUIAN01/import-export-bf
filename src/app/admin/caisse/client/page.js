@@ -124,14 +124,14 @@ function ClientForm({ initial = {}, onSubmit, onCancel, saving }) {
         <TabsList className="inline-flex h-10 bg-zinc-100 rounded-md p-1 border border-zinc-200 w-fit">
           <TabsTrigger 
             value="expediteur"
-            className="data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
+            className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
           >
             <UserCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Expéditeur</span>
           </TabsTrigger>
           <TabsTrigger 
             value="destinataire"
-            className="data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
+            className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
           >
             <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Destinataire</span>
@@ -315,7 +315,7 @@ function ClientForm({ initial = {}, onSubmit, onCancel, saving }) {
         <Button 
           type="submit" 
           disabled={saving} 
-          className="bg-orange-500 hover:bg-orange-600 text-white flex-1 sm:flex-initial"
+          className="bg-amber-500 hover:bg-amber-600 text-white flex-1 sm:flex-initial"
         >
           {saving ? "Enregistrement…" : initial.id ? "Mettre à jour" : "Créer"}
         </Button>
@@ -602,13 +602,13 @@ export default function ClientPage() {
           </TabsTrigger>
           <TabsTrigger 
             value="liste" 
-            className="text-xs sm:text-sm font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-zinc-600 hover:text-zinc-900 relative"
+            className="text-xs sm:text-sm font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-zinc-600 hover:text-zinc-900 relative"
           >
             <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
             <span className="hidden sm:inline">Liste des clients</span>
             <span className="sm:hidden">Liste</span>
             {clients.length > 0 && (
-              <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs font-semibold bg-orange-500/10 text-orange-600 rounded-full px-2 py-0.5 min-w-[20px] text-center">
+              <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs font-semibold bg-amber-500/10 text-amber-600 rounded-full px-2 py-0.5 min-w-[20px] text-center">
                 {clients.length}
               </span>
             )}
@@ -637,14 +637,14 @@ export default function ClientPage() {
                   <Button 
                     onClick={handleSearch} 
                     disabled={searching || !search.trim()} 
-                    className="h-14 flex-1 sm:flex-initial sm:px-4 bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50"
+                    className="h-14 flex-1 sm:flex-initial sm:px-4 bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-50"
                   >
                     <Search className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">{searching ? "Recherche…" : "Rechercher"}</span>
                   </Button>
                   <Button
                     onClick={() => setShowInlineForm((v) => !v)}
-                    className="h-14 bg-orange-500 hover:bg-orange-600 text-white flex-1 sm:flex-initial sm:px-4"
+                    className="h-14 bg-amber-500 hover:bg-amber-600 text-white flex-1 sm:flex-initial sm:px-4"
                   >
                     {showInlineForm
                       ? <><X className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Annuler</span></>

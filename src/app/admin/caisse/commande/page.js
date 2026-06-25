@@ -131,7 +131,7 @@ export default function CommandePage() {
             </div>
             <Button
               onClick={() => router.push("/admin/caisse/client")}
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+              className="bg-amber-500 hover:bg-amber-600 text-white w-full"
             >
               Sélectionner un client
             </Button>
@@ -158,14 +158,14 @@ export default function CommandePage() {
                 className={cn(
                   "relative shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all",
                   active
-                    ? "bg-orange-500 text-white shadow-md"
-                    : "bg-white text-zinc-600 border border-zinc-200 hover:border-orange-300"
+                    ? "bg-amber-500 text-white shadow-md"
+                    : "bg-white text-zinc-600 border border-zinc-200 hover:border-amber-300"
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {cat.label}
                 {qty > 0 && (
-                  <span className="ml-0.5 bg-white text-orange-600 text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                  <span className="ml-0.5 bg-white text-amber-600 text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
                     {qty}
                   </span>
                 )}
@@ -223,7 +223,7 @@ export default function CommandePage() {
                       <Plus className="h-3 w-3" />
                     </button>
                   </div>
-                  <span className="text-sm font-bold text-orange-600">
+                  <span className="text-sm font-bold text-amber-600">
                     {formatPrice(item.total)} €
                   </span>
                 </div>
@@ -264,13 +264,13 @@ export default function CommandePage() {
               value={orderOptions.discount || ""}
               onChange={(e) => setDiscount(e.target.value)}
               placeholder="0"
-              className="w-24 h-8 text-sm text-right rounded-lg border border-zinc-200 px-2 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+              className="w-24 h-8 text-sm text-right rounded-lg border border-zinc-200 px-2 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
             />
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-zinc-200">
             <span className="text-sm font-semibold text-zinc-900">Total</span>
-            <span className="text-lg font-bold text-orange-600">
+            <span className="text-lg font-bold text-amber-600">
               {formatPrice(orderTotal)} €
             </span>
           </div>
@@ -278,7 +278,7 @@ export default function CommandePage() {
           <Button
             disabled={orderItems.length === 0}
             onClick={() => router.push("/admin/caisse/encaissement")}
-            className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white"
+            className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white"
           >
             Valider la commande
           </Button>
@@ -294,7 +294,7 @@ export default function CommandePage() {
               {selectedCategory?.label ?? "Colis"}
             </p>
             {orderItems.length > 0 && (
-              <Badge className="bg-orange-500 text-white shrink-0 text-xs">
+              <Badge className="bg-amber-500 text-white shrink-0 text-xs">
                 {orderItems.reduce((s, i) => s + i.quantity, 0)} colis
               </Badge>
             )}
@@ -306,7 +306,7 @@ export default function CommandePage() {
               placeholder="Rechercher un type de colis…"
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
-              className="w-full h-9 pl-9 pr-8 text-sm rounded-lg border border-zinc-200 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
+              className="w-full h-9 pl-9 pr-8 text-sm rounded-lg border border-zinc-200 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-colors"
             />
             {productSearch && (
               <button
@@ -350,12 +350,12 @@ export default function CommandePage() {
                       className={cn(
                         "relative bg-white border rounded-xl p-3 cursor-pointer transition-all select-none",
                         qty > 0
-                          ? "border-orange-300 ring-1 ring-orange-200"
-                          : "border-zinc-200 hover:border-orange-300 hover:shadow-md"
+                          ? "border-amber-300 ring-1 ring-amber-200"
+                          : "border-zinc-200 hover:border-amber-300 hover:shadow-md"
                       )}
                     >
                       {qty > 0 && (
-                        <Badge className="absolute -top-2 -right-2 bg-orange-500 text-white h-5 min-w-5 rounded-full flex items-center justify-center p-0 text-[10px] font-bold shadow-lg">
+                        <Badge className="absolute -top-2 -right-2 bg-amber-500 text-white h-5 min-w-5 rounded-full flex items-center justify-center p-0 text-[10px] font-bold shadow-lg">
                           {qty}
                         </Badge>
                       )}
@@ -370,7 +370,7 @@ export default function CommandePage() {
                           {type.desc}
                         </p>
                       )}
-                      <p className="text-sm font-semibold text-orange-600 text-center">
+                      <p className="text-sm font-semibold text-amber-600 text-center">
                         {formatPrice(type.price)} €
                       </p>
                     </div>
@@ -389,8 +389,8 @@ export default function CommandePage() {
                         className={cn(
                           "relative bg-white border rounded-xl p-3 cursor-pointer transition-all select-none",
                           openPopoverId === type.value
-                            ? "border-orange-400 ring-2 ring-orange-200"
-                            : "border-dashed border-zinc-300 hover:border-orange-300 hover:shadow-md"
+                            ? "border-amber-400 ring-2 ring-amber-200"
+                            : "border-dashed border-zinc-300 hover:border-amber-300 hover:shadow-md"
                         )}
                       >
                         <div className="w-full aspect-square rounded-lg bg-zinc-50 mb-2 overflow-hidden flex items-center justify-center">
@@ -457,7 +457,7 @@ export default function CommandePage() {
                           size="sm"
                           disabled={!quotePrice || parseFloat(quotePrice) <= 0}
                           onClick={() => confirmQuoteItem(type)}
-                          className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
                         >
                           Ajouter
                         </Button>
@@ -472,10 +472,10 @@ export default function CommandePage() {
       </div>
 
       {/* ══ Droite : catégories (Desktop) ════════════════════════════════════ */}
-      <div className="hidden lg:flex w-32 shrink-0 bg-gradient-to-b from-orange-500 to-orange-600 rounded-xl flex-col overflow-hidden border-2 border-orange-700 shadow-2xl order-3">
+      <div className="hidden lg:flex w-32 shrink-0 bg-gradient-to-b from-amber-500 to-amber-600 rounded-xl flex-col overflow-hidden border-2 border-amber-700 shadow-2xl order-3">
 
         {/* Header + recherche */}
-        <div className="px-2 pt-3 pb-2 border-b-2 border-orange-700 bg-orange-600/50 backdrop-blur-sm shrink-0">
+        <div className="px-2 pt-3 pb-2 border-b-2 border-amber-700 bg-amber-600/50 backdrop-blur-sm shrink-0">
           <p className="text-[10px] font-bold text-white text-center mb-2 tracking-wide uppercase">
             Catégories
           </p>
@@ -505,27 +505,27 @@ export default function CommandePage() {
                 className={cn(
                   "relative w-full flex flex-col items-center justify-center gap-1 px-2 py-2.5 rounded-lg transition-all duration-200 text-center",
                   active
-                    ? "bg-white text-orange-600 font-bold shadow-lg"
+                    ? "bg-white text-amber-600 font-bold shadow-lg"
                     : "bg-white/10 text-white border border-white/20 hover:bg-white/15 hover:border-white/30"
                 )}
               >
                 {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-600 rounded-r-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-600 rounded-r-full" />
                 )}
 
                 {qty > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-white text-orange-600 text-[9px] font-bold min-w-5 h-5 rounded-full flex items-center justify-center px-1 border-2 border-orange-500 shadow-xl pointer-events-none">
+                  <span className="absolute -top-1 -right-1 bg-white text-amber-600 text-[9px] font-bold min-w-5 h-5 rounded-full flex items-center justify-center px-1 border-2 border-amber-500 shadow-xl pointer-events-none">
                     {qty}
                   </span>
                 )}
 
                 <Icon className={cn(
                   "h-4 w-4 shrink-0",
-                  active ? "text-orange-600" : "text-white/90"
+                  active ? "text-amber-600" : "text-white/90"
                 )} />
                 <span className={cn(
                   "text-[9px] font-medium leading-tight line-clamp-2",
-                  active ? "text-orange-600" : "text-white"
+                  active ? "text-amber-600" : "text-white"
                 )}>
                   {cat.label}
                 </span>
@@ -543,9 +543,9 @@ export default function CommandePage() {
         >
           <span className="flex items-center gap-2.5">
             <span className="relative">
-              <ShoppingCart className="h-5 w-5 text-orange-600" />
+              <ShoppingCart className="h-5 w-5 text-amber-600" />
               {totalQty > 0 && (
-                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
                   {totalQty}
                 </span>
               )}
@@ -555,8 +555,8 @@ export default function CommandePage() {
             </span>
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-base font-bold text-orange-600">{formatPrice(orderTotal)} €</span>
-            <span className="text-xs font-semibold text-white bg-orange-500 px-2.5 py-1.5 rounded-lg">
+            <span className="text-base font-bold text-amber-600">{formatPrice(orderTotal)} €</span>
+            <span className="text-xs font-semibold text-white bg-amber-500 px-2.5 py-1.5 rounded-lg">
               Voir le panier
             </span>
           </span>
@@ -569,7 +569,7 @@ export default function CommandePage() {
           <div className="flex flex-col h-full">
             <SheetHeader className="px-4 py-3 border-b shrink-0 text-left">
               <SheetTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4 text-orange-600" />
+                <ShoppingCart className="h-4 w-4 text-amber-600" />
                 Commande
               </SheetTitle>
               <p className="text-xs text-zinc-500 truncate">{selectedClient.name}</p>
@@ -615,7 +615,7 @@ export default function CommandePage() {
                           <Plus className="h-3 w-3" />
                         </button>
                       </div>
-                      <span className="text-sm font-bold text-orange-600">
+                      <span className="text-sm font-bold text-amber-600">
                         {formatPrice(item.total)} €
                       </span>
                     </div>
@@ -656,13 +656,13 @@ export default function CommandePage() {
                   value={orderOptions.discount || ""}
                   onChange={(e) => setDiscount(e.target.value)}
                   placeholder="0"
-                  className="w-24 h-8 text-sm text-right rounded-lg border border-zinc-200 px-2 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                  className="w-24 h-8 text-sm text-right rounded-lg border border-zinc-200 px-2 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
                 />
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-zinc-200">
                 <span className="text-sm font-semibold text-zinc-900">Total</span>
-                <span className="text-lg font-bold text-orange-600">
+                <span className="text-lg font-bold text-amber-600">
                   {formatPrice(orderTotal)} €
                 </span>
               </div>
@@ -673,7 +673,7 @@ export default function CommandePage() {
                   setMobileCartOpen(false);
                   router.push("/admin/caisse/encaissement");
                 }}
-                className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white"
+                className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white"
               >
                 Valider la commande
               </Button>

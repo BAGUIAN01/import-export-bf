@@ -1,6 +1,6 @@
 {
-  "name": "Import Export BF",
-  "short_name": "IE BF",
+  "name": "Naange Envoi",
+  "short_name": "Naange Envoi",
   "description": "Service d'envoi de colis de la France vers le Burkina Faso",
   "start_url": "/",
   "scope": "/",
@@ -9,7 +9,7 @@
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#ffffff",
-  "theme_color": "#f97316",
+  "theme_color": "#0E7A34",
   "categories": ["logistics", "business", "shopping"],
   "lang": "fr",
   "dir": "ltr",

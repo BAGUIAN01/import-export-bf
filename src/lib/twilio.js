@@ -284,23 +284,23 @@ export async function validateTwilioConfig() {
  */
 export const MessageTemplates = {
   // Code de vérification pour inscription
-  verificationCode: (code, appName = "Import Export BF") =>
+  verificationCode: (code, appName = "Naange Envoi") =>
     `${appName}: Votre code de vérification est ${code}. Valide 10 min. Ne le partagez jamais.`,
 
   // Code de connexion
-  loginCode: (code, appName = "Import Export BF") =>
+  loginCode: (code, appName = "Naange Envoi") =>
     `${appName}: Votre code de connexion est ${code}. Valide 10 min. Ne le partagez jamais.`,
 
   // Notification de colis
-  packageUpdate: (packageNumber, status, appName = "Import Export BF") =>
+  packageUpdate: (packageNumber, status, appName = "Naange Envoi") =>
     `${appName}: Votre colis ${packageNumber} est maintenant ${status}. Consultez l'app pour plus de détails.`,
 
   // Notification de livraison
-  deliveryNotification: (packageNumber, appName = "Import Export BF") =>
+  deliveryNotification: (packageNumber, appName = "Naange Envoi") =>
     `${appName}: Votre colis ${packageNumber} est arrivé et prêt pour la livraison. Contactez-nous pour organiser la réception.`,
 
   // Message de bienvenue
-  welcome: (firstName, appName = "Import Export BF") =>
+  welcome: (firstName, appName = "Naange Envoi") =>
     `Bienvenue ${firstName} ! Votre compte ${appName} est activé. Vous pouvez maintenant enregistrer vos colis.`
 }
 

@@ -178,7 +178,7 @@ export function Header() {
       <header className="sticky top-0 z-50">
       {/* Annonce du prochain départ : affichée uniquement si un départ futur est programmé */}
       {hasUpcomingDeparture && (
-        <div className="bg-orange-500 text-white">
+        <div className="bg-amber-500 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
               <Calendar className="w-4 h-4 flex-shrink-0 animate-pulse" />
@@ -189,7 +189,7 @@ export function Header() {
                 href="https://wa.me/33670699823?text=Bonjour%2C%20je%20souhaite%20r%C3%A9server%20une%20place%20pour%20le%20prochain%20chargement."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center gap-1 underline underline-offset-2 hover:text-orange-100 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1 underline underline-offset-2 hover:text-amber-100 transition-colors"
               >
                 Réservez votre place
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -201,22 +201,22 @@ export function Header() {
 
       {/* Top Bar avec animation */}
       <div
-        className={`bg-gradient-to-r from-blue-900 to-[#010066] text-white transition-all duration-300 ${
+        className={`bg-gradient-to-r from-blue-900 to-[#0E7A34] text-white transition-all duration-300 ${
           scrolled ? "py-1" : "py-2"
         } hidden lg:block`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-2 hover:text-amber-300 transition-colors cursor-pointer">
                 <Phone className="w-4 h-4" />
                 <span>+33 670 699 823</span>
               </div>
-              <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-2 hover:text-amber-300 transition-colors cursor-pointer">
                 <Phone className="w-4 h-4" />
                 <span>+226 76 60 19 81</span>
               </div>
-              <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors">
+              <div className="flex items-center space-x-2 hover:text-amber-300 transition-colors">
                 <MapPin className="w-4 h-4" />
                 <span>Paris, France</span>
               </div>
@@ -241,19 +241,19 @@ export function Header() {
                 <div className="relative overflow-hidden rounded-md">
                   <Image
                     src="/logo.jpg"
-                    alt="IE BF Logo"
+                    alt="Naange Envoi Logo"
                     width={60}
                     height={48}
                     className="object-cover transition-transform duration-300 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#010066]/0 via-white/20 to-[#010066]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0E7A34]/0 via-white/20 to-[#0E7A34]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-xl font-bold bg-gradient-to-r from-[#010066] to-blue-900 bg-clip-text text-transparent">
-                    IE BF
+                  <div className="text-xl font-bold bg-gradient-to-r from-[#0E7A34] to-blue-900 bg-clip-text text-transparent">
+                    Naange Envoi
                   </div>
                   <div className="text-xs text-gray-500 -mt-1">
-                    Transport & Logistique
+                    Groupage & Transport de Colis
                   </div>
                 </div>
               </div>
@@ -274,8 +274,8 @@ export function Header() {
                     <button
                       className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center relative overflow-hidden group/btn ${
                         isActive(link.href)
-                          ? "text-white bg-gradient-to-r from-[#010066] to-blue-900 shadow-lg"
-                          : "text-gray-700 hover:text-[#010066] hover:bg-blue-50/70"
+                          ? "text-white bg-gradient-to-r from-[#0E7A34] to-blue-900 shadow-lg"
+                          : "text-gray-700 hover:text-[#0E7A34] hover:bg-blue-50/70"
                       }`}
                     >
                       <span className="relative z-10">{link.name}</span>
@@ -286,9 +286,9 @@ export function Header() {
                           }`}
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#010066] to-blue-900 opacity-0 group-hover/btn:opacity-10 transition-all duration-300 rounded-xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#0E7A34] to-blue-900 opacity-0 group-hover/btn:opacity-10 transition-all duration-300 rounded-xl"></div>
                       {isActive(link.href) && (
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-400 rounded-full"></div>
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-amber-400 rounded-full"></div>
                       )}
                     </button>
                   </Link>
@@ -316,14 +316,14 @@ export function Header() {
                                   <span className="text-lg">{item.icon}</span>
                                 </div>
                                 <div className="text-left flex-1">
-                                  <div className="text-gray-800 font-semibold group-hover/item:text-[#010066] transition-colors">
+                                  <div className="text-gray-800 font-semibold group-hover/item:text-[#0E7A34] transition-colors">
                                     {item.name}
                                   </div>
                                   <div className="text-xs text-gray-500 mt-0.5">
                                     {item.desc}
                                   </div>
                                 </div>
-                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover/item:text-[#010066] group-hover/item:translate-x-1 transition-all duration-200" />
+                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover/item:text-[#0E7A34] group-hover/item:translate-x-1 transition-all duration-200" />
                               </button>
                             </Link>
                           ))}
@@ -339,9 +339,9 @@ export function Header() {
             <div className="flex items-center space-x-3">
               {/* CTA Button */}
               <Link href="/tracking">
-                <button className="hidden md:flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 bg-gradient-to-r from-[#010066] to-blue-900 text-white shadow-lg hover:shadow-xl hover:scale-105 group relative overflow-hidden">
+                <button className="hidden md:flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white shadow-lg hover:shadow-xl hover:scale-105 group relative overflow-hidden">
                   <span className="relative z-10">Suivre un colis</span>
-                  <div className="w-6 h-6 bg-orange-500 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
+                  <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
                     <ArrowRight className="w-3 h-3 text-white" />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
@@ -365,11 +365,11 @@ export function Header() {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#010066] to-blue-900 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
                           <User className="w-4 h-4 text-white" />
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-700 group-hover/account:text-[#010066] transition-colors">
+                      <span className="text-sm font-medium text-gray-700 group-hover/account:text-[#0E7A34] transition-colors">
                         {user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Compte'}
                       </span>
                       <ChevronDown
@@ -397,7 +397,7 @@ export function Header() {
                               className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#010066] to-blue-900 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
                               <User className="w-6 h-6 text-white" />
                             </div>
                           )}
@@ -410,7 +410,7 @@ export function Header() {
                                   user.role === "ADMIN" 
                                     ? "bg-blue-100 text-blue-700" 
                                     : user.role === "STAFF"
-                                    ? "bg-orange-100 text-orange-700"
+                                    ? "bg-amber-100 text-amber-700"
                                     : "bg-gray-100 text-gray-700"
                                 }`}>
                                   {ROLE_LABELS[user.role] || user.role}
@@ -433,14 +433,14 @@ export function Header() {
                                   <Shield className="w-4 h-4 text-blue-600" />
                                 </div>
                                 <div className="text-left flex-1">
-                                  <div className="text-gray-800 font-medium group-hover/item:text-[#010066] transition-colors">
+                                  <div className="text-gray-800 font-medium group-hover/item:text-[#0E7A34] transition-colors">
                                     Administration
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     Accéder au panneau admin
                                   </div>
                                 </div>
-                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover/item:text-[#010066] group-hover/item:translate-x-1 transition-all duration-200" />
+                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover/item:text-[#0E7A34] group-hover/item:translate-x-1 transition-all duration-200" />
                               </button>
                             </Link>
                           )}
@@ -456,14 +456,14 @@ export function Header() {
                                   <item.icon className="w-4 h-4 text-blue-600" />
                                 </div>
                                 <div className="text-left flex-1">
-                                  <div className="text-gray-800 font-medium group-hover/item:text-[#010066] transition-colors">
+                                  <div className="text-gray-800 font-medium group-hover/item:text-[#0E7A34] transition-colors">
                                     {item.name}
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     {item.desc}
                                   </div>
                                 </div>
-                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover/item:text-[#010066] group-hover/item:translate-x-1 transition-all duration-200" />
+                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover/item:text-[#0E7A34] group-hover/item:translate-x-1 transition-all duration-200" />
                               </button>
                             </Link>
                           ))}
@@ -491,7 +491,7 @@ export function Header() {
                     onMouseEnter={() => handleDropdownEnter('auth')}
                     onMouseLeave={handleDropdownLeave}
                   >
-                    <button className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-[#010066] hover:bg-gray-50 rounded-xl transition-all duration-300 font-medium group/auth">
+                    <button className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-[#0E7A34] hover:bg-gray-50 rounded-xl transition-all duration-300 font-medium group/auth">
                       <User className="w-4 h-4" />
                       <span>Compte</span>
                       <ChevronDown
@@ -520,14 +520,14 @@ export function Header() {
                                 <LogIn className="w-4 h-4 text-blue-600" />
                               </div>
                               <div className="text-left flex-1">
-                                <div className="text-gray-800 font-medium group-hover/login:text-[#010066] transition-colors">
+                                <div className="text-gray-800 font-medium group-hover/login:text-[#0E7A34] transition-colors">
                                   Connexion
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   Accédez à votre espace
                                 </div>
                               </div>
-                              <ArrowRight className="w-4 h-4 text-gray-400 group-hover/login:text-[#010066] group-hover/login:translate-x-1 transition-all duration-200" />
+                              <ArrowRight className="w-4 h-4 text-gray-400 group-hover/login:text-[#0E7A34] group-hover/login:translate-x-1 transition-all duration-200" />
                             </button>
                           </Link>
 
@@ -540,14 +540,14 @@ export function Header() {
                                 <UserPlus className="w-4 h-4 text-green-600" />
                               </div>
                               <div className="text-left flex-1">
-                                <div className="text-gray-800 font-medium group-hover/register:text-[#010066] transition-colors">
+                                <div className="text-gray-800 font-medium group-hover/register:text-[#0E7A34] transition-colors">
                                   S'inscrire
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   Créer un nouveau compte
                                 </div>
                               </div>
-                              <ArrowRight className="w-4 h-4 text-gray-400 group-hover/register:text-[#010066] group-hover/register:translate-x-1 transition-all duration-200" />
+                              <ArrowRight className="w-4 h-4 text-gray-400 group-hover/register:text-[#0E7A34] group-hover/register:translate-x-1 transition-all duration-200" />
                             </button>
                           </Link>
                         </div>
@@ -599,7 +599,7 @@ export function Header() {
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#010066] to-blue-900 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
                         <User className="w-5 h-5 text-white" />
                       </div>
                     )}
@@ -612,7 +612,7 @@ export function Header() {
                             user.role === "ADMIN" 
                               ? "bg-blue-100 text-blue-700" 
                               : user.role === "STAFF"
-                              ? "bg-orange-100 text-orange-700"
+                              ? "bg-amber-100 text-amber-700"
                               : "bg-gray-100 text-gray-700"
                           }`}>
                             {ROLE_LABELS[user.role] || user.role}
@@ -626,7 +626,7 @@ export function Header() {
                     {user?.role === "ADMIN" && (
                       <Link href="/admin">
                         <button
-                          className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:text-[#010066] hover:bg-white/70 rounded-lg transition-all duration-200 border border-blue-200 mb-2"
+                          className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:text-[#0E7A34] hover:bg-white/70 rounded-lg transition-all duration-200 border border-blue-200 mb-2"
                           onClick={() => setIsOpen(false)}
                         >
                           <Shield className="w-4 h-4" />
@@ -638,7 +638,7 @@ export function Header() {
                     {accountMenuItems.map((item) => (
                       <Link href={item.href} key={item.name}>
                         <button
-                          className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:text-[#010066] hover:bg-white/70 rounded-lg transition-all duration-200"
+                          className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:text-[#0E7A34] hover:bg-white/70 rounded-lg transition-all duration-200"
                           onClick={() => setIsOpen(false)}
                         >
                           <item.icon className="w-4 h-4" />
@@ -661,7 +661,7 @@ export function Header() {
               ) : (
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-4">
                   <div className="flex items-center justify-center mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#010066] to-blue-900 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div className="ml-3">
@@ -681,7 +681,7 @@ export function Header() {
                     </Link>
                     <Link href="/auth/signup">
                       <button
-                        className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gradient-to-r from-[#010066] to-blue-900 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
+                        className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
                         onClick={() => setIsOpen(false)}
                       >
                         <UserPlus className="w-4 h-4" />
@@ -703,8 +703,8 @@ export function Header() {
                     <button
                       className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-between group ${
                         isActive(link.href)
-                          ? "text-white bg-gradient-to-r from-[#010066] to-blue-900 shadow-lg"
-                          : "text-gray-700 hover:text-[#010066] hover:bg-gray-50"
+                          ? "text-white bg-gradient-to-r from-[#0E7A34] to-blue-900 shadow-lg"
+                          : "text-gray-700 hover:text-[#0E7A34] hover:bg-gray-50"
                       }`}
                       onClick={() => setIsOpen(false)}
                     >
@@ -720,7 +720,7 @@ export function Header() {
                       {link.dropdown.map((item) => (
                         <Link href={item.href} key={item.name}>
                           <button
-                            className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-600 hover:text-[#010066] hover:bg-blue-50 rounded-xl transition-all duration-200 group/mobile"
+                            className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-600 hover:text-[#0E7A34] hover:bg-blue-50 rounded-xl transition-all duration-200 group/mobile"
                             onClick={() => setIsOpen(false)}
                           >
                             <div
@@ -741,7 +741,7 @@ export function Header() {
               {/* CTA Mobile */}
               <Link href="/tracking">
                 <button
-                  className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#010066] to-blue-900 text-white text-center rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
+                  className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white text-center rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
                   onClick={() => setIsOpen(false)}
                 >
                   <span>Suivre un colis</span>

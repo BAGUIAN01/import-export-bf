@@ -39,7 +39,7 @@ export function PWAUpdateNotification() {
           : "opacity-100 translate-y-0"
       )}
     >
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-2xl text-white overflow-hidden">
+      <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-2xl text-white overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
             <Sparkles className="h-4 w-4 text-white" />
@@ -47,7 +47,7 @@ export function PWAUpdateNotification() {
 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold leading-tight">Mise à jour disponible</p>
-            <p className="text-xs text-orange-100 mt-0.5">
+            <p className="text-xs text-amber-100 mt-0.5">
               Une nouvelle version de l'application est prête.
             </p>
           </div>
@@ -56,7 +56,7 @@ export function PWAUpdateNotification() {
             <Button
               size="sm"
               variant="secondary"
-              className="h-8 px-3 bg-white text-orange-600 hover:bg-orange-50 text-xs font-semibold gap-1.5"
+              className="h-8 px-3 bg-white text-amber-600 hover:bg-amber-50 text-xs font-semibold gap-1.5"
               onClick={handleUpdate}
               disabled={updating}
             >

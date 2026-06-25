@@ -17,7 +17,7 @@ export const SidebarHeader = () => {
         </div>
         {sidebarOpen && (
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">Import Export</span>
+            <span className="text-sm font-semibold">Naange Envoi</span>
             <span className="text-xs text-muted-foreground">Gestion des colis</span>
           </div>
         )}

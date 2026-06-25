@@ -21,8 +21,8 @@ import { toast } from 'sonner'
 export function GeneralSettings() {
   const [isLoading, setIsLoading] = useState(false)
   const [settings, setSettings] = useState({
-    companyName: 'Import Export BF',
-    companyEmail: 'contact@import-export-bf.com',
+    companyName: 'Naange Envoi',
+    companyEmail: 'contact@naange-envoi.com',
     companyPhone: '+226 25 30 60 70',
     companyAddress: 'Ouagadougou, Burkina Faso',
     timezone: 'Africa/Ouagadougou',
@@ -49,8 +49,8 @@ export function GeneralSettings() {
 
   const handleReset = () => {
     setSettings({
-      companyName: 'Import Export BF',
-      companyEmail: 'contact@import-export-bf.com',
+      companyName: 'Naange Envoi',
+      companyEmail: 'contact@naange-envoi.com',
       companyPhone: '+226 25 30 60 70',
       companyAddress: 'Ouagadougou, Burkina Faso',
       timezone: 'Africa/Ouagadougou',

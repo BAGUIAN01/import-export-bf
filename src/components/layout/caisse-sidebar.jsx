@@ -42,7 +42,7 @@ export function CaisseSidebar() {
         <div className="w-14 h-14 rounded-2xl overflow-hidden bg-black ring-2 ring-white/30 flex items-center justify-center">
           <Image
             src="/logo.png"
-            alt="Import Export BF"
+            alt="Naange Envoi"
             width={56}
             height={56}
             className="object-contain"
@@ -138,14 +138,14 @@ export function CaisseSidebar() {
   return (
     <>
       {/* Sidebar Desktop */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-28 bg-gradient-to-b from-orange-500 to-orange-600 z-40 flex-col shadow-2xl border-r border-orange-700 rounded-r-2xl">
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-28 bg-gradient-to-b from-amber-500 to-amber-600 z-40 flex-col shadow-2xl border-r border-amber-700 rounded-r-2xl">
         <SidebarContent />
       </aside>
 
       {/* Bottom Navbar Mobile - style application */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40" aria-label="Navigation caisse">
         <div
-          className="bg-gradient-to-r from-orange-500 to-orange-600 border-t border-orange-700 shadow-[0_-8px_30px_rgba(0,0,0,0.15)]"
+          className="bg-gradient-to-r from-amber-500 to-amber-600 border-t border-amber-700 shadow-[0_-8px_30px_rgba(0,0,0,0.15)]"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex items-stretch">
@@ -158,7 +158,7 @@ export function CaisseSidebar() {
               <Menu className="h-5 w-5 shrink-0" />
               <span className="text-[9px] font-semibold leading-none">Menu</span>
               {selectedClient && (
-                <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-white ring-2 ring-orange-500" />
+                <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-white ring-2 ring-amber-500" />
               )}
             </button>
 
@@ -180,7 +180,7 @@ export function CaisseSidebar() {
                     <span
                       className={cn(
                         "flex items-center justify-center rounded-lg transition-all",
-                        active ? "bg-white text-orange-600 w-8 h-8 shadow-md" : "w-8 h-8"
+                        active ? "bg-white text-amber-600 w-8 h-8 shadow-md" : "w-8 h-8"
                       )}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" />
@@ -198,7 +198,7 @@ export function CaisseSidebar() {
 
       {/* Sidebar Mobile - Sheet (déclenché par le bouton "Menu" de la bottom nav) */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-80 p-0 bg-gradient-to-b from-orange-500 to-orange-600 border-orange-700" hideCloseButton>
+        <SheetContent side="left" className="w-80 p-0 bg-gradient-to-b from-amber-500 to-amber-600 border-amber-700" hideCloseButton>
           <SheetTitle className="sr-only">Menu Caisse</SheetTitle>
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between p-4 border-b border-white/20">

@@ -257,15 +257,15 @@ export default function CaissePage() {
 
         {/* Colis vendus */}
         <Card
-          className="transition-all hover:shadow-md border group bg-white border-orange-200 cursor-pointer hover:scale-[1.02]"
+          className="transition-all hover:shadow-md border group bg-white border-amber-200 cursor-pointer hover:scale-[1.02]"
           onClick={() => router.push("/admin/caisse")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-700">
               Colis vendus
             </CardTitle>
-            <div className="p-2 rounded-lg bg-orange-50 transition-all group-hover:scale-105">
-              <Package className="h-4 w-4 text-orange-600" />
+            <div className="p-2 rounded-lg bg-amber-50 transition-all group-hover:scale-105">
+              <Package className="h-4 w-4 text-amber-600" />
             </div>
           </CardHeader>
           <CardContent>

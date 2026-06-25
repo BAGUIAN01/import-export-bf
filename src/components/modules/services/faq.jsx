@@ -83,7 +83,7 @@ export default function FAQ() {
       category: 'contact',
       icon: Phone,
       question: "Comment vous contacter en cas de problème ?",
-      answer: "Notre support est disponible 24/7. En France : +33 6 70 69 98 23, au Burkina : +226 76 60 19 81. Vous pouvez aussi nous écrire par WhatsApp, email (contact@ieBF.fr) ou via notre site web. Nous répondons sous 2h maximum.",
+      answer: "Notre support est disponible 24/7. En France : +33 6 70 69 98 23, au Burkina : +226 76 60 19 81. Vous pouvez aussi nous écrire par WhatsApp, email (contact@naange-envoi.fr) ou via notre site web. Nous répondons sous 2h maximum.",
       popular: false
     },
     {
@@ -131,25 +131,25 @@ export default function FAQ() {
       id="faq">
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-[#010066]/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-32 left-20 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-[#0E7A34]/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-32 left-20 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl"></div>
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
         
         {/* Section Header */}
         <div className={`text-center mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#010066]/10 to-orange-500/10 backdrop-blur-sm border border-[#010066]/20 rounded-full px-6 py-2 mb-6">
-            <HelpCircle className="w-4 h-4 text-orange-500" />
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0E7A34]/10 to-amber-500/10 backdrop-blur-sm border border-[#0E7A34]/20 rounded-full px-6 py-2 mb-6">
+            <HelpCircle className="w-4 h-4 text-amber-500" />
             <span className="text-sm font-semibold text-gray-700">Questions Fréquentes</span>
           </div>
           
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#010066] to-blue-900">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0E7A34] to-blue-900">
               Tout savoir sur
             </span>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">
               nos services
             </span>
           </h2>
@@ -166,7 +166,7 @@ export default function FAQ() {
                 placeholder="Rechercher une question..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#010066]/20 focus:border-[#010066] shadow-lg"
+                className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0E7A34]/20 focus:border-[#0E7A34] shadow-lg"
               />
               <HelpCircle className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             </div>
@@ -181,7 +181,7 @@ export default function FAQ() {
               onClick={() => setActiveCategory(category.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${
                 activeCategory === category.id
-                  ? 'bg-gradient-to-r from-[#010066] to-blue-900 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white shadow-lg'
                   : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
               }`}
             >
@@ -210,17 +210,17 @@ export default function FAQ() {
                       <div className="flex items-start gap-4 flex-1">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                           item.popular 
-                            ? 'bg-gradient-to-br from-orange-500 to-red-600' 
-                            : 'bg-gradient-to-br from-[#010066] to-blue-900'
+                            ? 'bg-gradient-to-br from-amber-500 to-red-600' 
+                            : 'bg-gradient-to-br from-[#0E7A34] to-blue-900'
                         }`}>
                           <item.icon className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#010066] transition-colors pr-4">
+                          <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#0E7A34] transition-colors pr-4">
                             {item.question}
                           </h3>
                           {item.popular && (
-                            <span className="inline-block mt-2 px-3 py-1 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full">
+                            <span className="inline-block mt-2 px-3 py-1 bg-amber-100 text-amber-600 text-xs font-semibold rounded-full">
                               Question populaire
                             </span>
                           )}
@@ -264,7 +264,7 @@ export default function FAQ() {
           <div className="space-y-6">
             
             {/* Quick Help */}
-            <div className="bg-gradient-to-br from-[#010066] to-blue-900 rounded-2xl p-6 text-white">
+            <div className="bg-gradient-to-br from-[#0E7A34] to-blue-900 rounded-2xl p-6 text-white">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
                 <Phone className="w-6 h-6 text-white" />
               </div>
@@ -275,24 +275,24 @@ export default function FAQ() {
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <Phone className="w-4 h-4 text-orange-400" />
+                  <Phone className="w-4 h-4 text-amber-400" />
                   <div>
                     <div className="font-semibold">🇫🇷 France</div>
                     <div className="text-white/80">+33 6 70 69 98 23</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Phone className="w-4 h-4 text-orange-400" />
+                  <Phone className="w-4 h-4 text-amber-400" />
                   <div>
                     <div className="font-semibold">🇧🇫 Burkina Faso</div>
                     <div className="text-white/80">+226 76 60 19 81</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Mail className="w-4 h-4 text-orange-400" />
+                  <Mail className="w-4 h-4 text-amber-400" />
                   <div>
                     <div className="font-semibold">Email</div>
-                    <div className="text-white/80">contact@ieBF.fr</div>
+                    <div className="text-white/80">contact@naange-envoi.fr</div>
                   </div>
                 </div>
               </div>
@@ -301,7 +301,7 @@ export default function FAQ() {
             {/* Popular Questions */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-orange-500" />
+                <CheckCircle className="w-5 h-5 text-amber-500" />
                 Questions populaires
               </h3>
               <div className="space-y-3">
@@ -316,7 +316,7 @@ export default function FAQ() {
                     }}
                     className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors group"
                   >
-                    <div className="text-sm font-semibold text-gray-700 group-hover:text-[#010066] transition-colors leading-tight">
+                    <div className="text-sm font-semibold text-gray-700 group-hover:text-[#0E7A34] transition-colors leading-tight">
                       {item.question}
                     </div>
                   </button>
@@ -325,14 +325,14 @@ export default function FAQ() {
             </div>
 
             {/* Contact CTA */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-red-600/10 rounded-2xl p-6 border border-orange-500/20">
+            <div className="bg-gradient-to-r from-amber-500/10 to-red-600/10 rounded-2xl p-6 border border-amber-500/20">
               <h3 className="text-lg font-bold text-gray-900 mb-3">
                 Pas trouvé votre réponse ?
               </h3>
               <p className="text-gray-600 text-sm mb-4">
                 Contactez-nous directement pour une réponse personnalisée
               </p>
-              <button className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold py-3 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <button className="w-full bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold py-3 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 Nous contacter
               </button>
             </div>

@@ -5,8 +5,8 @@ import { authOptions } from '@/lib/auth'
 // Simulation de données de paramètres (en production, ceci viendrait de la base de données)
 const defaultSettings = {
   general: {
-    companyName: 'Import Export BF',
-    companyEmail: 'contact@import-export-bf.com',
+    companyName: 'Naange Envoi',
+    companyEmail: 'contact@naange-envoi.com',
     companyPhone: '+226 25 30 60 70',
     companyAddress: 'Ouagadougou, Burkina Faso',
     timezone: 'Africa/Ouagadougou',

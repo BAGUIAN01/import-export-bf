@@ -5,7 +5,7 @@ import {
 } from "react";
 
 /* ── Constantes ────────────────────────────────────────────── */
-const DISMISS_KEY   = "iebf-pwa-install-dismissed";
+const DISMISS_KEY   = "naange-envoi-pwa-install-dismissed";
 const DISMISS_DAYS  = 30;
 const SHOW_DELAY_MS = 20_000; // 20 secondes avant de proposer l'install
 

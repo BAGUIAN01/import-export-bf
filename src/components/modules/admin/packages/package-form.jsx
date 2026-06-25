@@ -44,7 +44,7 @@ const PACKAGE_TYPES = [
 const PRIORITY_LEVELS = [
   { value: 'LOW', label: 'Basse', color: 'bg-gray-100 text-gray-800' },
   { value: 'NORMAL', label: 'Normale', color: 'bg-blue-100 text-blue-800' },
-  { value: 'HIGH', label: 'Haute', color: 'bg-orange-100 text-orange-800' },
+  { value: 'HIGH', label: 'Haute', color: 'bg-amber-100 text-amber-800' },
   { value: 'URGENT', label: 'Urgente', color: 'bg-red-100 text-red-800' }
 ];
 

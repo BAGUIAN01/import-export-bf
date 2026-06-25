@@ -59,15 +59,15 @@ export function ShipmentsStats({ stats }) {
         </CardContent>
       </Card>
 
-      <Card className="border-2 border-orange-500">
+      <Card className="border-2 border-amber-500">
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">En transit</p>
               <p className="text-2xl font-bold">{formatNumber(inTransit)}</p>
             </div>
-            <div className="p-3 bg-orange-50 rounded-lg">
-              <Truck className="h-6 w-6 text-orange-600" />
+            <div className="p-3 bg-amber-50 rounded-lg">
+              <Truck className="h-6 w-6 text-amber-600" />
             </div>
           </div>
         </CardContent>

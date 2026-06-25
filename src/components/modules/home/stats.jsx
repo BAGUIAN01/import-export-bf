@@ -67,7 +67,7 @@ export default function Stats() {
       label: "Colis envoyés",
       description: "Depuis notre création",
       color: "primary",
-      gradient: "from-[#010066] to-[#010088]"
+      gradient: "from-[#0E7A34] to-[#0B5C28]"
     },
     {
       icon: Users,
@@ -75,7 +75,7 @@ export default function Stats() {
       label: "Clients satisfaits",
       description: "Font confiance à nos services",
       color: "orange",
-      gradient: "from-orange-500 to-orange-600"
+      gradient: "from-amber-500 to-amber-600"
     },
     {
       icon: Clock,
@@ -83,7 +83,7 @@ export default function Stats() {
       label: "Années d'expérience",
       description: "Sur la ligne France-Burkina",
       color: "primary",
-      gradient: "from-[#010066] to-[#010088]"
+      gradient: "from-[#0E7A34] to-[#0B5C28]"
     },
     {
       icon: CheckCircle,
@@ -91,7 +91,7 @@ export default function Stats() {
       label: "Taux de satisfaction",
       description: "Clients recommandent nos services",
       color: "orange",
-      gradient: "from-orange-500 to-orange-600"
+      gradient: "from-amber-500 to-amber-600"
     }
   ];
 
@@ -129,8 +129,8 @@ export default function Stats() {
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-100/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-orange-100/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-10 left-10 w-72 h-72 bg-green-100/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-100/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       {/* Pattern Background */}
@@ -141,14 +141,14 @@ export default function Stats() {
         {/* Header */}
         <div className={`text-center mb-12 lg:mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 lg:mb-8 shadow-sm">
-            <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5" style={{ color: '#010066' }} />
-            <span className="font-semibold text-sm lg:text-base" style={{ color: '#010066' }}>Nos Résultats</span>
+            <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5" style={{ color: '#0E7A34' }} />
+            <span className="font-semibold text-sm lg:text-base" style={{ color: '#0E7A34' }}>Nos Résultats</span>
           </div>
           
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 lg:mb-6 leading-tight" style={{ color: '#010066' }}>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 lg:mb-6 leading-tight" style={{ color: '#0E7A34' }}>
             Des chiffres qui
             <br />
-            <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
               parlent d'eux-mêmes
             </span>
           </h2>
@@ -178,7 +178,7 @@ export default function Stats() {
               
               {/* Number */}
               <div className="text-center mb-3 lg:mb-4">
-                <div className="text-3xl lg:text-4xl xl:text-5xl font-black mb-2" style={{ color: '#010066' }}>
+                <div className="text-3xl lg:text-4xl xl:text-5xl font-black mb-2" style={{ color: '#0E7A34' }}>
                   {stat.number}
                 </div>
                 <div className="text-base lg:text-lg font-bold text-gray-800">
@@ -204,10 +204,10 @@ export default function Stats() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {additionalStats.map((stat, index) => (
               <div key={index} className="text-center group">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-3 lg:mb-4 group-hover:bg-blue-100 transition-colors duration-300">
-                  <stat.icon className="w-5 h-5 lg:w-6 lg:h-6" style={{ color: '#010066' }} />
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-3 lg:mb-4 group-hover:bg-green-100 transition-colors duration-300">
+                  <stat.icon className="w-5 h-5 lg:w-6 lg:h-6" style={{ color: '#0E7A34' }} />
                 </div>
-                <div className="text-xl lg:text-2xl font-black mb-1" style={{ color: '#010066' }}>
+                <div className="text-xl lg:text-2xl font-black mb-1" style={{ color: '#0E7A34' }}>
                   {stat.value}
                 </div>
                 <div className="text-sm lg:text-base font-semibold text-gray-800 mb-1">
@@ -223,17 +223,17 @@ export default function Stats() {
 
         {/* Bottom CTA */}
         <div className={`text-center mt-12 lg:mt-16 transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="bg-gradient-to-r from-[#010066] to-[#010088] rounded-3xl p-8 lg:p-12 text-white shadow-2xl">
+          <div className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] rounded-3xl p-8 lg:p-12 text-white shadow-2xl">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Rejoignez nos clients satisfaits
             </h3>
-            <p className="text-blue-100 mb-6 lg:mb-8 text-lg max-w-2xl mx-auto">
+            <p className="text-green-50 mb-6 lg:mb-8 text-lg max-w-2xl mx-auto">
               Faites confiance à notre expertise pour l'envoi de vos colis vers le Burkina Faso
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href={"/#contact"}>
-                <button className="bg-orange-500 hover:bg-orange-400 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg">
+                <button className="bg-amber-500 hover:bg-amber-400 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg">
                   Envoyer un colis
                 </button>
               </Link>

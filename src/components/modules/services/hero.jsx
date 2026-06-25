@@ -49,7 +49,7 @@ export default function Hero() {
   const features = [
     { icon: Clock, text: "Livraison 45 jours", color: "text-blue-400" },
     { icon: Shield, text: "Assurance incluse", color: "text-green-400" },
-    { icon: MapPin, text: "Suivi GPS temps réel", color: "text-orange-400" },
+    { icon: MapPin, text: "Suivi GPS temps réel", color: "text-amber-400" },
     { icon: Users, text: "Service familial", color: "text-purple-400" },
   ];
 
@@ -70,12 +70,12 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-br from-[#0E7A34] via-blue-900 to-[#0E7A34] overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#010066]/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-orange-500/8 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#0E7A34]/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/4 w-60 h-60 bg-amber-500/8 rounded-full blur-3xl"></div>
       </div>
 
       {/* Network Pattern */}
@@ -113,8 +113,8 @@ export default function Hero() {
           />
           <defs>
             <linearGradient id="grad">
-              <stop offset="0%" stopColor="#010066" />
-              <stop offset="100%" stopColor="#f97316" />
+              <stop offset="0%" stopColor="#0E7A34" />
+              <stop offset="100%" stopColor="#E0A500" />
             </linearGradient>
           </defs>
         </svg>
@@ -130,7 +130,7 @@ export default function Hero() {
           <div className="flex items-center gap-2 text-sm text-white/60">
             <span>Accueil</span>
             <ArrowRight className="w-3 h-3" />
-            <span className="text-orange-400 font-medium">Services</span>
+            <span className="text-amber-400 font-medium">Services</span>
           </div>
         </div>
 
@@ -146,11 +146,11 @@ export default function Hero() {
             >
               {/* Badge */}
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Package className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <div className="text-orange-400 font-bold text-xl">
+                  <div className="text-amber-400 font-bold text-xl">
                     Nos Services
                   </div>
                   <div className="text-blue-300 text-sm font-medium">
@@ -165,7 +165,7 @@ export default function Hero() {
                   Tous vos besoins
                 </span>
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-red-500">
                   d'envoi couverts
                 </span>
                 <br />
@@ -186,13 +186,13 @@ export default function Hero() {
                     key={index}
                     className={`relative p-6 rounded-2xl border transition-all duration-300 cursor-pointer ${
                       index === currentService
-                        ? "bg-gradient-to-br from-orange-500/20 to-red-600/20 border-orange-500/50 scale-105"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-orange-500/30"
+                        ? "bg-gradient-to-br from-amber-500/20 to-red-600/20 border-amber-500/50 scale-105"
+                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-amber-500/30"
                     }`}
                     onClick={() => setCurrentService(index)}
                   >
                     {service.popular && (
-                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-500 to-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
                         Populaire
                       </div>
                     )}
@@ -201,7 +201,7 @@ export default function Hero() {
                       <div
                         className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                           index === currentService
-                            ? "bg-gradient-to-br from-orange-500 to-red-600"
+                            ? "bg-gradient-to-br from-amber-500 to-red-600"
                             : "bg-white/10"
                         }`}
                       >
@@ -211,7 +211,7 @@ export default function Hero() {
                         <h3 className="text-white font-bold text-lg">
                           {service.title}
                         </h3>
-                        <div className="text-2xl font-black text-orange-400">
+                        <div className="text-2xl font-black text-amber-400">
                           {service.price}
                         </div>
                       </div>
@@ -240,7 +240,7 @@ export default function Hero() {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/#contact">
-                  <button className="group bg-gradient-to-r from-orange-500 to-red-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
+                  <button className="group bg-gradient-to-r from-amber-500 to-red-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
                     <span className="flex items-center gap-3">
                       Demander un devis
                       <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:translate-x-1 transition-transform">
@@ -251,7 +251,7 @@ export default function Hero() {
                 </Link>
 
                 <Link href="/services#services-list">
-                  <button className="border-2 border-white/20 hover:border-orange-400 text-white/80 hover:text-orange-400 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:bg-orange-400/5">
+                  <button className="border-2 border-white/20 hover:border-amber-400 text-white/80 hover:text-amber-400 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:bg-amber-400/5">
                     Voir la grille tarifaire
                   </button>
                 </Link>
@@ -288,7 +288,7 @@ export default function Hero() {
                 {/* Stats Card */}
                 <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-6 min-w-[320px] shadow-2xl">
                   <h3 className="text-white font-bold mb-6 flex items-center gap-2">
-                    <Star className="w-5 h-5 text-orange-400" />
+                    <Star className="w-5 h-5 text-amber-400" />
                     Notre expertise
                   </h3>
 
@@ -298,10 +298,10 @@ export default function Hero() {
                         key={index}
                         className="text-center p-4 bg-white/[0.02] rounded-xl border border-white/5"
                       >
-                        <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-red-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                           <stat.icon className="w-5 h-5 text-white" />
                         </div>
-                        <div className="text-2xl font-black text-orange-400 mb-1">
+                        <div className="text-2xl font-black text-amber-400 mb-1">
                           {stat.number}
                         </div>
                         <div className="text-xs text-white/70">
@@ -315,7 +315,7 @@ export default function Hero() {
                 {/* Service Highlight */}
                 <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       {React.createElement(services[currentService].icon, {
                         className: "w-8 h-8 text-white",
                       })}
@@ -324,15 +324,15 @@ export default function Hero() {
                     <h4 className="text-xl font-black text-white mb-2">
                       {services[currentService].title}
                     </h4>
-                    <div className="text-3xl font-black text-orange-400 mb-3">
+                    <div className="text-3xl font-black text-amber-400 mb-3">
                       {services[currentService].price}
                     </div>
                     <p className="text-white/80 mb-4">
                       {services[currentService].desc}
                     </p>
 
-                    <div className="bg-gradient-to-r from-orange-500/10 to-red-600/10 rounded-xl p-3 border border-orange-500/20">
-                      <p className="text-sm text-orange-300">
+                    <div className="bg-gradient-to-r from-amber-500/10 to-red-600/10 rounded-xl p-3 border border-amber-500/20">
+                      <p className="text-sm text-amber-300">
                         {services[currentService].details}
                       </p>
                     </div>
@@ -346,7 +346,7 @@ export default function Hero() {
                         onClick={() => setCurrentService(index)}
                         className={`w-2 h-2 rounded-full transition-all duration-300 ${
                           index === currentService
-                            ? "bg-orange-400 w-6"
+                            ? "bg-amber-400 w-6"
                             : "bg-white/20 hover:bg-white/40"
                         }`}
                       />
@@ -355,8 +355,8 @@ export default function Hero() {
                 </div>
 
                 {/* Quick Action */}
-                <div className="bg-gradient-to-r from-orange-500/20 to-red-600/20 backdrop-blur-xl border border-orange-500/30 rounded-2xl p-4 text-center">
-                  <div className="text-orange-400 text-sm font-bold mb-1">
+                <div className="bg-gradient-to-r from-amber-500/20 to-red-600/20 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-4 text-center">
+                  <div className="text-amber-400 text-sm font-bold mb-1">
                     Besoin d'aide pour choisir ?
                   </div>
                   <div className="text-white text-lg font-black mb-2">
@@ -371,7 +371,7 @@ export default function Hero() {
               </div>
 
               {/* Floating Elements */}
-              <div className="absolute -top-3 -right-3 w-6 h-6 bg-orange-500 rounded-full opacity-60 animate-pulse"></div>
+              <div className="absolute -top-3 -right-3 w-6 h-6 bg-amber-500 rounded-full opacity-60 animate-pulse"></div>
               <div className="absolute -bottom-3 -left-3 w-4 h-4 bg-blue-400/40 rounded-full animate-pulse delay-1000"></div>
             </div>
           </div>

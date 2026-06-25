@@ -40,24 +40,24 @@ export default function ServicesList() {
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 right-20 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-32 left-20 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-32 left-20 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl"></div>
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
         
         {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#010066]/10 to-orange-500/10 backdrop-blur-sm border border-[#010066]/20 rounded-full px-6 py-2 mb-6">
-            <Star className="w-4 h-4 text-orange-500" />
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0E7A34]/10 to-amber-500/10 backdrop-blur-sm border border-[#0E7A34]/20 rounded-full px-6 py-2 mb-6">
+            <Star className="w-4 h-4 text-amber-500" />
             <span className="text-sm font-semibold text-gray-700">Nos Services d'Envoi</span>
           </div>
           
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#010066] to-blue-900">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0E7A34] to-blue-900">
               Solutions sur mesure
             </span>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">
               pour tous vos envois
             </span>
           </h2>
@@ -87,7 +87,7 @@ export default function ServicesList() {
               {/* Popular Badge */}
               {service.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                  <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1">
+                  <div className="bg-gradient-to-r from-amber-500 to-red-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1">
                     <Star className="w-3 h-3" />
                     {service.badge}
                   </div>
@@ -246,12 +246,12 @@ export default function ServicesList() {
           <div id="tarifs-complets" className="scroll-mt-32">
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 lg:p-12 border border-gray-200 shadow-2xl">
               <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#010066]/10 to-orange-500/10 backdrop-blur-sm border border-[#010066]/20 rounded-full px-6 py-2 mb-6">
-                  <Euro className="w-4 h-4 text-orange-500" />
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0E7A34]/10 to-amber-500/10 backdrop-blur-sm border border-[#0E7A34]/20 rounded-full px-6 py-2 mb-6">
+                  <Euro className="w-4 h-4 text-amber-500" />
                   <span className="text-sm font-semibold text-gray-700">Grille Tarifaire Complète</span>
                 </div>
                 <h3 className="text-3xl lg:text-4xl font-black text-gray-900 mb-4">
-                  Tous nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">tarifs détaillés</span>
+                  Tous nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">tarifs détaillés</span>
                 </h3>
                 <p className="text-gray-600 max-w-2xl mx-auto">
                   Tarifs transparents pour tous types d'envois vers le Burkina Faso
@@ -286,7 +286,7 @@ export default function ServicesList() {
               </div>
 
               {/* Important Notes */}
-              <div className="mt-8 bg-gradient-to-r from-[#010066] to-blue-900 rounded-2xl p-6 text-white">
+              <div className="mt-8 bg-gradient-to-r from-[#0E7A34] to-blue-900 rounded-2xl p-6 text-white">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Shield className="w-6 h-6 text-white" />
@@ -295,15 +295,15 @@ export default function ServicesList() {
                     <h5 className="font-bold text-lg mb-2">Notes importantes</h5>
                     <ul className="space-y-2 text-white/90 text-sm">
                       <li className="flex items-start gap-2">
-                        <span className="text-orange-400 mt-1">•</span>
+                        <span className="text-amber-400 mt-1">•</span>
                         <span>Les tarifs peuvent varier selon la région de départ en France (Paris vs Province)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-orange-400 mt-1">•</span>
+                        <span className="text-amber-400 mt-1">•</span>
                         <span>Assurance tous risques incluse sur chaque envoi sauf véhicules</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-orange-400 mt-1">•</span>
+                        <span className="text-amber-400 mt-1">•</span>
                         <span>Pour tout article non listé, contactez-nous pour un devis personnalisé</span>
                       </li>
                     </ul>
@@ -318,7 +318,7 @@ export default function ServicesList() {
         <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-xl border border-gray-100">
           <div className="text-center mb-10">
             <h3 className="text-2xl lg:text-3xl font-black text-gray-900 mb-4">
-              Pourquoi choisir <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">IE BF</span> ?
+              Pourquoi choisir <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">Naange Envoi</span> ?
             </h3>
             <p className="text-gray-600 max-w-2xl mx-auto">
               8 années d'expérience au service de la communauté franco-burkinabè
@@ -347,9 +347,9 @@ export default function ServicesList() {
 
         {/* Bottom CTA */}
         <div className="text-center mt-12">
-          <div className="bg-gradient-to-r from-[#010066] to-blue-900 rounded-3xl p-8 lg:p-12 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#0E7A34] to-blue-900 rounded-3xl p-8 lg:p-12 text-white relative overflow-hidden">
             <div className="absolute inset-0">
-              <div className="absolute top-4 right-4 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl"></div>
+              <div className="absolute top-4 right-4 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
               <div className="absolute bottom-4 left-4 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
             </div>
             
@@ -363,7 +363,7 @@ export default function ServicesList() {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link href="/#contact">
-                  <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 group">
+                  <button className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 group">
                     <Star className="w-5 h-5" />
                     <span>Demander un devis</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />

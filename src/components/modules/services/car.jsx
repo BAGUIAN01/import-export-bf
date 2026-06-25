@@ -85,17 +85,17 @@ export default function CarShippingCard() {
         
         {/* Tag de section */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#010066]/10 to-orange-500/10 backdrop-blur-sm border border-[#010066]/20 rounded-full px-6 py-2 mb-6">
-            <Ship className="w-4 h-4 text-orange-500" />
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0E7A34]/10 to-amber-500/10 backdrop-blur-sm border border-[#0E7A34]/20 rounded-full px-6 py-2 mb-6">
+            <Ship className="w-4 h-4 text-amber-500" />
             <span className="text-sm font-semibold text-gray-700">Especialiste en expedition de voiture</span>
           </div>
           
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#010066] to-blue-900">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0E7A34] to-blue-900">
               Expédition de véhicules
             </span>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">
               vers le Burkina Faso
             </span>
           </h2>
@@ -109,10 +109,10 @@ export default function CarShippingCard() {
           <div className="grid grid-cols-1 lg:grid-cols-2">
             
             {/* Colonne gauche - Carousel de véhicules */}
-            <div className="relative bg-gradient-to-br from-[#010066] to-blue-900 p-6">
+            <div className="relative bg-gradient-to-br from-[#0E7A34] to-blue-900 p-6">
               {/* Badge assurance */}
               <div className="absolute top-6 right-6 z-10">
-                <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white text-sm font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
+                <div className="bg-gradient-to-r from-amber-500 to-red-600 text-white text-sm font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
                   <Shield className="w-4 h-4" />
                   Assurance non incluse
                 </div>
@@ -135,11 +135,11 @@ export default function CarShippingCard() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                         {/* <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                          <div className="bg-orange-500/80 backdrop-blur-sm rounded-lg px-3 py-1 text-xs font-semibold mb-2 inline-block">
+                          <div className="bg-amber-500/80 backdrop-blur-sm rounded-lg px-3 py-1 text-xs font-semibold mb-2 inline-block">
                             {vehicle.type}
                           </div>
                           <h4 className="text-2xl font-bold mb-1">{vehicle.name}</h4>
-                          <p className="text-orange-300 font-semibold text-lg">{vehicle.price}</p>
+                          <p className="text-amber-300 font-semibold text-lg">{vehicle.price}</p>
                         </div> */}
                       </div>
                     ))}
@@ -168,7 +168,7 @@ export default function CarShippingCard() {
                       onClick={() => setCurrentSlide(index)}
                       className={`w-3 h-3 rounded-full transition-all duration-300 ${
                         index === currentSlide 
-                          ? 'bg-orange-500 scale-125' 
+                          ? 'bg-amber-500 scale-125' 
                           : 'bg-white/50 hover:bg-white/70'
                       }`}
                     />
@@ -185,9 +185,9 @@ export default function CarShippingCard() {
                   </div>
                   
                   <div className="flex items-center">
-                    <div className="w-6 h-0.5 bg-orange-400 rounded"></div>
-                    <Ship className="w-5 h-5 text-orange-400 mx-2" />
-                    <div className="w-6 h-0.5 bg-orange-400 rounded"></div>
+                    <div className="w-6 h-0.5 bg-amber-400 rounded"></div>
+                    <Ship className="w-5 h-5 text-amber-400 mx-2" />
+                    <div className="w-6 h-0.5 bg-amber-400 rounded"></div>
                   </div>
                   
                   <div className="text-center">
@@ -204,7 +204,7 @@ export default function CarShippingCard() {
             <div className="p-8">
               <div className="mb-6">
                 <h3 className="text-2xl font-black text-gray-900 mb-3 flex items-center gap-2">
-                  <Car className="w-6 h-6 text-[#010066]" />
+                  <Car className="w-6 h-6 text-[#0E7A34]" />
                   Service professionnel
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -217,7 +217,7 @@ export default function CarShippingCard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {features.map((feature, index) => (
                   <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#010066] to-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#0E7A34] to-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
                       <feature.icon className="w-4 h-4 text-white" />
                     </div>
                     <div>
@@ -244,7 +244,7 @@ export default function CarShippingCard() {
                     "Suivi GPS en temps réel"
                   ].map((service, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full flex-shrink-0"></div>
+                      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full flex-shrink-0"></div>
                       <span>{service}</span>
                     </div>
                   ))}
@@ -252,13 +252,13 @@ export default function CarShippingCard() {
               </div>
 
               {/* Highlight tarif */}
-              <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-4 mb-6">
+              <div className="bg-gradient-to-r from-amber-50 to-red-50 border border-amber-200 rounded-2xl p-4 mb-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-bold text-orange-800 mb-1">Tarif exceptionnel</h4>
-                    <p className="text-sm text-orange-700">À partir de 800€ selon le véhicule</p>
+                    <h4 className="font-bold text-amber-800 mb-1">Tarif exceptionnel</h4>
+                    <p className="text-sm text-amber-700">À partir de 800€ selon le véhicule</p>
                   </div>
-                  <div className="text-2xl font-black text-orange-600">
+                  <div className="text-2xl font-black text-amber-600">
                     Devis gratuit
                   </div>
                 </div>
@@ -267,7 +267,7 @@ export default function CarShippingCard() {
               {/* CTA */}
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <Link href="/#contact" className='w-full sm:w-auto '>
-                    <button className={`cursor-pointer group bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 ${isHovered ? 'scale-105 shadow-lg' : ''}`}>
+                    <button className={`cursor-pointer group bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 ${isHovered ? 'scale-105 shadow-lg' : ''}`}>
                     <span>Demander un devis</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                     </button>

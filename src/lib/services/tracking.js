@@ -290,11 +290,11 @@ export class TrackingService {
       }
       
       // Créer le message avec la position et le lien de tracking
-      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://import-export-bf.vercel.app'
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://naange-envoi.fr'
       const trackingUrl = `${baseUrl}/tracking?q=${shipment.shipmentNumber}`
       
       // Message SMS optimisé (160 caractères max recommandé)
-      const message = `IE BF: Expédition ${shipment.shipmentNumber} - Position: ${update.location}. ${update.description}. Suivez: ${trackingUrl}`
+      const message = `Naange Envoi: Expédition ${shipment.shipmentNumber} - Position: ${update.location}. ${update.description}. Suivez: ${trackingUrl}`
 
       try {
         // Envoyer le SMS via Twilio avec le numéro normalisé

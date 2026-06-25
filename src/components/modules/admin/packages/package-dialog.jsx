@@ -399,7 +399,7 @@ const PackageDialog = ({
                 <button
                   type="button"
                   onClick={addNewPackage}
-                  className="w-full flex items-center justify-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                  className="w-full flex items-center justify-center px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
                 >
                   <Plus size={16} className="mr-1" />
                   Ajouter un colis
@@ -437,7 +437,7 @@ const PackageDialog = ({
               <div className="p-4 border-t bg-white">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-orange-600">
+                  <span className="text-xl font-bold text-amber-600">
                     {totalAmount.toFixed(2)}€
                   </span>
                 </div>
@@ -449,7 +449,7 @@ const PackageDialog = ({
         {/* Contenu principal */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <div className="sticky top-0 z-10 border-b bg-gradient-to-r from-orange-50 to-blue-50 px-4 sm:px-6 py-3">
+          <div className="sticky top-0 z-10 border-b bg-gradient-to-r from-amber-50 to-blue-50 px-4 sm:px-6 py-3">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-3">

@@ -95,14 +95,14 @@ export function ClientForm({ initial = {}, onSubmit, onCancel, saving }) {
         <TabsList className="inline-flex h-10 bg-zinc-100 rounded-md p-1 border border-zinc-200 w-fit">
           <TabsTrigger 
             value="expediteur"
-            className="data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
+            className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
           >
             <UserCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Expéditeur</span>
           </TabsTrigger>
           <TabsTrigger 
             value="destinataire"
-            className="data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
+            className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm data-[state=inactive]:text-zinc-600 hover:text-zinc-900 transition-all duration-200 font-medium rounded text-xs sm:text-sm flex items-center justify-center gap-1.5 px-3 sm:px-4"
           >
             <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Destinataire</span>
@@ -284,7 +284,7 @@ export function ClientForm({ initial = {}, onSubmit, onCancel, saving }) {
         <Button 
           type="submit" 
           disabled={saving} 
-          className="bg-orange-500 hover:bg-orange-600 text-white flex-1 sm:flex-initial"
+          className="bg-amber-500 hover:bg-amber-600 text-white flex-1 sm:flex-initial"
         >
           {saving ? "Enregistrement…" : initial.id ? "Mettre à jour" : "Créer"}
         </Button>

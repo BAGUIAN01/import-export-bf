@@ -29,7 +29,7 @@ const StatusBadge = ({ status }) => {
     },
     IN_TRANSIT: {
       label: "En transit",
-      color: "bg-orange-50 text-orange-700 border-orange-200",
+      color: "bg-amber-50 text-amber-700 border-amber-200",
     },
     CUSTOMS: { label: "Douanes", color: "bg-red-50 text-red-700 border-red-200" },
     DELIVERED: {
@@ -58,7 +58,7 @@ const PriorityBadge = ({ priority }) => {
   const priorityConfig = {
     LOW: { label: "Faible", color: "bg-gray-50 text-gray-600" },
     NORMAL: { label: "Normal", color: "bg-blue-50 text-blue-600" },
-    HIGH: { label: "Élevé", color: "bg-orange-50 text-orange-600" },
+    HIGH: { label: "Élevé", color: "bg-amber-50 text-amber-600" },
     URGENT: { label: "Urgent", color: "bg-red-50 text-red-600" },
   };
 
@@ -78,7 +78,7 @@ const PaymentStatusBadge = ({ status }) => {
     },
     PARTIAL: {
       label: "Partiel",
-      color: "bg-orange-50 text-orange-700 border-orange-200",
+      color: "bg-amber-50 text-amber-700 border-amber-200",
     },
     PAID: { label: "Payé", color: "bg-green-50 text-green-700 border-green-200" },
     CANCELLED: {

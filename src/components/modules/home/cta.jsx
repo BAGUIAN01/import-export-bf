@@ -102,12 +102,12 @@ export default function CTA() {
   return (
     <section 
       ref={sectionRef}
-      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-[#010066] via-[#010088] to-[#010066] overflow-hidden"
+      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-[#0E7A34] via-[#0B5C28] to-[#0E7A34] overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-20 left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-3xl"></div>
       </div>
 
@@ -121,7 +121,7 @@ export default function CTA() {
           
           {/* Urgency Badge */}
           {!loading && nextDeparture?.hasNextDeparture && (
-            <div className="inline-flex items-center gap-2 bg-orange-500 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 lg:mb-8 shadow-lg">
+            <div className="inline-flex items-center gap-2 bg-amber-500 rounded-full px-4 lg:px-6 py-2 lg:py-3 mb-6 lg:mb-8 shadow-lg">
               <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-white animate-pulse" />
               <span className="font-bold text-sm lg:text-base text-white">
                 Prochain chargement : {nextDeparture.departure.formatted.short}
@@ -132,12 +132,12 @@ export default function CTA() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 lg:mb-8 leading-tight text-white">
             Votre colis doit partir ?
             <br />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
               Réservez maintenant !
             </span>
           </h2>
           
-          <p className="text-lg lg:text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed mb-8 lg:mb-12">
+          <p className="text-lg lg:text-xl text-green-50 max-w-3xl mx-auto leading-relaxed mb-8 lg:mb-12">
             Places limitées pour le prochain chargement vers le Burkina Faso. 
             Garantissez l'envoi de vos colis avec nos tarifs préférentiels.
           </p>
@@ -154,12 +154,12 @@ export default function CTA() {
                   { value: timeLeft.seconds, label: 'Secondes' }
                 ].map((item, index) => (
                   <div key={index} className="text-center">
-                    <div className="bg-orange-500 rounded-xl p-3 lg:p-4 mb-2 shadow-lg">
+                    <div className="bg-amber-500 rounded-xl p-3 lg:p-4 mb-2 shadow-lg">
                       <div className="text-xl lg:text-2xl xl:text-3xl font-black text-white">
                         {item.value.toString().padStart(2, '0')}
                       </div>
                     </div>
-                    <div className="text-xs lg:text-sm text-blue-200 font-medium">
+                    <div className="text-xs lg:text-sm text-green-100 font-medium">
                       {item.label}
                     </div>
                   </div>
@@ -175,7 +175,7 @@ export default function CTA() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <button className="group bg-orange-500 hover:bg-orange-400 text-white px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-black text-lg lg:text-xl transition-all duration-300 hover:scale-105 shadow-2xl flex items-center justify-center gap-3">
+              <button className="group bg-amber-500 hover:bg-amber-400 text-white px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-black text-lg lg:text-xl transition-all duration-300 hover:scale-105 shadow-2xl flex items-center justify-center gap-3">
                 <Package className="w-6 h-6 lg:w-7 lg:h-7" />
                 <span>Réserver ma place</span>
                 <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform" />
@@ -194,12 +194,12 @@ export default function CTA() {
           {benefits.map((benefit, index) => (
             <div key={index} className="text-center group">
               <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20 group-hover:bg-white/20 transition-all duration-300">
-                <benefit.icon className="w-8 h-8 lg:w-10 lg:h-10 text-orange-400" />
+                <benefit.icon className="w-8 h-8 lg:w-10 lg:h-10 text-amber-400" />
               </div>
               <h4 className="text-white font-bold text-base lg:text-lg mb-2">
                 {benefit.title}
               </h4>
-              <p className="text-blue-200 text-sm lg:text-base">
+              <p className="text-green-100 text-sm lg:text-base">
                 {benefit.description}
               </p>
             </div>
@@ -218,21 +218,21 @@ export default function CTA() {
               
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 bg-white/5 rounded-2xl p-4 border border-white/10">
-                  <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
                     <Phone className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-blue-200 text-sm">France</div>
+                    <div className="text-green-100 text-sm">France</div>
                     <div className="text-white font-bold">+33 670 699 823</div>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3 bg-white/5 rounded-2xl p-4 border border-white/10">
-                  <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
                     <Phone className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-blue-200 text-sm">Burkina Faso</div>
+                    <div className="text-green-100 text-sm">Burkina Faso</div>
                     <div className="text-white font-bold">+226 766 019 81</div>
                   </div>
                 </div>
@@ -241,10 +241,10 @@ export default function CTA() {
 
             {/* Quick Action */}
             <div className="text-center lg:text-right">
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-xl">
+              <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 shadow-xl">
                 <CheckCircle className="w-8 h-8 text-white mx-auto lg:ml-auto lg:mr-0 mb-3" />
                 <div className="text-white font-bold text-lg mb-2">Disponible 24/7</div>
-                <div className="text-orange-100 text-sm">Réponse immédiate par WhatsApp</div>
+                <div className="text-amber-100 text-sm">Réponse immédiate par WhatsApp</div>
               </div>
             </div>
           </div>
@@ -252,9 +252,9 @@ export default function CTA() {
 
         {/* Final Urgency Message */}
         <div className={`text-center mt-8 lg:mt-12 transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="bg-orange-500/20 border border-orange-400/30 rounded-2xl p-4 lg:p-6 max-w-2xl mx-auto">
-            <p className="text-orange-200 font-semibold text-sm lg:text-base">
-              ⚡ Places limitées • Plus que <span className="text-orange-300 font-black">15 places</span> disponibles pour ce chargement
+          <div className="bg-amber-500/20 border border-amber-400/30 rounded-2xl p-4 lg:p-6 max-w-2xl mx-auto">
+            <p className="text-amber-200 font-semibold text-sm lg:text-base">
+              ⚡ Places limitées • Plus que <span className="text-amber-300 font-black">15 places</span> disponibles pour ce chargement
             </p>
           </div>
         </div>

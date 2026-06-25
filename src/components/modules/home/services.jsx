@@ -137,7 +137,7 @@ export default function Tarifs() {
     <section id="tarifs" className="py-20 sm:py-28 bg-white">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-14">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#010066] mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0E7A34] mb-4">
             Grille tarifaire
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -153,24 +153,24 @@ export default function Tarifs() {
                 key={cat.id}
                 className={`relative rounded-2xl p-7 border transition-all flex flex-col ${
                   cat.highlighted
-                    ? "bg-[#010066] text-white border-[#010066] shadow-xl"
-                    : "bg-white text-gray-900 border-gray-200 hover:border-[#010066]/30 hover:shadow-lg"
+                    ? "bg-[#0E7A34] text-white border-[#0E7A34] shadow-xl"
+                    : "bg-white text-gray-900 border-gray-200 hover:border-[#0E7A34]/30 hover:shadow-lg"
                 }`}
               >
                 {cat.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                     Populaire
                   </div>
                 )}
 
                 <div
                   className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${
-                    cat.highlighted ? "bg-white/10" : "bg-[#010066]/5"
+                    cat.highlighted ? "bg-white/10" : "bg-[#0E7A34]/5"
                   }`}
                 >
                   <Icon
                     className={`w-6 h-6 ${
-                      cat.highlighted ? "text-orange-400" : "text-[#010066]"
+                      cat.highlighted ? "text-amber-400" : "text-[#0E7A34]"
                     }`}
                   />
                 </div>
@@ -203,11 +203,11 @@ export default function Tarifs() {
                         className={`font-bold whitespace-nowrap ${
                           item.price === "Sur devis"
                             ? cat.highlighted
-                              ? "text-orange-300 italic font-semibold"
-                              : "text-orange-600 italic font-semibold"
+                              ? "text-amber-300 italic font-semibold"
+                              : "text-amber-600 italic font-semibold"
                             : cat.highlighted
-                            ? "text-orange-400"
-                            : "text-[#010066]"
+                            ? "text-amber-400"
+                            : "text-[#0E7A34]"
                         }`}
                       >
                         {item.price}
@@ -227,19 +227,19 @@ export default function Tarifs() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href="tel:+33670699823"
-              className="inline-flex items-center justify-center gap-2 bg-[#010066] hover:bg-[#010088] text-white px-7 py-3.5 rounded-xl font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-[#0E7A34] hover:bg-[#0B5C28] text-white px-7 py-3.5 rounded-xl font-semibold transition-colors"
             >
               🇫🇷 +33 670 699 823
             </a>
             <a
               href="tel:+22676601981"
-              className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-7 py-3.5 rounded-xl font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-7 py-3.5 rounded-xl font-semibold transition-colors"
             >
               🇧🇫 +226 76 60 19 81
             </a>
             <Link
               href="/tracking"
-              className="inline-flex items-center justify-center gap-2 border border-[#010066]/20 hover:bg-[#010066]/5 text-[#010066] px-7 py-3.5 rounded-xl font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 border border-[#0E7A34]/20 hover:bg-[#0E7A34]/5 text-[#0E7A34] px-7 py-3.5 rounded-xl font-semibold transition-colors"
             >
               Suivre un colis
             </Link>

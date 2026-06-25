@@ -40,12 +40,12 @@ export  function Footer() {
   ];
 
   return (
-    <footer className="bg-gradient-to-br from-[#010066] via-[#010088] to-[#010066] text-white relative overflow-hidden">
+    <footer className="bg-gradient-to-br from-[#0E7A34] via-[#0B5C28] to-[#0E7A34] text-white relative overflow-hidden">
       
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-400/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-20 left-20 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,21 +61,21 @@ export  function Footer() {
                   {/* <Package className="h-7 w-7 text-white" /> */}
                   <Image
                     src="/logo.png"
-                    alt="IE BF Logo"
+                    alt="Naange Envoi Logo"
                     width={40}
                     height={40}
                     // className="absolute inset-0 object-cover rounded-full"
                     />
                 </div>
                 <div>
-                  <div className="text-2xl font-black">Import Export</div>
-                  <div className="text-sm text-blue-200 font-medium">
+                  <div className="text-2xl font-black">Naange Envoi</div>
+                  <div className="text-sm text-green-100 font-medium">
                     France ↔ Burkina Faso
                   </div>
                 </div>
               </div>
               
-              <p className="text-blue-200 leading-relaxed">
+              <p className="text-green-100 leading-relaxed">
                 Depuis 8 ans, nous sommes le pont entre la France et le Burkina Faso. 
                 Chaque colis que nous transportons porte l'amour et l'espoir des familles.
               </p>
@@ -90,7 +90,7 @@ export  function Footer() {
                       <a
                         key={social.name}
                         href={social.href}
-                        className="w-10 h-10 bg-white/10 hover:bg-orange-500 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 group backdrop-blur-sm border border-white/20"
+                        className="w-10 h-10 bg-white/10 hover:bg-amber-500 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 group backdrop-blur-sm border border-white/20"
                         aria-label={social.name}
                       >
                         <Icon className="h-5 w-5 group-hover:text-white transition-colors" />
@@ -104,7 +104,7 @@ export  function Footer() {
             {/* Services */}
             <div className="space-y-6">
               <h3 className="text-xl font-black flex items-center">
-                <Truck className="mr-3 h-5 w-5 text-orange-400" />
+                <Truck className="mr-3 h-5 w-5 text-amber-400" />
                 Nos Services
               </h3>
               <ul className="space-y-3">
@@ -112,7 +112,7 @@ export  function Footer() {
                   <li key={service.name}>
                     <a 
                       href={service.href} 
-                      className="text-blue-200 hover:text-orange-400 transition-colors duration-200 flex items-center justify-between group"
+                      className="text-green-100 hover:text-amber-400 transition-colors duration-200 flex items-center justify-between group"
                     >
                       <div className="flex items-center">
                         <ArrowRight className="mr-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-2 group-hover:translate-x-0" />
@@ -120,7 +120,7 @@ export  function Footer() {
                           {service.name}
                         </span>
                       </div>
-                      <span className="text-orange-400 font-bold text-sm">
+                      <span className="text-amber-400 font-bold text-sm">
                         {service.price}
                       </span>
                     </a>
@@ -137,7 +137,7 @@ export  function Footer() {
                   <li key={link.name}>
                     <a 
                       href={link.href} 
-                      className="text-blue-200 hover:text-orange-400 transition-colors duration-200 flex items-center group"
+                      className="text-green-100 hover:text-amber-400 transition-colors duration-200 flex items-center group"
                     >
                       <ArrowRight className="mr-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-2 group-hover:translate-x-0" />
                       <span className="group-hover:translate-x-1 transition-transform duration-200">
@@ -152,33 +152,33 @@ export  function Footer() {
             {/* Contact Info */}
             <div className="space-y-6">
               <h3 className="text-xl font-black flex items-center text-white">
-                <Phone className="mr-3 h-5 w-5 text-orange-400" />
+                <Phone className="mr-3 h-5 w-5 text-amber-400" />
                 Contact
               </h3>
               
               <div className="space-y-4">
                 {/* France Phone */}
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Phone className="h-4 w-4 text-white" />
                   </div>
                   <div>
                     <div className="font-bold text-white">France</div>
-                    <div className="text-blue-200">+33 670 699 823</div>
-                    <div className="text-xs text-blue-300">WhatsApp disponible</div>
+                    <div className="text-green-100">+33 670 699 823</div>
+                    <div className="text-xs text-green-200">WhatsApp disponible</div>
                   </div>
                 </div>
                 
                 {/* Burkina Phone */}
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Phone className="h-4 w-4 text-white" />
                   </div>
                   <div>
                     <div className="font-bold text-white">Burkina Faso</div>
-                    <div className="text-blue-200">+226 766 019 81</div>
-                    <div className="text-blue-200">00226 46 10 00 09</div>
-                    <div className="text-xs text-blue-300">Livraison & support</div>
+                    <div className="text-green-100">+226 766 019 81</div>
+                    <div className="text-green-100">00226 46 10 00 09</div>
+                    <div className="text-xs text-green-200">Livraison & support</div>
                   </div>
                 </div>
                 
@@ -193,13 +193,13 @@ export  function Footer() {
             
             {/* Copyright */}
             <div className="text-center lg:text-left">
-              <div className="text-blue-200">
-                © 2024 Import Export BF. Tous droits réservés.
-                <Link href="/legal" className="text-blue-300 hover:text-orange-400 transition-colors ml-1">
+              <div className="text-green-100">
+                © 2024 Naange Envoi. Tous droits réservés.
+                <Link href="/legal" className="text-green-200 hover:text-amber-400 transition-colors ml-1">
                 ToemeXpertise
                 </Link>
               </div>
-              <div className="text-sm text-blue-300 mt-1">
+              <div className="text-sm text-green-200 mt-1">
                 Connectons les cœurs entre la France et le Burkina Faso depuis 2016
               </div>
             </div>
@@ -210,12 +210,12 @@ export  function Footer() {
                 <React.Fragment key={link.name}>
                   <a 
                     href={link.href} 
-                    className="text-blue-200 hover:text-orange-400 transition-colors"
+                    className="text-green-100 hover:text-amber-400 transition-colors"
                   >
                     {link.name}
                   </a>
                   {index < legalLinks.length - 1 && (
-                    <span className="text-blue-400">•</span>
+                    <span className="text-green-300">•</span>
                   )}
                 </React.Fragment>
               ))}

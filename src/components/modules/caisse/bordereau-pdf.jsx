@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   header: {
-    backgroundColor: "#010066",
+    backgroundColor: "#0E7A34",
     color: "white",
     padding: 20,
   },
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   tableHeader: {
-    backgroundColor: "#010066",
+    backgroundColor: "#0E7A34",
     color: "white",
     flexDirection: "row",
     padding: 8,
@@ -265,8 +265,8 @@ export function BordereauPDF({
                 <Image src={logoDataUrl} style={styles.logo} />
               )}
               <View>
-                <Text style={styles.companySub}>IMPORT-EXPORT BF</Text>
-                <Text style={styles.companyName}>IMPORT EXPORT BF</Text>
+                <Text style={styles.companySub}>NAANGE ENVOI</Text>
+                <Text style={styles.companyName}>NAANGE ENVOI</Text>
               </View>
             </View>
             <View style={styles.trackingInfo}>
@@ -281,7 +281,7 @@ export function BordereauPDF({
             <View>
               <Text style={styles.contact}>+33 6 70 69 98 23</Text>
               <Text style={styles.contact}>+226 76 60 19 81</Text>
-              <Text style={styles.contact}>contact@ieBF.fr</Text>
+              <Text style={styles.contact}>contact@naange-envoi.fr</Text>
             </View>
             {qrCodeDataUrl && (
               <View style={styles.qrCode}>
@@ -464,7 +464,7 @@ export function BordereauPDF({
               <Text>
                 Document généré le {dateEdition} — Réf. bordereau : {bordereauNum}
               </Text>
-              <Text>IMPORT EXPORT BF - Service d'envoi de colis France-Burkina Faso</Text>
+              <Text>NAANGE ENVOI - Service d'envoi de colis France-Burkina Faso</Text>
             </View>
             <View style={styles.signature}>
               <Text style={styles.signatureLabel}>Signature</Text>

@@ -58,24 +58,24 @@ export default function SignInMain() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#010066] via-blue-900 to-[#010066] p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0E7A34] via-blue-900 to-[#0E7A34] p-4 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#010066]/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#0E7A34]/20 rounded-full blur-3xl"></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
             <Package className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-3">
             Connexion
           </h1>
           <p className="text-blue-200">
-            Accédez à votre espace Import Export BF
+            Accédez à votre espace Naange Envoi
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default function SignInMain() {
                     setLogin(e.target.value)
                     setError('')
                   }}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
                   placeholder="email@exemple.com ou +226 70 12 34 56"
                 />
                 <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -132,7 +132,7 @@ export default function SignInMain() {
                     setPassword(e.target.value)
                     setError('')
                   }}
-                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white"
                   placeholder="Votre mot de passe"
                 />
                 <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -152,7 +152,7 @@ export default function SignInMain() {
               <div className="text-sm">
                 <a 
                   href="/auth/forgot-password" 
-                  className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors"
+                  className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors"
                 >
                   Mot de passe oublié ?
                 </a>
@@ -163,7 +163,7 @@ export default function SignInMain() {
             <button
               type="submit"
               disabled={loading || !login || !password}
-              className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full flex items-center justify-center py-4 px-6 border border-transparent rounded-xl text-lg font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <>
@@ -185,7 +185,7 @@ export default function SignInMain() {
               Pas encore de compte ?{' '}
               <a 
                 href="/auth/signup" 
-                className="text-orange-600 hover:text-orange-500 font-medium underline underline-offset-2 transition-colors"
+                className="text-amber-600 hover:text-amber-500 font-medium underline underline-offset-2 transition-colors"
               >
                 Créer un compte
               </a>
@@ -199,7 +199,7 @@ export default function SignInMain() {
             Besoin d'aide ?{' '}
             <a 
               href="/contact" 
-              className="text-orange-400 hover:text-orange-300 font-medium underline underline-offset-2 transition-colors"
+              className="text-amber-400 hover:text-amber-300 font-medium underline underline-offset-2 transition-colors"
             >
               Contactez notre support
             </a>

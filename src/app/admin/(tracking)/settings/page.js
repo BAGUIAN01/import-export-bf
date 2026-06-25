@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export const metadata = {
-  title: 'Paramètres - Import Export BF',
+  title: 'Paramètres - Naange Envoi',
   description: 'Gérez les paramètres de votre application et de votre compte',
 }
 

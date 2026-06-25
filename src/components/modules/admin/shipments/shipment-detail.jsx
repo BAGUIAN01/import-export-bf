@@ -67,7 +67,7 @@ const PaymentBadge = ({ status }) => {
   const cfg = {
     PENDING: { 
       label: "En attente", 
-      cls: "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200 shadow-sm",
+      cls: "bg-gradient-to-r from-amber-50 to-amber-50 text-amber-700 border-amber-200 shadow-sm",
       icon: Clock
     },
     PARTIAL: { 
@@ -107,7 +107,7 @@ const StatusBadge = ({ status }) => {
     REGISTERED: { label: "Enregistré", cls: "bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 border-slate-200" },
     COLLECTED: { label: "Collecté", cls: "bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-700 border-indigo-200" },
     IN_CONTAINER: { label: "En conteneur", cls: "bg-gradient-to-r from-purple-50 to-violet-50 text-purple-700 border-purple-200" },
-    IN_TRANSIT: { label: "En transit", cls: "bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-orange-200" },
+    IN_TRANSIT: { label: "En transit", cls: "bg-gradient-to-r from-amber-50 to-amber-50 text-amber-700 border-amber-200" },
     CUSTOMS: { label: "Douanes", cls: "bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-700 border-yellow-200" },
     DELIVERED: { label: "Livré", cls: "bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-200" },
     RETURNED: { label: "Retourné", cls: "bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border-red-200" },
@@ -472,7 +472,7 @@ export default function ShipmentDetail({
             title="Poids total"
             value={`${headerStats.weight.toFixed(1)} kg`}
             subtitle="Poids cumulé"
-            color="from-orange-500 to-orange-600"
+            color="from-amber-500 to-amber-600"
           />
           
           <StatCard
@@ -557,10 +557,10 @@ export default function ShipmentDetail({
           {/* Contenu de droite - Transport et Colis */}
           <div className="lg:col-span-2 space-y-8">
             {/* Informations transport */}
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-orange-50/30">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-amber-50/30">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl text-white">
+                  <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl text-white">
                     <Truck className="h-5 w-5" />
                   </div>
                   Transport et livraison
