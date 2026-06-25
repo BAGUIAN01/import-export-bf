@@ -28,7 +28,7 @@ export default function Testimonials() {
         "Service exceptionnel ! Mes colis arrivent toujours en parfait état et dans les délais annoncés. Ma famille au Burkina peut compter sur la régularité des envois. Je recommande vivement !",
       type: "Colis personnel",
       avatar: "AT",
-      color: "from-purple-500 to-purple-600",
+      color: "bg-[#0E7A34]",
     },
     {
       id: 2,
@@ -40,7 +40,7 @@ export default function Testimonials() {
         "8 ans que j'utilise leurs services et jamais déçu ! L'équipe est professionnelle, les prix sont honnêtes et le suivi est parfait. C'est devenu mon service de référence pour tous mes envois.",
       type: "Client fidèle",
       avatar: "IS",
-      color: "from-blue-500 to-blue-600",
+      color: "bg-[#0E7A34]",
     },
     {
       id: 3,
@@ -52,7 +52,7 @@ export default function Testimonials() {
         "Ramassage à domicile très pratique ! Plus besoin de me déplacer, ils viennent chercher mes barriques directement chez moi. Service client au top et livraison garantie. Parfait pour nous les mamans !",
       type: "Ramassage domicile",
       avatar: "MO",
-      color: "from-green-500 to-green-600",
+      color: "bg-[#0E7A34]",
     },
     {
       id: 4,
@@ -64,7 +64,7 @@ export default function Testimonials() {
         "J'envoie des médicaments et des produits pour mon commerce. Tout arrive en sécurité et mes clients sont contents des délais. Relation de confiance établie depuis des années.",
       type: "Usage commercial",
       avatar: "SC",
-      color: "from-amber-500 to-amber-600",
+      color: "bg-amber-500",
     },
     {
       id: 5,
@@ -76,7 +76,7 @@ export default function Testimonials() {
         "Ma mère reçoit ses colis directement chez elle même dans une petite ville. C'est rassurant de savoir qu'ils livrent partout au Burkina. Service humain et professionnel.",
       type: "Livraison familiale",
       avatar: "FK",
-      color: "from-pink-500 to-pink-600",
+      color: "bg-[#0E7A34]",
     },
     {
       id: 6,
@@ -88,7 +88,7 @@ export default function Testimonials() {
         "Prix très compétitifs et service de qualité. J'ai comparé avec d'autres services et ils offrent le meilleur rapport qualité-prix. Suivi en ligne très pratique pour rassurer la famille.",
       type: "Bon rapport qualité-prix",
       avatar: "AO",
-      color: "from-indigo-500 to-indigo-600",
+      color: "bg-[#0E7A34]",
     },
   ];
 
@@ -222,7 +222,7 @@ export default function Testimonials() {
               {/* Client Info */}
               <div className="flex items-start gap-6 mb-8">
                 <div
-                  className={`w-16 h-16 bg-gradient-to-br ${current.color} rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg`}
+                  className={`w-16 h-16 ${current.color} rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg`}
                 >
                   {current.avatar}
                 </div>

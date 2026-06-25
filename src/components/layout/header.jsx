@@ -247,10 +247,10 @@ export function Header() {
                     height={48}
                     className="object-cover transition-transform duration-300 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0E7A34]/0 via-white/20 to-[#0E7A34]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-xl font-bold bg-gradient-to-r from-[#0E7A34] to-blue-900 bg-clip-text text-transparent">
+                  <div className="text-xl font-bold bg-[#0E7A34] bg-clip-text text-transparent">
                     Naange Envoi
                   </div>
                   <div className="text-xs text-gray-500 -mt-1">
@@ -275,7 +275,7 @@ export function Header() {
                     <button
                       className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center relative overflow-hidden group/btn ${
                         isActive(link.href)
-                          ? "text-white bg-gradient-to-r from-[#0E7A34] to-blue-900 shadow-lg"
+                          ? "text-white bg-[#0E7A34] shadow-lg"
                           : "text-gray-700 hover:text-[#0E7A34] hover:bg-blue-50/70"
                       }`}
                     >
@@ -287,7 +287,7 @@ export function Header() {
                           }`}
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#0E7A34] to-blue-900 opacity-0 group-hover/btn:opacity-10 transition-all duration-300 rounded-xl"></div>
+                      <div className="absolute inset-0 bg-[#0E7A34] opacity-0 group-hover/btn:opacity-10 transition-all duration-300 rounded-xl"></div>
                       {isActive(link.href) && (
                         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-amber-400 rounded-full"></div>
                       )}
@@ -340,12 +340,12 @@ export function Header() {
             <div className="flex items-center space-x-3">
               {/* CTA Button */}
               <Link href="/tracking">
-                <button className="hidden md:flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white shadow-lg hover:shadow-xl hover:scale-105 group relative overflow-hidden">
+                <button className="hidden md:flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 bg-[#0E7A34] text-white shadow-lg hover:shadow-xl hover:scale-105 group relative overflow-hidden">
                   <span className="relative z-10">Suivre un colis</span>
                   <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
                     <ArrowRight className="w-3 h-3 text-white" />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12 group-hover:translate-x-full"></div>
                 </button>
               </Link>
 
@@ -366,7 +366,7 @@ export function Header() {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-[#0E7A34] flex items-center justify-center">
                           <User className="w-4 h-4 text-white" />
                         </div>
                       )}
@@ -398,7 +398,7 @@ export function Header() {
                               className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-full bg-[#0E7A34] flex items-center justify-center">
                               <User className="w-6 h-6 text-white" />
                             </div>
                           )}
@@ -591,7 +591,7 @@ export function Header() {
             <div className="space-y-3">
               {/* Section Compte Mobile */}
               {isLoggedIn ? (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-4">
+                <div className="bg-gray-50 rounded-xl p-4 mb-4">
                   <div className="flex items-center space-x-3 mb-3">
                     {user?.image ? (
                       <img 
@@ -600,7 +600,7 @@ export function Header() {
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-[#0E7A34] flex items-center justify-center">
                         <User className="w-5 h-5 text-white" />
                       </div>
                     )}
@@ -660,9 +660,9 @@ export function Header() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-4">
+                <div className="bg-gray-50 rounded-xl p-4 mb-4">
                   <div className="flex items-center justify-center mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0E7A34] to-blue-900 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-[#0E7A34] flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div className="ml-3">
@@ -682,7 +682,7 @@ export function Header() {
                     </Link>
                     <Link href="/auth/signup">
                       <button
-                        className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
+                        className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-[#0E7A34] text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
                         onClick={() => setIsOpen(false)}
                       >
                         <UserPlus className="w-4 h-4" />
@@ -704,7 +704,7 @@ export function Header() {
                     <button
                       className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-between group ${
                         isActive(link.href)
-                          ? "text-white bg-gradient-to-r from-[#0E7A34] to-blue-900 shadow-lg"
+                          ? "text-white bg-[#0E7A34] shadow-lg"
                           : "text-gray-700 hover:text-[#0E7A34] hover:bg-gray-50"
                       }`}
                       onClick={() => setIsOpen(false)}
@@ -742,7 +742,7 @@ export function Header() {
               {/* CTA Mobile */}
               <Link href="/tracking">
                 <button
-                  className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#0E7A34] to-blue-900 text-white text-center rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
+                  className="w-full mt-6 px-6 py-4 bg-[#0E7A34] text-white text-center rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 group"
                   onClick={() => setIsOpen(false)}
                 >
                   <span>Suivre un colis</span>

@@ -78,7 +78,7 @@ export default function ContactSection() {
         { label: "France", value: "+33 670 699 823", primary: true },
         { label: "Burkina Faso", value: "+226 766 019 81", primary: false }
       ],
-      color: "from-green-500 to-green-600",
+      color: "bg-[#0E7A34]",
       description: "Réponse immédiate pour vos urgences"
     },
     {
@@ -87,7 +87,7 @@ export default function ContactSection() {
       details: [
         { label: "Chat direct", value: "Disponible 24/7", primary: true }
       ],
-      color: "from-emerald-500 to-emerald-600",
+      color: "bg-[#0E7A34]",
       description: "Le moyen le plus rapide pour nous joindre"
     },
     {
@@ -96,7 +96,7 @@ export default function ContactSection() {
       details: [
         { label: "Contact", value: "contact@naange-envoi.fr", primary: true }
       ],
-      color: "from-blue-500 to-blue-600",
+      color: "bg-[#0E7A34]",
       description: "Pour vos demandes détaillées"
     },
     {
@@ -105,7 +105,7 @@ export default function ContactSection() {
       details: [
         { label: "Zone", value: "Toute la France", primary: true }
       ],
-      color: "from-amber-500 to-amber-600",
+      color: "bg-amber-500",
       description: "Nous venons chercher vos colis"
     }
   ];
@@ -152,7 +152,7 @@ export default function ContactSection() {
     <section 
     id='contact'
       ref={sectionRef}
-      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-gray-50 to-white overflow-hidden"
+      className="relative py-16 sm:py-20 lg:py-24 bg-gray-50 overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
@@ -216,7 +216,7 @@ export default function ContactSection() {
               {contactMethods.map((method, index) => (
                 <div key={index} className="group bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-102">
                   <div className="flex items-start gap-4">
-                    <div className={`w-14 h-14 bg-gradient-to-br ${method.color} rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-14 h-14 ${method.color} rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
                       <method.icon className="w-7 h-7 text-white" />
                     </div>
                     

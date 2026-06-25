@@ -67,7 +67,7 @@ export default function Stats() {
       label: "Colis envoyés",
       description: "Depuis notre création",
       color: "primary",
-      gradient: "from-[#0E7A34] to-[#0B5C28]"
+      gradient: "bg-[#0E7A34]"
     },
     {
       icon: Users,
@@ -75,7 +75,7 @@ export default function Stats() {
       label: "Clients satisfaits",
       description: "Font confiance à nos services",
       color: "orange",
-      gradient: "from-amber-500 to-amber-600"
+      gradient: "bg-amber-500"
     },
     {
       icon: Clock,
@@ -83,7 +83,7 @@ export default function Stats() {
       label: "Années d'expérience",
       description: "Sur la ligne France-Burkina",
       color: "primary",
-      gradient: "from-[#0E7A34] to-[#0B5C28]"
+      gradient: "bg-[#0E7A34]"
     },
     {
       icon: CheckCircle,
@@ -91,7 +91,7 @@ export default function Stats() {
       label: "Taux de satisfaction",
       description: "Clients recommandent nos services",
       color: "orange",
-      gradient: "from-amber-500 to-amber-600"
+      gradient: "bg-amber-500"
     }
   ];
 
@@ -125,7 +125,7 @@ export default function Stats() {
   return (
     <section 
       ref={sectionRef}
-      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-gray-50 to-white overflow-hidden"
+      className="relative py-16 sm:py-20 lg:py-24 bg-gray-50 overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
@@ -169,10 +169,10 @@ export default function Stats() {
               }`}
             >
               {/* Background Gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-500`}></div>
+              <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-500`}></div>
               
               {/* Icon */}
-              <div className={`w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br ${stat.gradient} rounded-2xl flex items-center justify-center mb-4 lg:mb-6 mx-auto shadow-lg`}>
+              <div className={`w-14 h-14 lg:w-16 lg:h-16 ${stat.gradient} rounded-2xl flex items-center justify-center mb-4 lg:mb-6 mx-auto shadow-lg`}>
                 <stat.icon className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
               </div>
               
@@ -194,7 +194,7 @@ export default function Stats() {
               </div>
 
               {/* Hover Effect */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-transparent to-gray-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 rounded-3xl bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
           ))}
         </div>

@@ -236,7 +236,7 @@ export default function Mediatheque() {
   }, [isLightboxOpen]);
 
   return (
-    <section id="mediatheque" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-gray-50 to-gray-100">
+    <section id="mediatheque" className="py-16 sm:py-20 lg:py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -355,7 +355,7 @@ export default function Mediatheque() {
                     )}
                     
                     {/* Overlay with caption and zoom button */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="absolute bottom-0 left-0 right-0 p-6">
                         <h3 className="text-white font-bold text-xl mb-2">{media.caption}</h3>
                         <button

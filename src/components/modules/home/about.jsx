@@ -44,25 +44,25 @@ export default function About() {
       icon: Heart,
       title: "Proximité",
       description: "Nous connaissons la communauté franco-burkinabé",
-      color: "from-red-500 to-red-600",
+      color: "bg-[#0E7A34]",
     },
     {
       icon: Shield,
       title: "Fiabilité",
       description: "8 ans d'expérience sans faille",
-      color: "from-[#0E7A34] to-[#0B5C28]",
+      color: "bg-[#0E7A34]",
     },
     {
       icon: Clock,
       title: "Ponctualité",
       description: "Chargements réguliers et délais respectés",
-      color: "from-amber-500 to-amber-600",
+      color: "bg-amber-500",
     },
     {
       icon: Users,
       title: "Humanité",
       description: "Chaque colis porte une histoire",
-      color: "from-green-500 to-green-600",
+      color: "bg-[#0E7A34]",
     },
   ];
 
@@ -76,7 +76,7 @@ export default function About() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-gray-50 to-white overflow-hidden"
+      className="relative py-16 sm:py-20 lg:py-24 bg-gray-50 overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
@@ -213,7 +213,7 @@ export default function About() {
                     }`}
                   >
                     <div
-                      className={`w-10 h-10 bg-gradient-to-br ${value.color} rounded-xl flex items-center justify-center mb-3`}
+                      className={`w-10 h-10 ${value.color} rounded-xl flex items-center justify-center mb-3`}
                     >
                       <value.icon className="w-5 h-5 text-white" />
                     </div>

@@ -215,7 +215,7 @@ export default function TrackPackagePage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gray-50">
       
       {/* Hero Section */}
       <section className="relative py-16 lg:py-24 bg-[#0f172a] overflow-hidden">
@@ -374,7 +374,7 @@ export default function TrackPackagePage() {
                     </div>
 
                     <div className="lg:w-80">
-                      <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 border border-gray-200">
+                      <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                         <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                           <Calendar className="w-5 h-5 text-amber-500" />
                           Livraison
