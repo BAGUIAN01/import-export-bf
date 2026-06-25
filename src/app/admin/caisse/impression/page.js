@@ -261,7 +261,7 @@ export default function ImpressionPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
 
       {/* ══ Gauche : bordereau ══════════════════════════════════════════════ */}
       <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0">

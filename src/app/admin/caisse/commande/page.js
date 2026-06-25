@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 /* ── Utilitaires ─────────────────────────────────────────────── */
@@ -51,6 +52,9 @@ export default function CommandePage() {
   const [categorySearch, setCategorySearch]     = useState("");
   const [productSearch, setProductSearch]       = useState("");
 
+  /* ── Panier mobile (Sheet) ── */
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
+
   /* ── Popover "Sur devis" ── */
   const [openPopoverId, setOpenPopoverId] = useState(null); // type.value du popover ouvert
   const [quotePrice, setQuotePrice]       = useState("");
@@ -78,6 +82,9 @@ export default function CommandePage() {
       t.label?.toLowerCase().includes(productSearch.toLowerCase()) ||
       t.desc?.toLowerCase().includes(productSearch.toLowerCase())
   );
+
+  /* ── Quantité totale (badge panier mobile) ── */
+  const totalQty = orderItems.reduce((sum, i) => sum + i.quantity, 0);
 
   /* ── Ouvrir / fermer le popover devis ── */
   function handlePopoverChange(open, typeValue) {
@@ -129,7 +136,38 @@ export default function CommandePage() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
+
+      {/* ══ Catégories (Mobile / Tablette) — barre horizontale scrollable ════ */}
+      <div className="lg:hidden shrink-0 order-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {filteredCategories.map((cat) => {
+            const Icon   = getCategoryIcon(cat.label);
+            const active = selectedCategory?.key === cat.key;
+            const qty    = getCategoryQty(cat.key);
+            return (
+              <button
+                key={cat.key}
+                onClick={() => { setSelectedCategory(cat); setProductSearch(""); }}
+                className={cn(
+                  "relative shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all",
+                  active
+                    ? "bg-orange-500 text-white shadow-md"
+                    : "bg-white text-zinc-600 border border-zinc-200 hover:border-orange-300"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {cat.label}
+                {qty > 0 && (
+                  <span className="ml-0.5 bg-white text-orange-600 text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                    {qty}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* ══ Panneau gauche : résumé commande (Desktop) ══════════════════════ */}
       <div className="hidden lg:flex w-72 shrink-0 bg-white rounded-xl border border-zinc-200 flex-col overflow-hidden">
@@ -227,7 +265,7 @@ export default function CommandePage() {
       </div>
 
       {/* ══ Centre : grille types de colis ═══════════════════════════════════ */}
-      <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0 order-2 md:order-1">
+      <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0 order-2 lg:order-1">
         {/* Barre top */}
         <div className="px-2 sm:px-4 py-2 sm:py-3 border-b border-zinc-100 shrink-0 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -475,6 +513,138 @@ export default function CommandePage() {
           })}
         </div>
       </div>
+
+      {/* ══ Panier (Mobile / Tablette) — barre récap + Sheet ════════════════ */}
+      <div className="lg:hidden shrink-0 order-3">
+        <button
+          onClick={() => setMobileCartOpen(true)}
+          className="w-full flex items-center justify-between gap-3 bg-white border border-zinc-200 rounded-xl px-4 py-3 shadow-sm active:scale-[0.99] transition-transform"
+        >
+          <span className="flex items-center gap-2.5">
+            <span className="relative">
+              <ShoppingCart className="h-5 w-5 text-orange-600" />
+              {totalQty > 0 && (
+                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                  {totalQty}
+                </span>
+              )}
+            </span>
+            <span className="text-sm font-semibold text-zinc-700">
+              {totalQty > 0 ? `${totalQty} colis` : "Panier vide"}
+            </span>
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="text-base font-bold text-orange-600">{formatPrice(orderTotal)} €</span>
+            <span className="text-xs font-semibold text-white bg-orange-500 px-2.5 py-1.5 rounded-lg">
+              Voir le panier
+            </span>
+          </span>
+        </button>
+      </div>
+
+      {/* Sheet panier mobile */}
+      <Sheet open={mobileCartOpen} onOpenChange={setMobileCartOpen}>
+        <SheetContent side="right" className="w-full sm:w-96 p-0">
+          <div className="flex flex-col h-full">
+            <SheetHeader className="px-4 py-3 border-b shrink-0 text-left">
+              <SheetTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-orange-600" />
+                Commande
+              </SheetTitle>
+              <p className="text-xs text-zinc-500 truncate">{selectedClient.name}</p>
+            </SheetHeader>
+
+            {/* Items */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {orderItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full gap-2 text-zinc-500">
+                  <ShoppingCart className="h-10 w-10" />
+                  <p className="text-sm">Aucun colis ajouté</p>
+                </div>
+              ) : (
+                orderItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-zinc-50 border border-zinc-100 rounded-lg p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="text-xs font-medium text-zinc-900 leading-tight line-clamp-2 flex-1">
+                        {item.name}
+                      </p>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="text-zinc-500 hover:text-red-500 transition-colors shrink-0"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => updateItemQuantity(item.id, -1)}
+                          className="w-7 h-7 rounded border border-zinc-200 flex items-center justify-center hover:bg-zinc-100 transition-colors"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="w-7 text-center text-sm font-semibold">{item.quantity}</span>
+                        <button
+                          onClick={() => updateItemQuantity(item.id, 1)}
+                          className="w-7 h-7 rounded border border-zinc-200 flex items-center justify-center hover:bg-zinc-100 transition-colors"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <span className="text-sm font-bold text-orange-600">
+                        {formatPrice(item.total)} €
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-3 border-t border-zinc-100 shrink-0 space-y-3">
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500">Sous-total</span>
+                  <span className="text-zinc-900 font-medium">{formatPrice(orderSubtotal)} €</span>
+                </div>
+                {orderOptions.discount > 0 && (
+                  <div className="flex items-center justify-between text-green-600">
+                    <span>Remise</span>
+                    <span>-{formatPrice(orderOptions.discount)} €</span>
+                  </div>
+                )}
+                {orderOptions.additionalFees > 0 && (
+                  <div className="flex items-center justify-between text-zinc-600">
+                    <span>Frais supplémentaires</span>
+                    <span>+{formatPrice(orderOptions.additionalFees)} €</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-200">
+                <span className="text-sm font-semibold text-zinc-900">Total</span>
+                <span className="text-lg font-bold text-orange-600">
+                  {formatPrice(orderTotal)} €
+                </span>
+              </div>
+
+              <Button
+                disabled={orderItems.length === 0}
+                onClick={() => {
+                  setMobileCartOpen(false);
+                  router.push("/admin/caisse/encaissement");
+                }}
+                className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                Valider la commande
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
     </div>
   );
