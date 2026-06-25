@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { Inter } from 'next/font/google'
 import { LayoutProvider } from '@/components/layout/admin/layout-provider'
@@ -17,6 +18,21 @@ const inter = Inter({
 })
 
 export default function DashboardLayout({ children }) {
+  // L'app-shell admin occupe tout l'écran (h-[100dvh]) et gère son propre
+  // scroll interne : on verrouille le scroll global (body/html) pour éviter
+  // le double scroll, et on le restaure en quittant l'admin.
+  useEffect(() => {
+    const html = document.documentElement
+    const prevHtml = html.style.overflow
+    const prevBody = document.body.style.overflow
+    html.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      html.style.overflow = prevHtml
+      document.body.style.overflow = prevBody
+    }
+  }, [])
+
   return (
     <SessionProvider>
       <SWRProvider>

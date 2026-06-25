@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { Inter } from 'next/font/google';
 import { CaisseProvider } from "@/contexts/caisse-context";
 import { CaisseSidebar } from "@/components/layout/caisse-sidebar";
@@ -19,6 +20,19 @@ const inter = Inter({
  * Routes couvertes : /admin/caisse/**
  */
 export default function CaisseLayout({ children }) {
+  // Verrouille le scroll global : la coquille caisse gère son propre scroll
+  useEffect(() => {
+    const html = document.documentElement;
+    const prevHtml = html.style.overflow;
+    const prevBody = document.body.style.overflow;
+    html.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prevHtml;
+      document.body.style.overflow = prevBody;
+    };
+  }, []);
+
   return (
     <CaisseProvider>
       <div className={`flex h-[100dvh] overflow-hidden bg-[#fafaf9] font-sans antialiased ${inter.className}`}>
