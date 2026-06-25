@@ -178,7 +178,7 @@ export function Header() {
     <>
       {/* Annonce du prochain départ : affichée uniquement si un départ futur est programmé */}
       {hasUpcomingDeparture && (
-        <div className="bg-orange-500 text-white">
+        <div className="sticky top-0 z-50 bg-orange-500 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
               <Calendar className="w-4 h-4 flex-shrink-0 animate-pulse" />
