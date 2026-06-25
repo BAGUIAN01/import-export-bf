@@ -1,6 +1,7 @@
 "use client";
 // Container detail view component
 import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { 
   Package, 
   MapPin, 
@@ -92,6 +93,14 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
       setTrackingUpdates(container.trackingUpdates);
     }
   }, [container?.trackingUpdates]);
+
+  // Ouvrir directement le formulaire de mise à jour si on arrive via "?suivi=1"
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams?.get("suivi") === "1") {
+      setShowUpdateForm(true);
+    }
+  }, [searchParams]);
 
   const handleInputChange = (field, value) => {
     setUpdateForm(prev => ({
@@ -392,78 +401,6 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
             </CardContent>
           </Card>
         </div>
-
-        {/* Stats supplémentaires */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, idx) => (
-              <Card key={idx}>
-                <CardContent className="p-6">
-                  <Skeleton className="h-24 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-emerald-50 rounded-lg">
-                    <Euro className="h-6 w-6 text-emerald-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Valeur totale</p>
-                    <p className="text-2xl font-bold">{stats.totalAmount?.toFixed(2) || 0}€</p>
-                    {stats.avgPackageValue > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Moy: {stats.avgPackageValue.toFixed(2)}€/colis
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-indigo-50 rounded-lg">
-                    <Users className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Clients</p>
-                    <p className="text-2xl font-bold">{stats.clientsCount || 0}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {actualPackagesCount} colis au total
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-cyan-50 rounded-lg">
-                    <Activity className="h-6 w-6 text-cyan-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Dernière MAJ</p>
-                    <p className="text-sm font-bold">
-                      {stats.lastUpdate ? formatDate(stats.lastUpdate) : 'Aucune'}
-                    </p>
-                    {stats.statusBreakdown && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {Object.keys(stats.statusBreakdown).length} statuts
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Formulaire de mise à jour */}
         {showUpdateForm && (

@@ -140,10 +140,10 @@ export const containersColumns = ({ onEdit, onDelete, onView, onTrack }) => [
         });
       }
       
-      // Ajouter l'action Suivi GPS si disponible
+      // Ajouter l'action Suivi (mise à jour de la localisation) si disponible
       if (onTrack) {
         customActions.push({
-          label: "Suivi GPS",
+          label: "Suivi",
           onClick: () => onTrack(container),
           icon: "MapPin",
         });

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { CustomDataTable } from "@/components/modules/data-table/data-table";
 import { containersColumns } from "@/components/modules/admin/containers/containers-columns";
 import { ContainerDialog } from "@/components/modules/admin/containers/container-dialog";
@@ -136,8 +137,12 @@ export function ContainersTable({
     );
   };
 
+  const router = useRouter();
+
+  // Ouvre le détail du conteneur avec le formulaire de mise à jour de
+  // localisation déjà ouvert (?suivi=1)
   const handleTrack = (container) => {
-    toast.info(`Suivi GPS du conteneur ${container.containerNumber}`);
+    router.push(`/admin/containers/${container.id}?suivi=1`);
   };
 
   const filters = [
