@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft, Download, Printer, CheckCircle2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "react-qr-code";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas-pro";
+import QRCodeLib from "qrcode";
+import { pdf } from "@react-pdf/renderer";
+import { BordereauPDF } from "@/components/modules/caisse/bordereau-pdf";
 
 /* ── Utils ─────────────────────────────────────────────────────── */
 const formatPhone = (tel) => {
@@ -26,6 +27,18 @@ const formatPhone = (tel) => {
 
 function formatPrice(amount) {
   return Math.round(amount || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F");
+}
+
+/* \u2500\u2500 Charge une image publique et la convertit en data URL (pour react-pdf) \u2500\u2500 */
+async function toDataUrl(path) {
+  const res = await fetch(path);
+  const blob = await res.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 /* ── Page ───────────────────────────────────────────────────────── */
@@ -154,40 +167,41 @@ export default function ImpressionPage() {
   const montantPaye  = paymentInfo?.montantRecu ?? 0;
   const resteAPayer  = Math.max(0, orderTotal - montantPaye);
 
-  /* ── Génération PDF (retourne un blob) ── */
+  /* ── Génération PDF vectoriel (react-pdf) — retourne un Blob ── */
   const buildPdfBlob = async () => {
-    const canvas = await html2canvas(printRef.current, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-      width: printRef.current.scrollWidth,
-      height: printRef.current.scrollHeight,
-    });
-    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
-    const pw = pdf.internal.pageSize.getWidth();
-    const ph = pdf.internal.pageSize.getHeight();
-    const ih = (canvas.height * pw) / canvas.width;
-    let left = ih, pos = 0;
-    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, pos, pw, ih);
-    left -= ph;
-    while (left > 0) {
-      pos = left - ih;
-      pdf.addPage();
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, pos, pw, ih);
-      left -= ph;
-    }
-    return pdf;
+    const trackingUrl = shipmentInfo?.shipmentNumber
+      ? `${typeof window !== "undefined" ? window.location.origin : "https://import-export-bf.com"}/tracking?q=${shipmentInfo.shipmentNumber}`
+      : "https://import-export-bf.com";
+
+    const [qrCodeDataUrl, logoDataUrl] = await Promise.all([
+      QRCodeLib.toDataURL(trackingUrl, { margin: 1, width: 200 }).catch(() => null),
+      toDataUrl("/logo.png").catch(() => null),
+    ]);
+
+    return await pdf(
+      <BordereauPDF
+        selectedClient={selectedClient}
+        orderItems={orderItems}
+        orderSubtotal={orderSubtotal}
+        orderTotal={orderTotal}
+        orderOptions={orderOptions}
+        paymentInfo={paymentInfo}
+        bordereauNum={bordereauNum}
+        shipmentInfo={shipmentInfo}
+        lastContainer={lastContainer}
+        dateEdition={dateEdition}
+        qrCodeDataUrl={qrCodeDataUrl}
+        logoDataUrl={logoDataUrl}
+      />
+    ).toBlob();
   };
 
   /* ── Actions ── */
   const handlePrint = async () => {
-    if (!printRef.current) return;
     try {
       setIsGenerating(true);
       toast.loading("Préparation de l'impression…", { id: "print" });
-      const pdf = await buildPdfBlob();
-      const blob = pdf.output("blob");
+      const blob = await buildPdfBlob();
       const url = URL.createObjectURL(blob);
       const win = window.open(url, "_blank");
       if (win) {
@@ -205,12 +219,18 @@ export default function ImpressionPage() {
   };
 
   const handleDownload = async () => {
-    if (!printRef.current) return;
     try {
       setIsGenerating(true);
       toast.loading("Génération du PDF…", { id: "pdf" });
-      const pdf = await buildPdfBlob();
-      pdf.save(`bordereau-${selectedClient?.clientCode || "client"}-${new Date().toISOString().split("T")[0]}.pdf`);
+      const blob = await buildPdfBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bordereau-${selectedClient?.clientCode || "client"}-${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
       toast.success("PDF téléchargé", { id: "pdf" });
     } catch {
       toast.error("Erreur lors de la génération du PDF", { id: "pdf" });
