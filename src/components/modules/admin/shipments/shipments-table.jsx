@@ -10,6 +10,8 @@ import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { ShipmentsStats } from "@/components/modules/admin/shipments/shipments-stats";
 import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
 import { useShipments, useShipmentMutations, usePackageBatch } from "@/hooks/use-shipments";
+import { FloatingLabelSelect } from "@/components/ui/floating-label-select";
+import { SelectItem } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -152,6 +154,7 @@ export function ShipmentsTable({
   const [shipmentToDelete, setShipmentToDelete] = useState(null);
   const [editingShipment, setEditingShipment] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [containerFilter, setContainerFilter] = useState("ALL");
 
   // Hook SWR pour les shipments avec cache
   const { 
@@ -181,7 +184,30 @@ export function ShipmentsTable({
     return data.map(normalizeShipment);
   }, [serverShipments, initialShipments]);
 
-  const stats = useMemo(() => computeShipmentsStats(shipments), [shipments]);
+  // Options de conteneurs présentes dans les expéditions (pour le select)
+  const containerOptions = useMemo(() => {
+    const map = new Map();
+    shipments.forEach((sh) => {
+      const id = sh.container?.id || sh.containerId;
+      if (id && !map.has(id)) {
+        map.set(id, sh.containerLabel || sh.container?.containerNumber || id);
+      }
+    });
+    return Array.from(map, ([value, label]) => ({ value, label }));
+  }, [shipments]);
+
+  // Filtrage par conteneur (select flottant en haut)
+  const filteredShipments = useMemo(() => {
+    if (!containerFilter || containerFilter === "ALL") return shipments;
+    return shipments.filter(
+      (sh) => (sh.container?.id || sh.containerId) === containerFilter
+    );
+  }, [shipments, containerFilter]);
+
+  const stats = useMemo(
+    () => computeShipmentsStats(filteredShipments),
+    [filteredShipments]
+  );
 
   const handleCreate = useCallback(() => setIsDialogOpen(true), []);
 
@@ -338,17 +364,8 @@ export function ShipmentsTable({
     { label: "Remboursé", value: "REFUNDED" },
   ];
 
-  const containerStatusOptions = [
-    { label: "Préparation", value: "PREPARATION" },
-    { label: "Chargé", value: "LOADED" },
-    { label: "En transit", value: "IN_TRANSIT" },
-    { label: "Douanes", value: "CUSTOMS" },
-    { label: "Livré", value: "DELIVERED" },
-  ];
-
   const filters = [
     { key: "paymentStatus", title: "Paiement", options: paymentStatusOptions },
-    { key: "containerStatus", title: "Statut conteneur", options: containerStatusOptions },
   ];
 
   const handleEdit = useCallback((shipment) => {
@@ -380,10 +397,27 @@ export function ShipmentsTable({
 
   return (
     <div className="space-y-4 xs:space-y-6">
+      {/* Filtre conteneur (select flottant) */}
+      <div className="max-w-xs">
+        <FloatingLabelSelect
+          id="container-filter"
+          label="Conteneur"
+          value={containerFilter}
+          onValueChange={setContainerFilter}
+        >
+          <SelectItem value="ALL">Tous les conteneurs</SelectItem>
+          {containerOptions.map((c) => (
+            <SelectItem key={c.value} value={c.value}>
+              {c.label}
+            </SelectItem>
+          ))}
+        </FloatingLabelSelect>
+      </div>
+
       {showStats && <ShipmentsStats stats={stats} />}
 
       <CustomDataTable
-        data={shipments}
+        data={filteredShipments}
         columns={columns}
         searchPlaceholder="Rechercher par n° d'expédition, client..."
         searchKey="shipmentNumber"
@@ -391,9 +425,6 @@ export function ShipmentsTable({
           "shipmentNumber",
           "client.firstName",
           "client.lastName",
-          "containerLabel",
-          "container.containerNumber",
-          "container.name",
         ]}
         filters={filters}
         onAdd={handleCreate}
@@ -422,7 +453,6 @@ export function ShipmentsTable({
           "insuranceFeeTotal",
           "customsFeeTotal",
           "discountTotal",
-          "containerStatus", // technique (filtre) — on la cache
         ]}
       />
 
