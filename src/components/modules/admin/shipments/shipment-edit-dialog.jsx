@@ -50,10 +50,14 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
 
   useEffect(() => {
     if (shipment) {
+      const total = Number(shipment.totalAmount || 0);
+      const alreadyPaid = Number(shipment.paidAmount || 0);
+      // Pré-remplit avec le montant à payer (solde complet) si pas encore soldé
+      const autoAmount = alreadyPaid >= total && total > 0 ? alreadyPaid : total;
       setFormData({
-        paidAmount: shipment.paidAmount || 0,
+        paidAmount: autoAmount,
         paymentMethod: shipment.paymentMethod || "NONE",
-        paidAt: shipment.paidAt ? new Date(shipment.paidAt) : null,
+        paidAt: shipment.paidAt ? new Date(shipment.paidAt) : new Date(),
         paymentStatus: shipment.paymentStatus || "PENDING",
         notes: shipment.notes || "",
       });

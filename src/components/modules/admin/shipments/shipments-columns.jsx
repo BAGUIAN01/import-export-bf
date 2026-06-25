@@ -137,6 +137,7 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit, onPay }) =
       const sh = row.original;
       const remis = Boolean(sh.deliveredAt);
       const unpaid = !["PAID", "CANCELLED", "REFUNDED"].includes(sh.paymentStatus);
+      const paid = sh.paymentStatus === "PAID";
       // Empêche la navigation vers le détail (clic de ligne)
       const stop = (fn) => (e) => {
         e.stopPropagation();
@@ -167,15 +168,18 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit, onPay }) =
               </Badge>
             </button>
           ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={stop(() => onRemit?.(sh))}
-              className="h-8 border-[#0E7A34]/30 text-[#0E7A34] hover:bg-[#0E7A34]/5 hover:text-[#0B5C28]"
-            >
-              <PackageCheck className="h-4 w-4 mr-1" />
-              Remettre
-            </Button>
+            // « Remettre » seulement si l'expédition est payée
+            paid && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={stop(() => onRemit?.(sh))}
+                className="h-8 border-[#0E7A34]/30 text-[#0E7A34] hover:bg-[#0E7A34]/5 hover:text-[#0B5C28]"
+              >
+                <PackageCheck className="h-4 w-4 mr-1" />
+                Remettre
+              </Button>
+            )
           )}
         </div>
       );
