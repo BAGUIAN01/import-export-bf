@@ -1,9 +1,9 @@
 "use client";
 import { useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { CustomDataTable } from "@/components/modules/data-table/data-table";
 import { containersColumns } from "@/components/modules/admin/containers/containers-columns";
 import { ContainerDialog } from "@/components/modules/admin/containers/container-dialog";
+import { ContainerTrackingDialog } from "@/components/modules/admin/containers/container-tracking-dialog";
 import { toast } from "sonner";
 import { ContainersStats } from "@/components/modules/admin/containers/containers-stats";
 import { useContainers, useContainerMutations } from "@/hooks/use-containers";
@@ -34,6 +34,7 @@ export function ContainersTable({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContainer, setEditingContainer] = useState(null);
   const [containerToDelete, setContainerToDelete] = useState(null);
+  const [trackingContainer, setTrackingContainer] = useState(null);
   const [showStats, setShowStats] = useState(true);
 
   // Hook SWR pour les conteneurs avec cache
@@ -137,12 +138,9 @@ export function ContainersTable({
     );
   };
 
-  const router = useRouter();
-
-  // Ouvre le détail du conteneur avec le formulaire de mise à jour de
-  // localisation déjà ouvert (?suivi=1)
+  // Ouvre le dialog de suivi (mise à jour localisation / statut)
   const handleTrack = (container) => {
-    router.push(`/admin/containers/${container.id}?suivi=1`);
+    setTrackingContainer(container);
   };
 
   const filters = [
@@ -248,6 +246,14 @@ export function ContainersTable({
         container={editingContainer}
         onSave={handleSave}
         loading={isMutating}
+      />
+
+      {/* Dialog de suivi (mise à jour localisation / statut) */}
+      <ContainerTrackingDialog
+        container={trackingContainer}
+        isOpen={!!trackingContainer}
+        onClose={() => setTrackingContainer(null)}
+        onUpdated={() => mutate?.()}
       />
 
       {/* Confirmation de suppression */}

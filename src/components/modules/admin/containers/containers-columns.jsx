@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { DataTableColumnHeader } from "@/components/modules/data-table/data-table-column-header";
 import { DataTableRowActions } from "@/components/modules/data-table/data-table-row-actions";
+import { Button } from "@/components/ui/button";
 import { Container, MapPin, Calendar, Truck, Weight, Users, Pencil, Trash2, Eye } from "lucide-react";
 import Link from "next/link";
 
@@ -117,6 +118,24 @@ export const containersColumns = ({ onEdit, onDelete, onView, onTrack }) => [
     ),
   },
   {
+    id: "suivi",
+    header: () => <span className="text-xs font-medium">Suivi</span>,
+    cell: ({ row }) =>
+      onTrack ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 border-[#0E7A34]/30 text-[#0E7A34] hover:bg-[#0E7A34]/5 hover:text-[#0E7A34]"
+          onClick={() => onTrack(row.original)}
+        >
+          <MapPin className="h-3.5 w-3.5" />
+          Suivi
+        </Button>
+      ) : null,
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const container = row.original;
@@ -137,15 +156,6 @@ export const containersColumns = ({ onEdit, onDelete, onView, onTrack }) => [
           label: "Modifier",
           onClick: () => onEdit(container),
           icon: "Pencil",
-        });
-      }
-      
-      // Ajouter l'action Suivi (mise à jour de la localisation) si disponible
-      if (onTrack) {
-        customActions.push({
-          label: "Suivi",
-          onClick: () => onTrack(container),
-          icon: "MapPin",
         });
       }
       
