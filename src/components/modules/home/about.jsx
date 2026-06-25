@@ -110,7 +110,7 @@ export default function About() {
           >
             Un pont entre
             <br />
-            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
+            <span className="bg-amber-500 bg-clip-text text-transparent">
               la France et le Burkina Faso
             </span>
           </h2>
@@ -145,7 +145,7 @@ export default function About() {
                 besoins des familles burkinabées installées en France.
               </p>
 
-              <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200">
+              <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Heart className="w-6 h-6 text-white" />
@@ -241,7 +241,7 @@ export default function About() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          <div className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
+          <div className="bg-[#0E7A34] rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Faites-nous confiance pour vos envois
             </h3>

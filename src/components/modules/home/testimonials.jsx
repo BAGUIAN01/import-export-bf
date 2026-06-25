@@ -179,7 +179,7 @@ export default function Testimonials() {
           >
             Ils nous font
             <br />
-            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
+            <span className="bg-amber-500 bg-clip-text text-transparent">
               confiance depuis des années
             </span>
           </h2>
@@ -304,7 +304,7 @@ export default function Testimonials() {
               key={index}
               className="text-center bg-gray-50 rounded-2xl p-6 hover:bg-gray-100 transition-colors duration-300"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-[#0E7A34] to-[#0B5C28] rounded-xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-[#0E7A34] rounded-xl flex items-center justify-center mx-auto mb-3">
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
               <div
@@ -326,7 +326,7 @@ export default function Testimonials() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
         >
-          <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
+          <div className="bg-amber-500 rounded-3xl p-8 lg:p-10 text-white shadow-2xl max-w-4xl mx-auto">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Rejoignez nos clients satisfaits
             </h3>

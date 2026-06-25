@@ -218,7 +218,7 @@ export default function TrackPackagePage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       
       {/* Hero Section */}
-      <section className="relative py-16 lg:py-24 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] overflow-hidden">
+      <section className="relative py-16 lg:py-24 bg-[#0f172a] overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-20 right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-32 left-20 w-80 h-80 bg-[#0E7A34]/20 rounded-full blur-3xl"></div>
@@ -233,11 +233,11 @@ export default function TrackPackagePage() {
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-green-200">
+              <span className="text-transparent bg-clip-text bg-green-100">
                 Suivez votre colis
               </span>
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-red-500">
+              <span className="text-transparent bg-clip-text bg-amber-500">
                 en temps réel
               </span>
             </h1>
@@ -264,7 +264,7 @@ export default function TrackPackagePage() {
                   <button
                     onClick={handleSearch}
                     disabled={isLoading || !trackingNumber.trim()}
-                    className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
+                    className="bg-amber-500 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
                   >
                     {isLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -299,7 +299,7 @@ export default function TrackPackagePage() {
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button 
                       onClick={() => {setSearchResults(null); setTrackingNumber(''); setError(null);}}
-                      className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105"
+                      className="bg-[#0E7A34] text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105"
                     >
                       Nouvelle recherche
                     </button>
@@ -318,7 +318,7 @@ export default function TrackPackagePage() {
                     
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-16 h-16 bg-gradient-to-br from-[#0E7A34] to-[#0B5C28] rounded-2xl flex items-center justify-center">
+                        <div className="w-16 h-16 bg-[#0E7A34] rounded-2xl flex items-center justify-center">
                           <Package className="w-8 h-8 text-white" />
                         </div>
                         <div>
@@ -415,7 +415,7 @@ export default function TrackPackagePage() {
                           <div className="flex items-center gap-2">
                             <div className="flex-1 bg-gray-200 rounded-full h-2">
                               <div 
-                                className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] h-2 rounded-full transition-all duration-500"
+                                className="bg-[#0E7A34] h-2 rounded-full transition-all duration-500"
                                 style={{ width: `${(currentStep / searchResults.timeline.length) * 100}%` }}
                               ></div>
                             </div>
@@ -496,9 +496,9 @@ export default function TrackPackagePage() {
                           
                           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center z-10 shadow-lg transition-all duration-300 ${
                             step.completed 
-                              ? 'bg-gradient-to-br from-[#0E7A34] to-[#0B5C28]' 
+                              ? 'bg-[#0E7A34]' 
                               : step.current
-                                ? 'bg-gradient-to-br from-amber-500 to-red-600 animate-pulse'
+                                ? 'bg-amber-500 animate-pulse'
                                 : 'bg-gray-200'
                           }`}>
                             <step.icon className={`w-8 h-8 ${
@@ -553,7 +553,7 @@ export default function TrackPackagePage() {
                 <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
                   <button 
                     onClick={() => {setSearchResults(null); setTrackingNumber(''); setError(null);}}
-                    className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 justify-center"
+                    className="bg-[#0E7A34] text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center gap-2 justify-center"
                   >
                     <Search className="w-5 h-5" />
                     Nouvelle recherche
@@ -587,7 +587,7 @@ export default function TrackPackagePage() {
       )}
 
       {/* Help Section */}
-      <section className="py-16 lg:py-24 bg-gradient-to-r from-[#0f172a] to-[#1e293b]">
+      <section className="py-16 lg:py-24 bg-[#0f172a]">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl lg:text-4xl font-black text-white mb-6">
             Besoin d&apos;aide avec votre colis ?

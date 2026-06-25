@@ -242,7 +242,7 @@ export default function Mediatheque() {
         {/* Section Header */}
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-6 text-[#0E7A34]">
-            Notre <span className="bg-gradient-to-r from-amber-500 to-red-500 bg-clip-text text-transparent">Médiathèque</span>
+            Notre <span className="bg-amber-500 bg-clip-text text-transparent">Médiathèque</span>
           </h2>
           <p className="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Découvrez nos services en images et vidéos : de la préparation à la livraison, 

@@ -178,18 +178,19 @@ export function Header() {
       <header className="sticky top-0 z-50">
       {/* Annonce du prochain départ : affichée uniquement si un départ futur est programmé */}
       {hasUpcomingDeparture && (
-        <div className="bg-amber-500 text-white">
+        <div className="bg-[#0f172a] text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-center">
-              <Calendar className="w-4 h-4 flex-shrink-0 animate-pulse" />
+            <div className="flex items-center justify-center gap-2 text-sm text-center">
+              <Calendar className="w-4 h-4 flex-shrink-0 text-amber-400" />
               <span>
-                Prochain chargement : {nextDeparture.departure.formatted.short}
+                Prochain chargement :{" "}
+                <span className="font-semibold text-amber-400">{nextDeparture.departure.formatted.short}</span>
               </span>
               <a
                 href="https://wa.me/33670699823?text=Bonjour%2C%20je%20souhaite%20r%C3%A9server%20une%20place%20pour%20le%20prochain%20chargement."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center gap-1 underline underline-offset-2 hover:text-amber-100 transition-colors"
+                className="hidden sm:inline-flex items-center gap-1 font-semibold text-amber-400 underline underline-offset-2 hover:text-[#0E7A34] transition-colors"
               >
                 Réservez votre place
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -201,22 +202,22 @@ export function Header() {
 
       {/* Top Bar avec animation */}
       <div
-        className={`bg-gradient-to-r from-blue-900 to-[#0E7A34] text-white transition-all duration-300 ${
+        className={`bg-gray-50 border-b border-gray-100 text-gray-600 transition-all duration-300 ${
           scrolled ? "py-1" : "py-2"
         } hidden lg:block`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2 hover:text-amber-300 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-2 hover:text-[#0E7A34] transition-colors cursor-pointer">
                 <Phone className="w-4 h-4" />
                 <span>+33 670 699 823</span>
               </div>
-              <div className="flex items-center space-x-2 hover:text-amber-300 transition-colors cursor-pointer">
+              <div className="flex items-center space-x-2 hover:text-[#0E7A34] transition-colors cursor-pointer">
                 <Phone className="w-4 h-4" />
                 <span>+226 76 60 19 81</span>
               </div>
-              <div className="flex items-center space-x-2 hover:text-amber-300 transition-colors">
+              <div className="flex items-center space-x-2 hover:text-[#0E7A34] transition-colors">
                 <MapPin className="w-4 h-4" />
                 <span>Paris, France</span>
               </div>

@@ -172,7 +172,7 @@ export default function ContactSection() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 leading-tight" style={{ color: '#0E7A34' }}>
             Une question ?
             <br />
-            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
+            <span className="bg-amber-500 bg-clip-text text-transparent">
               Nous sommes là pour vous
             </span>
           </h2>
@@ -187,7 +187,7 @@ export default function ContactSection() {
         <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12 lg:mb-16 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           {quickInfo.map((info, index) => (
             <div key={index} className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-[#0E7A34] to-[#0B5C28] rounded-xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#0E7A34] rounded-xl flex items-center justify-center mx-auto mb-3">
                 <info.icon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
               </div>
               <div className="text-lg lg:text-xl font-black mb-1" style={{ color: '#0E7A34' }}>
@@ -357,7 +357,7 @@ export default function ContactSection() {
                   {/* Submit */}
                   <button
                     onClick={handleSubmit}
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-3"
+                    className="w-full bg-amber-500 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-3"
                   >
                     <Send className="w-5 h-5" />
                     <span>Envoyer le message</span>
@@ -383,7 +383,7 @@ export default function ContactSection() {
 
         {/* Bottom CTA */}
         <div className={`text-center mt-12 lg:mt-16 transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] rounded-3xl p-8 lg:p-10 text-white shadow-2xl">
+          <div className="bg-[#0E7A34] rounded-3xl p-8 lg:p-10 text-white shadow-2xl">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Besoin d'une réponse immédiate ?
             </h3>

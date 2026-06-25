@@ -102,7 +102,7 @@ export default function CTA() {
   return (
     <section 
       ref={sectionRef}
-      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] overflow-hidden"
+      className="relative py-16 sm:py-20 lg:py-24 bg-[#0f172a] overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
@@ -132,7 +132,7 @@ export default function CTA() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-6 lg:mb-8 leading-tight text-white">
             Votre colis doit partir ?
             <br />
-            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+            <span className="text-amber-500">
               Réservez maintenant !
             </span>
           </h2>
@@ -241,7 +241,7 @@ export default function CTA() {
 
             {/* Quick Action */}
             <div className="text-center lg:text-right">
-              <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 shadow-xl">
+              <div className="bg-amber-500 rounded-2xl p-6 shadow-xl">
                 <CheckCircle className="w-8 h-8 text-white mx-auto lg:ml-auto lg:mr-0 mb-3" />
                 <div className="text-white font-bold text-lg mb-2">Disponible 24/7</div>
                 <div className="text-amber-100 text-sm">Réponse immédiate par WhatsApp</div>

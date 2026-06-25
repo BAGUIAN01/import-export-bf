@@ -148,7 +148,7 @@ export default function Stats() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 lg:mb-6 leading-tight" style={{ color: '#0E7A34' }}>
             Des chiffres qui
             <br />
-            <span className="bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
+            <span className="bg-amber-500 bg-clip-text text-transparent">
               parlent d'eux-mêmes
             </span>
           </h2>
@@ -223,7 +223,7 @@ export default function Stats() {
 
         {/* Bottom CTA */}
         <div className={`text-center mt-12 lg:mt-16 transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="bg-gradient-to-r from-[#0E7A34] to-[#0B5C28] rounded-3xl p-8 lg:p-12 text-white shadow-2xl">
+          <div className="bg-[#0E7A34] rounded-3xl p-8 lg:p-12 text-white shadow-2xl">
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Rejoignez nos clients satisfaits
             </h3>
