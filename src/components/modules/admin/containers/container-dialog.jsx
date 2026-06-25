@@ -152,7 +152,7 @@ export function ContainerDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Modifier le conteneur" : "Créer un nouveau conteneur"}
@@ -205,135 +205,6 @@ export function ContainerDialog({
               label="Date d'arrivée prévue"
               value={formData.arrivalDate}
               onChange={(value) => handleChange("arrivalDate", value)}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Capacité et poids */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FloatingLabelInput
-              id="capacity"
-              label="Capacité (nombre de colis)"
-              type="number"
-              min="1"
-              value={formData.capacity}
-              onChange={(e) => handleChange("capacity", e.target.value)}
-              error={errors.capacity}
-              disabled={loading}
-            />
-
-            <FloatingLabelInput
-              id="maxWeight"
-              label="Poids maximum autorisé (kg)"
-              type="number"
-              step="0.1"
-              value={formData.maxWeight}
-              onChange={(e) => handleChange("maxWeight", e.target.value)}
-              error={errors.maxWeight}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Localisation */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FloatingCombobox
-              id="origin"
-              label="Origine"
-              value={formData.origin}
-              onValueChange={(v) => handleChange("origin", v)}
-              disabled={loading}
-              placeholder="Sélectionnez ou saisissez l'origine"
-              options={[
-                { value: "France", label: "France" },
-                { value: "Burkina Faso", label: "Burkina Faso" },
-              ]}
-            />
-
-            <FloatingCombobox
-              id="destination"
-              label="Destination"
-              value={formData.destination}
-              onValueChange={(v) => handleChange("destination", v)}
-              disabled={loading}
-              placeholder="Sélectionnez ou saisissez la destination"
-              options={[
-                { value: "Burkina Faso", label: "Burkina Faso" },
-                { value: "France", label: "France" },
-              ]}
-            />
-
-            <FloatingLabelInput
-              id="currentLocation"
-              label="Localisation actuelle"
-              value={formData.currentLocation}
-              onChange={(e) => handleChange("currentLocation", e.target.value)}
-              disabled={loading}
-              placeholder="Ex: Port de Marseille"
-            />
-          </div>
-
-          {/* Transport */}
-          <div className="space-y-4">
-            <h4 className="font-medium">Informations de transport</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FloatingLabelInput
-                id="transportCompany"
-                label="Compagnie de transport"
-                value={formData.transportCompany}
-                onChange={(e) => handleChange("transportCompany", e.target.value)}
-                disabled={loading}
-                placeholder="Ex: TransAfrica Logistics"
-              />
-
-              <FloatingLabelInput
-                id="driverName"
-                label="Nom du chauffeur"
-                value={formData.driverName}
-                onChange={(e) => handleChange("driverName", e.target.value)}
-                disabled={loading}
-              />
-
-              <FloatingLabelInput
-                id="driverPhone"
-                label="Téléphone du chauffeur"
-                value={formData.driverPhone}
-                onChange={(e) => handleChange("driverPhone", e.target.value)}
-                disabled={loading}
-                placeholder="+22670123456"
-              />
-
-              <FloatingLabelInput
-                id="plateNumber"
-                label="Numéro de plaque"
-                value={formData.plateNumber}
-                onChange={(e) => handleChange("plateNumber", e.target.value)}
-                disabled={loading}
-                placeholder="BF-1234-AA"
-              />
-            </div>
-          </div>
-
-          {/* Coûts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FloatingLabelInput
-              id="transportCost"
-              label="Coût de transport (€)"
-              type="number"
-              step="0.01"
-              value={formData.transportCost}
-              onChange={(e) => handleChange("transportCost", e.target.value)}
-              error={errors.transportCost}
-              disabled={loading}
-            />
-
-            <FloatingLabelInput
-              id="customsCost"
-              label="Coût des douanes (€)"
-              type="number"
-              step="0.01"
-              value={formData.customsCost}
-              onChange={(e) => handleChange("customsCost", e.target.value)}
-              error={errors.customsCost}
               disabled={loading}
             />
           </div>
