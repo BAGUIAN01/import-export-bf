@@ -10,6 +10,9 @@ import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { ShipmentsStats } from "@/components/modules/admin/shipments/shipments-stats";
 import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
 import { ShipmentRemitDialog } from "@/components/modules/admin/shipments/shipment-remit-dialog";
+import { ReceiptPDF } from "@/components/modules/admin/shipments/receipt-pdf";
+import { pdf } from "@react-pdf/renderer";
+import QRCodeLib from "qrcode";
 import { useShipments, useShipmentMutations, usePackageBatch } from "@/hooks/use-shipments";
 import { FloatingLabelSelect } from "@/components/ui/floating-label-select";
 import { SelectItem } from "@/components/ui/select";
@@ -25,6 +28,18 @@ import {
 } from "@/components/ui/alert-dialog";
 
 /* ----------------------------- Helpers ----------------------------- */
+
+// Charge un fichier (ex: /logo.jpeg) en Data URL base64 pour @react-pdf
+async function toDataUrl(path) {
+  const res = await fetch(path);
+  const blob = await res.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 function compactName(client) {
   if (!client) return "";
@@ -402,6 +417,54 @@ export function ShipmentsTable({
     }
   }, [remitShipment, updateShipment, mutate]);
 
+  const handlePrintReceipt = useCallback(async (shipment) => {
+    if (!shipment?.id) return;
+    toast.loading("Génération de la quittance…", { id: "quittance" });
+    try {
+      const trackingUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/tracking?q=${shipment.shipmentNumber}`
+          : "";
+      const [logoDataUrl, qrCodeDataUrl] = await Promise.all([
+        toDataUrl("/logo.jpeg").catch(() => null),
+        trackingUrl
+          ? QRCodeLib.toDataURL(trackingUrl, { margin: 1, width: 160 }).catch(() => null)
+          : Promise.resolve(null),
+      ]);
+
+      const blob = await pdf(
+        <ReceiptPDF
+          shipment={shipment}
+          logoDataUrl={logoDataUrl}
+          qrCodeDataUrl={qrCodeDataUrl}
+          dateEdition={new Date()}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+      if (win) {
+        win.addEventListener("load", () => {
+          win.print();
+          win.addEventListener("afterprint", () => URL.revokeObjectURL(url));
+        });
+      } else {
+        // popup bloquée → téléchargement de secours
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `quittance-${shipment.shipmentNumber}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+      toast.success("Quittance prête", { id: "quittance" });
+    } catch (e) {
+      console.error("Quittance PDF:", e);
+      toast.error("Erreur lors de la génération de la quittance", { id: "quittance" });
+    }
+  }, []);
+
   const columns = useMemo(
     () =>
       shipmentsColumns({
@@ -410,8 +473,9 @@ export function ShipmentsTable({
         onDelete: handleDelete,
         onRemit: handleRemit,
         onPay: handleEdit, // ouvre le dialog "Gérer le paiement"
+        onPrintReceipt: handlePrintReceipt,
       }),
-    [handleRowOpen, handleEdit, handleDelete, handleRemit]
+    [handleRowOpen, handleEdit, handleDelete, handleRemit, handlePrintReceipt]
   );
 
   return (

@@ -64,13 +64,17 @@ export async function GET(request) {
           containerId: true,
           
           // Relations
-          client: { 
-            select: { 
-              id: true, 
-              clientCode: true, 
-              firstName: true, 
-              lastName: true 
-            } 
+          client: {
+            select: {
+              id: true,
+              clientCode: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              email: true,
+              recipientName: true,
+              recipientCity: true
+            }
           },
           container: { 
             select: { 

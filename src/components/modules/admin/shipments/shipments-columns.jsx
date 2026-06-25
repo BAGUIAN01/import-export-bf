@@ -23,7 +23,7 @@ const PaymentStatusBadge = ({ status }) => {
   return <Badge variant="outline" className={`${conf.cls} text-xs xs:text-sm`}>{conf.label}</Badge>;
 };
 
-export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit, onPay }) => [
+export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit, onPay, onPrintReceipt }) => [
   // Sélecteur
   {
     id: "select",
@@ -203,6 +203,11 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit, onPay }) =
             label: "Modifier",
             onClick: () => onEdit?.(row.original),
             icon: "Edit",
+          },
+          {
+            label: "Imprimer quittance",
+            onClick: () => onPrintReceipt?.(row.original),
+            icon: "Printer",
           },
           {
             label: "Supprimer",
