@@ -5,7 +5,6 @@ import {
   Menu,
   X,
   Phone,
-  Mail,
   MapPin,
   ArrowRight,
   User,
@@ -214,8 +213,8 @@ export function Header() {
                 <span>+33 670 699 823</span>
               </div>
               <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors cursor-pointer">
-                <Mail className="w-4 h-4" />
-                <span>contact@ieBF.fr</span>
+                <Phone className="w-4 h-4" />
+                <span>+226 76 60 19 81</span>
               </div>
               <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors">
                 <MapPin className="w-4 h-4" />

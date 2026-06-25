@@ -2,12 +2,9 @@
 import React from 'react';
 import {
   Phone,
-  Mail,
   Facebook,
   Instagram,
-  Clock,
   ArrowRight,
-  Heart,
   Truck
 } from 'lucide-react';
 import Image from 'next/image';
@@ -185,40 +182,6 @@ export  function Footer() {
                   </div>
                 </div>
                 
-                {/* Email */}
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-white">Email</div>
-                    <div className="text-blue-200">contact@ieBF.fr</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Business Hours */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                <h4 className="font-bold mb-3 flex items-center text-white">
-                  <Clock className="mr-2 h-4 w-4 text-orange-400" />
-                  Disponibilité
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between text-blue-200">
-                    <span>Lundi - Vendredi</span>
-                    <span className="font-medium text-white">8h00 - 18h00</span>
-                  </div>
-                  <div className="flex justify-between text-blue-200">
-                    <span>Samedi</span>
-                    <span className="font-medium text-white">9h00 - 15h00</span>
-                  </div>
-                  <div className="pt-2 mt-2 border-t border-white/10">
-                    <div className="flex items-center space-x-2">
-                      <Heart className="h-4 w-4 text-orange-400" />
-                      <span className="text-orange-300 font-medium text-sm">Service familial 24h/7j</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
