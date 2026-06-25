@@ -6,6 +6,7 @@ const CaisseContext = createContext(null);
 
 export function CaisseProvider({ children }) {
   const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedContainer, setSelectedContainer] = useState(null);
   const [orderItems, setOrderItems]         = useState([]);
   // paymentInfo: { modePaiement, montantRecu, monnaieRendue, observations }
   const [paymentInfo, setPaymentInfo]       = useState(null);
@@ -71,6 +72,9 @@ export function CaisseProvider({ children }) {
   const clearSession = useCallback(() => {
     setSelectedClient(null);
     setOrderItems([]);
+    // NB: on conserve volontairement le conteneur sélectionné entre deux ventes
+    // (même chargement = même conteneur). Décommenter pour réinitialiser :
+    // setSelectedContainer(null);
     setPaymentInfo(null);
     setOrderOptions({
       discount: 0,
@@ -88,6 +92,7 @@ export function CaisseProvider({ children }) {
     <CaisseContext.Provider
       value={{
         selectedClient, setSelectedClient,
+        selectedContainer, setSelectedContainer,
         orderItems, addItem, updateItemQuantity, removeItem, clearOrder,
         orderSubtotal,
         orderTotal,

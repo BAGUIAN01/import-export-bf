@@ -583,7 +583,7 @@ export default function ClientPage() {
   ], [selectClient]);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 pb-24 md:pb-6 space-y-3 sm:space-y-4 md:space-y-5 w-full max-w-7xl mx-auto">
+    <div className="h-full overflow-y-auto p-3 sm:p-4 md:p-6 pb-24 md:pb-6 space-y-3 sm:space-y-4 md:space-y-5 w-full max-w-7xl mx-auto">
       <div>
         <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-zinc-900">Sélection du client</h1>
         <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">

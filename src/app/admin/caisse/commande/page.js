@@ -142,7 +142,7 @@ export default function CommandePage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
 
       {/* ══ Catégories (Mobile / Tablette) — barre horizontale scrollable ════ */}
       <div className="lg:hidden shrink-0 order-1">

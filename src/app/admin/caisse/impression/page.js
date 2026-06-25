@@ -44,7 +44,7 @@ async function toDataUrl(path) {
 /* ── Page ───────────────────────────────────────────────────────── */
 export default function ImpressionPage() {
   const router = useRouter();
-  const { selectedClient, orderItems, orderTotal, orderSubtotal, orderOptions, paymentInfo, clearSession } = useCaisse();
+  const { selectedClient, selectedContainer, orderItems, orderTotal, orderSubtotal, orderOptions, paymentInfo, clearSession } = useCaisse();
 
   const printRef = useRef(null);
   const [lastContainer, setLastContainer] = useState(null);
@@ -92,7 +92,8 @@ export default function ImpressionPage() {
             orderSubtotal,
             orderOptions,
             paymentInfo,
-            containerId: lastContainer?.id,
+            // Conteneur choisi dans le header de la caisse (sinon dernier conteneur)
+            containerId: selectedContainer?.id ?? lastContainer?.id,
           }),
         });
 
@@ -143,7 +144,7 @@ export default function ImpressionPage() {
     };
 
     createOrder();
-  }, [selectedClient, orderItems, orderTotal, orderSubtotal, orderOptions, paymentInfo, lastContainer, orderCreated]);
+  }, [selectedClient, selectedContainer, orderItems, orderTotal, orderSubtotal, orderOptions, paymentInfo, lastContainer, orderCreated]);
 
   /* ── Dernier conteneur (bandeau seulement) ── */
   useEffect(() => {
@@ -281,7 +282,7 @@ export default function ImpressionPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
+    <div className="flex flex-col h-full gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
 
       {/* ══ Bordereau ══════════════════════════════════════════════════════ */}
       <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0">

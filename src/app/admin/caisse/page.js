@@ -113,7 +113,7 @@ export default function CaissePage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 md:p-8 pb-24 md:pb-8">
+    <div className="h-full overflow-y-auto flex flex-col gap-4 sm:gap-6 p-4 sm:p-6 md:p-8 pb-24 md:pb-8">
         {/* En-tête */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
