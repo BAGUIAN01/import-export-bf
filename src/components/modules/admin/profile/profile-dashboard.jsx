@@ -1,27 +1,14 @@
 "use client"
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { 
-  User, 
-  Shield, 
-  Bell, 
-  Globe,
-  Camera,
-  Save,
-  RefreshCw
-} from 'lucide-react'
+import { Camera, RefreshCw } from 'lucide-react'
 import { ProfileForm } from './profile-form'
-import { SecuritySettings } from './security-settings'
-import { NotificationSettings } from './notification-settings'
 import { useProfile } from '@/hooks/use-profile'
 
 export function ProfileDashboard() {
-  const [activeTab, setActiveTab] = useState('profile')
   const { user, isLoading, error, mutate } = useProfile()
 
   const handleRefresh = () => {
@@ -93,56 +80,10 @@ export function ProfileDashboard() {
         </CardContent>
       </Card>
 
-      {/* Profile Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Profil
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Sécurité
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="preferences" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Préférences
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile" className="space-y-4">
-          <ProfileForm user={user} isLoading={isLoading} />
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-4">
-          <SecuritySettings user={user} isLoading={isLoading} />
-        </TabsContent>
-
-        <TabsContent value="notifications" className="space-y-4">
-          <NotificationSettings user={user} isLoading={isLoading} />
-        </TabsContent>
-
-        <TabsContent value="preferences" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Préférences</CardTitle>
-              <CardDescription>
-                Personnalisez votre expérience utilisateur
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Les préférences seront disponibles prochainement</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Profil */}
+      <div className="space-y-4">
+        <ProfileForm user={user} isLoading={isLoading} />
+      </div>
     </div>
   )
 }
