@@ -39,8 +39,8 @@ export default function Hero() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
-              Envoyez vos colis<br />
-              <span className="text-[#0E7A34]">en toute sécurité</span>
+              Envoyez vos <span className="text-[#0E7A34]">colis</span><br />
+              en toute sécurité
             </h1>
 
             <p className="text-lg sm:text-xl text-gray-600 max-w-xl mx-auto lg:mx-0 mb-9 leading-relaxed">
