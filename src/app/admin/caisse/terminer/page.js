@@ -53,7 +53,7 @@ export default function TerminerPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 h-full overflow-y-auto pb-8 p-3 sm:p-6">
+    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 h-full overflow-y-auto pb-24 md:pb-8 p-3 sm:p-6">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Terminer la transaction</h2>

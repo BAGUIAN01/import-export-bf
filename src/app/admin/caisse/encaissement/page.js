@@ -176,7 +176,7 @@ export default function EncaissementPage() {
   const insuffisant    = modePaiement === "ESPECES" && montantRecuNum > 0 && montantRecuNum < orderTotal;
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
 
       {/* ══ Gauche : récapitulatif + mode paiement (Desktop) ══════════════════ */}
       <div className="hidden lg:flex w-80 shrink-0 flex-col gap-3 overflow-hidden">
@@ -352,7 +352,7 @@ export default function EncaissementPage() {
       <Sheet>
         <SheetTrigger asChild>
           <Button
-            className="lg:hidden fixed bottom-4 left-4 z-50 h-14 w-14 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-2xl"
+            className="lg:hidden fixed bottom-[5.5rem] right-4 md:bottom-4 z-50 h-14 w-14 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-2xl"
             size="icon"
           >
             <Menu className="h-6 w-6" />
