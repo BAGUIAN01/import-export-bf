@@ -387,7 +387,7 @@ export default function ContactSection() {
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Besoin d'une réponse immédiate ?
             </h3>
-            <p className="text-green-50 mb-6 lg:mb-8 text-lg">
+            <p className="text-gray-200 mb-6 lg:mb-8 text-lg">
               Appelez-nous directement, nous sommes disponibles 7j/7
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -102,7 +102,7 @@ export default function CTA() {
   return (
     <section 
       ref={sectionRef}
-      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-[#0E7A34] via-[#0B5C28] to-[#0E7A34] overflow-hidden"
+      className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
@@ -137,7 +137,7 @@ export default function CTA() {
             </span>
           </h2>
           
-          <p className="text-lg lg:text-xl text-green-50 max-w-3xl mx-auto leading-relaxed mb-8 lg:mb-12">
+          <p className="text-lg lg:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed mb-8 lg:mb-12">
             Places limitées pour le prochain chargement vers le Burkina Faso. 
             Garantissez l'envoi de vos colis avec nos tarifs préférentiels.
           </p>
@@ -159,7 +159,7 @@ export default function CTA() {
                         {item.value.toString().padStart(2, '0')}
                       </div>
                     </div>
-                    <div className="text-xs lg:text-sm text-green-100 font-medium">
+                    <div className="text-xs lg:text-sm text-gray-300 font-medium">
                       {item.label}
                     </div>
                   </div>
@@ -199,7 +199,7 @@ export default function CTA() {
               <h4 className="text-white font-bold text-base lg:text-lg mb-2">
                 {benefit.title}
               </h4>
-              <p className="text-green-100 text-sm lg:text-base">
+              <p className="text-gray-300 text-sm lg:text-base">
                 {benefit.description}
               </p>
             </div>
@@ -222,7 +222,7 @@ export default function CTA() {
                     <Phone className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-green-100 text-sm">France</div>
+                    <div className="text-gray-300 text-sm">France</div>
                     <div className="text-white font-bold">+33 670 699 823</div>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export default function CTA() {
                     <Phone className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-green-100 text-sm">Burkina Faso</div>
+                    <div className="text-gray-300 text-sm">Burkina Faso</div>
                     <div className="text-white font-bold">+226 766 019 81</div>
                   </div>
                 </div>

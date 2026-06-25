@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative bg-[#0E7A34] text-white pt-10 pb-20 sm:pt-16 sm:pb-28">
+    <section className="relative bg-[#0f172a] text-white pt-10 pb-20 sm:pt-16 sm:pb-28">
       <div className="max-w-4xl mx-auto px-6 text-center">
         <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-4 py-1.5 mb-8 text-sm font-medium text-white/90">
           Transport France → Burkina Faso

@@ -246,7 +246,7 @@ export default function About() {
               Faites-nous confiance pour vos envois
             </h3>
 
-            <p className="text-green-50 mb-6 lg:mb-8 text-lg">
+            <p className="text-gray-200 mb-6 lg:mb-8 text-lg">
               Rejoignez les centaines de familles satisfaites
             </p>
 

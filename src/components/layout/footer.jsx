@@ -40,7 +40,7 @@ export  function Footer() {
   ];
 
   return (
-    <footer className="bg-gradient-to-br from-[#0E7A34] via-[#0B5C28] to-[#0E7A34] text-white relative overflow-hidden">
+    <footer className="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white relative overflow-hidden">
       
       {/* Background Elements */}
       <div className="absolute inset-0">
@@ -69,13 +69,13 @@ export  function Footer() {
                 </div>
                 <div>
                   <div className="text-2xl font-black">Naange Envoi</div>
-                  <div className="text-sm text-green-100 font-medium">
+                  <div className="text-sm text-gray-300 font-medium">
                     France ↔ Burkina Faso
                   </div>
                 </div>
               </div>
               
-              <p className="text-green-100 leading-relaxed">
+              <p className="text-gray-300 leading-relaxed">
                 Depuis 8 ans, nous sommes le pont entre la France et le Burkina Faso. 
                 Chaque colis que nous transportons porte l'amour et l'espoir des familles.
               </p>
@@ -112,7 +112,7 @@ export  function Footer() {
                   <li key={service.name}>
                     <a 
                       href={service.href} 
-                      className="text-green-100 hover:text-amber-400 transition-colors duration-200 flex items-center justify-between group"
+                      className="text-gray-300 hover:text-amber-400 transition-colors duration-200 flex items-center justify-between group"
                     >
                       <div className="flex items-center">
                         <ArrowRight className="mr-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-2 group-hover:translate-x-0" />
@@ -137,7 +137,7 @@ export  function Footer() {
                   <li key={link.name}>
                     <a 
                       href={link.href} 
-                      className="text-green-100 hover:text-amber-400 transition-colors duration-200 flex items-center group"
+                      className="text-gray-300 hover:text-amber-400 transition-colors duration-200 flex items-center group"
                     >
                       <ArrowRight className="mr-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-2 group-hover:translate-x-0" />
                       <span className="group-hover:translate-x-1 transition-transform duration-200">
@@ -164,8 +164,8 @@ export  function Footer() {
                   </div>
                   <div>
                     <div className="font-bold text-white">France</div>
-                    <div className="text-green-100">+33 670 699 823</div>
-                    <div className="text-xs text-green-200">WhatsApp disponible</div>
+                    <div className="text-gray-300">+33 670 699 823</div>
+                    <div className="text-xs text-gray-400">WhatsApp disponible</div>
                   </div>
                 </div>
                 
@@ -176,9 +176,9 @@ export  function Footer() {
                   </div>
                   <div>
                     <div className="font-bold text-white">Burkina Faso</div>
-                    <div className="text-green-100">+226 766 019 81</div>
-                    <div className="text-green-100">00226 46 10 00 09</div>
-                    <div className="text-xs text-green-200">Livraison & support</div>
+                    <div className="text-gray-300">+226 766 019 81</div>
+                    <div className="text-gray-300">00226 46 10 00 09</div>
+                    <div className="text-xs text-gray-400">Livraison & support</div>
                   </div>
                 </div>
                 
@@ -193,13 +193,13 @@ export  function Footer() {
             
             {/* Copyright */}
             <div className="text-center lg:text-left">
-              <div className="text-green-100">
+              <div className="text-gray-300">
                 © 2024 Naange Envoi. Tous droits réservés.
-                <Link href="/legal" className="text-green-200 hover:text-amber-400 transition-colors ml-1">
+                <Link href="/legal" className="text-gray-400 hover:text-amber-400 transition-colors ml-1">
                 ToemeXpertise
                 </Link>
               </div>
-              <div className="text-sm text-green-200 mt-1">
+              <div className="text-sm text-gray-400 mt-1">
                 Connectons les cœurs entre la France et le Burkina Faso depuis 2016
               </div>
             </div>
@@ -210,12 +210,12 @@ export  function Footer() {
                 <React.Fragment key={link.name}>
                   <a 
                     href={link.href} 
-                    className="text-green-100 hover:text-amber-400 transition-colors"
+                    className="text-gray-300 hover:text-amber-400 transition-colors"
                   >
                     {link.name}
                   </a>
                   {index < legalLinks.length - 1 && (
-                    <span className="text-green-300">•</span>
+                    <span className="text-gray-400">•</span>
                   )}
                 </React.Fragment>
               ))}

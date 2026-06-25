@@ -227,7 +227,7 @@ export default function Stats() {
             <h3 className="text-2xl lg:text-3xl font-black mb-4">
               Rejoignez nos clients satisfaits
             </h3>
-            <p className="text-green-50 mb-6 lg:mb-8 text-lg max-w-2xl mx-auto">
+            <p className="text-gray-200 mb-6 lg:mb-8 text-lg max-w-2xl mx-auto">
               Faites confiance à notre expertise pour l'envoi de vos colis vers le Burkina Faso
             </p>
             
