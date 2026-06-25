@@ -38,9 +38,28 @@ export default function Hero() {
               Transport France → Burkina Faso
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
-              Envoyez vos <span className="text-[#0E7A34]">colis</span><br />
-              en toute sécurité
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.18] mb-6">
+              Envoyez vos{" "}
+              <span className="relative inline-block text-[#0E7A34]">
+                colis
+                <svg
+                  className="absolute left-0 -bottom-1 w-full"
+                  height="10"
+                  viewBox="0 0 200 10"
+                  fill="none"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 7 C 55 1, 150 1, 197 6"
+                    stroke="#E0A500"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              <br />
+              en toute <span className="text-amber-500">sécurité</span>
             </h1>
 
             <p className="text-lg sm:text-xl text-gray-600 max-w-xl mx-auto lg:mx-0 mb-9 leading-relaxed">
