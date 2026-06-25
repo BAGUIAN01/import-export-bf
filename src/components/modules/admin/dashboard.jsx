@@ -20,7 +20,7 @@ export default function Dashboard({ user, data }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-2 border-blue-500">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">

@@ -131,7 +131,7 @@ export default function ClientDetail({
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, idx) => (
             <Skeleton key={idx} className="h-24 w-full" />
           ))}
@@ -211,7 +211,7 @@ export default function ClientDetail({
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-2 border-blue-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">

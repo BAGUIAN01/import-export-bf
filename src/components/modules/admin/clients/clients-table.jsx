@@ -201,7 +201,7 @@ export function ClientsTable({ initialClients, initialStats }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card className="border-2 border-blue-500">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">

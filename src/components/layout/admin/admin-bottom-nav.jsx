@@ -20,18 +20,42 @@ export function AdminBottomNav() {
   const { role } = useRBAC();
   const { setSidebarMobileOpen } = useLayout();
 
-  // Items principaux : filtrés par rôle, dédupliqués par URL, limités à 4 onglets
+  // Items principaux de la bottom nav : on privilégie un ensemble curé
+  // (Hub, Tableau de bord, Clients, Conteneurs) dans cet ordre, en respectant
+  // le rôle. Si le rôle n'a pas accès à certains, on complète avec les autres
+  // entrées autorisées. Limité à 4 onglets (+ bouton Menu).
   const items = React.useMemo(() => {
     if (!role) return [];
     const filtered = filterNavByRole(navigationData.navMain, role, { hideUnknown: true });
-    const seen = new Set();
-    const unique = [];
+    const byUrl = new Map();
     for (const it of filtered) {
-      if (!it.url || seen.has(it.url)) continue;
-      seen.add(it.url);
-      unique.push(it);
+      if (it.url && !byUrl.has(it.url)) byUrl.set(it.url, it);
     }
-    return unique.slice(0, 4);
+
+    const preferred = [
+      "/admin",
+      "/admin/dashboard",
+      "/admin/clients",
+      "/admin/containers",
+    ];
+
+    const picked = [];
+    const used = new Set();
+    for (const url of preferred) {
+      if (byUrl.has(url) && !used.has(url)) {
+        picked.push(byUrl.get(url));
+        used.add(url);
+      }
+    }
+    // Complète si moins de 4 onglets disponibles pour ce rôle
+    for (const it of filtered) {
+      if (picked.length >= 4) break;
+      if (it.url && !used.has(it.url)) {
+        picked.push(it);
+        used.add(it.url);
+      }
+    }
+    return picked.slice(0, 4);
   }, [role]);
 
   const isActive = (url) =>

@@ -69,7 +69,7 @@ export const navigationData = {
       url: "/admin/clients"
     },
     {
-      title: "Shipments",
+      title: "Colis",
       icon: Package,
       url: "/admin/shipments"
     },

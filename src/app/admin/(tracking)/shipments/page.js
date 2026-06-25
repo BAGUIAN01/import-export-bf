@@ -116,9 +116,9 @@ export default async function ShipmentsPage() {
 
   return (
     <PageContainer>
-      <PageTitle title="Expéditions" />
-      <PageHeader breadcrumbs={[{ label: "Hub", href: "/admin" }, { label: "Expéditions" }]} />
-      <PageBody className="p-3 xs:p-4 sm:p-6">
+      <PageTitle title="Colis" />
+      <PageHeader breadcrumbs={[{ label: "Hub", href: "/admin" }, { label: "Colis" }]} />
+      <PageBody className="px-0 py-2 sm:p-4 md:p-6">
         <ShipmentsTable
           initialShipments={shipments}
           initialClients={clients}
