@@ -57,6 +57,9 @@ export async function GET(request) {
           deliveryAddress: true,
           specialInstructions: true,
           notes: true,
+          deliveredAt: true,
+          receivedBy: true,
+          deliveryNote: true,
           clientId: true,
           containerId: true,
           

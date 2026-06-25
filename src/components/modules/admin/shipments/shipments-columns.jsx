@@ -2,9 +2,10 @@
 
 import { Checkbox as Cb } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/modules/data-table/data-table-column-header";
 import { DataTableRowActions } from "@/components/modules/data-table/data-table-row-actions";
-import { User, Calendar, Euro, Package } from "lucide-react";
+import { User, Euro, Package, PackageCheck } from "lucide-react";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 const formatCurrency = (amount) =>
@@ -22,7 +23,7 @@ const PaymentStatusBadge = ({ status }) => {
   return <Badge variant="outline" className={`${conf.cls} text-xs xs:text-sm`}>{conf.label}</Badge>;
 };
 
-export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
+export const shipmentsColumns = ({ onOpen, onEdit, onDelete, onRemit }) => [
   // Sélecteur
   {
     id: "select",
@@ -126,18 +127,38 @@ export const shipmentsColumns = ({ onOpen, onEdit, onDelete }) => [
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
 
-  // Dates
+  // Remise au destinataire
   {
-    accessorKey: "createdAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Création" />
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center gap-1">
-        <Calendar className="h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground flex-shrink-0" />
-        <span className="text-sm xs:text-base">{formatDate(row.getValue("createdAt"))}</span>
-      </div>
-    ),
+    id: "remit",
+    header: () => <span className="text-sm">Remise</span>,
+    enableSorting: false,
+    enableHiding: false,
+    cell: ({ row }) => {
+      const sh = row.original;
+      const remis = Boolean(sh.deliveredAt);
+      return remis ? (
+        <button
+          onClick={() => onRemit?.(sh)}
+          title={`Remis le ${formatDate(sh.deliveredAt)}${sh.receivedBy ? ` à ${sh.receivedBy}` : ""}`}
+          className="inline-flex items-center"
+        >
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 cursor-pointer">
+            <PackageCheck className="h-3 w-3 mr-1" />
+            Remis
+          </Badge>
+        </button>
+      ) : (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onRemit?.(sh)}
+          className="h-8 border-[#0E7A34]/30 text-[#0E7A34] hover:bg-[#0E7A34]/5 hover:text-[#0B5C28]"
+        >
+          <PackageCheck className="h-4 w-4 mr-1" />
+          Remettre
+        </Button>
+      );
+    },
   },
 
   // Actions

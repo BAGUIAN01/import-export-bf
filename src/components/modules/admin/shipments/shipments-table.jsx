@@ -9,6 +9,7 @@ import { shipmentsColumns } from "@/components/modules/admin/shipments/shipments
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { ShipmentsStats } from "@/components/modules/admin/shipments/shipments-stats";
 import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
+import { ShipmentRemitDialog } from "@/components/modules/admin/shipments/shipment-remit-dialog";
 import { useShipments, useShipmentMutations, usePackageBatch } from "@/hooks/use-shipments";
 import { FloatingLabelSelect } from "@/components/ui/floating-label-select";
 import { SelectItem } from "@/components/ui/select";
@@ -155,6 +156,7 @@ export function ShipmentsTable({
   const [editingShipment, setEditingShipment] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [containerFilter, setContainerFilter] = useState("ALL");
+  const [remitShipment, setRemitShipment] = useState(null);
 
   // Hook SWR pour les shipments avec cache
   const { 
@@ -385,14 +387,30 @@ export function ShipmentsTable({
     }
   }, [editingShipment, updateShipment, mutate]);
 
+  const handleRemit = useCallback((shipment) => {
+    if (!shipment?.id) return;
+    setRemitShipment(shipment);
+  }, []);
+
+  const handleSaveRemit = useCallback(async (data) => {
+    if (!remitShipment) return;
+    const result = await updateShipment(remitShipment.id, data);
+    if (result.success) {
+      toast.success("Remise enregistrée");
+      setRemitShipment(null);
+      await mutate();
+    }
+  }, [remitShipment, updateShipment, mutate]);
+
   const columns = useMemo(
     () =>
       shipmentsColumns({
         onOpen: handleRowOpen,
         onEdit: handleEdit,
         onDelete: handleDelete,
+        onRemit: handleRemit,
       }),
-    [handleRowOpen, handleEdit, handleDelete]
+    [handleRowOpen, handleEdit, handleDelete, handleRemit]
   );
 
   return (
@@ -475,6 +493,15 @@ export function ShipmentsTable({
           setEditingShipment(null);
         }}
         onSave={handleSaveEdit}
+        loading={isMutating}
+      />
+
+      {/* Dialog de remise au destinataire */}
+      <ShipmentRemitDialog
+        shipment={remitShipment}
+        isOpen={!!remitShipment}
+        onClose={() => setRemitShipment(null)}
+        onSubmit={handleSaveRemit}
         loading={isMutating}
       />
 

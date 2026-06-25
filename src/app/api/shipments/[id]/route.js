@@ -198,6 +198,19 @@ export async function PUT(request, { params }) {
       updateData.notes = body.notes;
     }
 
+    // Remise au destinataire
+    if (body.deliveredAt !== undefined) {
+      updateData.deliveredAt = body.deliveredAt ? new Date(body.deliveredAt) : null;
+    }
+
+    if (body.receivedBy !== undefined) {
+      updateData.receivedBy = body.receivedBy || null;
+    }
+
+    if (body.deliveryNote !== undefined) {
+      updateData.deliveryNote = body.deliveryNote || null;
+    }
+
     // Recalculer automatiquement le paymentStatus si paidAmount est modifié
     if (body.paidAmount !== undefined) {
       const paidAmount = Number(body.paidAmount);
