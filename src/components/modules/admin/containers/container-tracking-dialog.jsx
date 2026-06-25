@@ -10,17 +10,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { SelectItem } from "@/components/ui/select";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
+import { FloatingLabelSelect } from "@/components/ui/floating-label-select";
+import { FloatingLabelTextarea } from "@/components/ui/floating-label-textarea";
 import { Loader2, MapPin, Bell, BellOff, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useContainerMutations } from "@/hooks/use-containers";
@@ -35,15 +30,15 @@ const statusOptions = [
 ];
 
 /**
- * Dialog de suivi : met à jour la localisation + le statut du conteneur,
- * ajoute une entrée d'historique et notifie éventuellement les clients.
+ * Dialog de suivi : met à jour la localisation + (optionnellement) le statut
+ * du conteneur, ajoute une entrée d'historique et notifie les clients.
  */
 export function ContainerTrackingDialog({ container, isOpen, onClose, onUpdated }) {
   const { updateContainer } = useContainerMutations();
   const [form, setForm] = useState({
     location: "",
     description: "",
-    status: "PREPARATION",
+    status: "", // pas de présélection
     isPublic: true,
     notifyClients: false,
   });
@@ -54,7 +49,7 @@ export function ContainerTrackingDialog({ container, isOpen, onClose, onUpdated 
       setForm({
         location: container.currentLocation || "",
         description: "",
-        status: container.status || "PREPARATION",
+        status: "", // pas de présélection du statut
         isPublic: true,
         notifyClients: false,
       });
@@ -87,8 +82,8 @@ export function ContainerTrackingDialog({ container, isOpen, onClose, onUpdated 
       }
       const data = await res.json().catch(() => ({}));
 
-      // Mise à jour du statut du conteneur si changé
-      if (form.status !== container.status) {
+      // Mise à jour du statut seulement si un statut a été choisi et qu'il change
+      if (form.status && form.status !== container.status) {
         await updateContainer(container.id, {
           status: form.status,
           currentLocation: form.location,
@@ -125,42 +120,37 @@ export function ContainerTrackingDialog({ container, isOpen, onClose, onUpdated 
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="track-location">Localisation *</Label>
-            <Input
-              id="track-location"
-              value={form.location}
-              onChange={(e) => set("location", e.target.value)}
-              placeholder="Port d'Abidjan, Côte d'Ivoire"
-            />
-          </div>
+          <FloatingLabelInput
+            id="track-location"
+            label="Localisation *"
+            value={form.location}
+            onChange={(e) => set("location", e.target.value)}
+            disabled={submitting}
+            placeholder="Port d'Abidjan, Côte d'Ivoire"
+          />
 
-          <div className="space-y-2">
-            <Label>Nouveau statut</Label>
-            <Select value={form.status} onValueChange={(v) => set("status", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FloatingLabelSelect
+            id="track-status"
+            label="Nouveau statut (optionnel)"
+            value={form.status}
+            onValueChange={(v) => set("status", v)}
+            disabled={submitting}
+          >
+            {statusOptions.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </FloatingLabelSelect>
 
-          <div className="space-y-2">
-            <Label htmlFor="track-desc">Description *</Label>
-            <Textarea
-              id="track-desc"
-              rows={3}
-              value={form.description}
-              onChange={(e) => set("description", e.target.value)}
-              placeholder="Décrivez l'étape actuelle du transport..."
-            />
-          </div>
+          <FloatingLabelTextarea
+            id="track-desc"
+            label="Description *"
+            rows={3}
+            value={form.description}
+            onChange={(e) => set("description", e.target.value)}
+            disabled={submitting}
+          />
 
           <div className="flex items-center justify-between">
             <Label htmlFor="track-public" className="flex items-center gap-2 text-sm">
