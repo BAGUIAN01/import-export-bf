@@ -54,6 +54,11 @@ function TabsContent({
   return (
     (<TabsPrimitive.Content
       data-slot="tabs-content"
+      // Radix met tabIndex=0 sur le panneau, qui reçoit alors le focus au
+      // changement d'onglet → le navigateur le fait défiler dans la vue
+      // (l'app "saute" vers le haut). Nos panneaux contiennent des éléments
+      // focusables, donc tabIndex=-1 est conforme a11y et supprime ce saut.
+      tabIndex={-1}
       className={cn("flex-1 outline-none", className)}
       {...props} />)
   );
