@@ -52,10 +52,10 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
     if (shipment) {
       const total = Number(shipment.totalAmount || 0);
       const alreadyPaid = Number(shipment.paidAmount || 0);
-      // Pré-remplit avec le montant à payer (solde complet) si pas encore soldé
-      const autoAmount = alreadyPaid >= total && total > 0 ? alreadyPaid : total;
+      // Pré-remplit avec le reste à payer (différence total − déjà payé)
+      const remaining = Math.max(0, Math.round((total - alreadyPaid) * 100) / 100);
       setFormData({
-        paidAmount: autoAmount,
+        paidAmount: remaining,
         paymentMethod: shipment.paymentMethod || "NONE",
         paidAt: shipment.paidAt ? new Date(shipment.paidAt) : new Date(),
         paymentStatus: shipment.paymentStatus || "PENDING",
@@ -70,16 +70,28 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // paymentStatus est recalculé côté serveur — on ne l'envoie pas
-    const { paymentStatus, paymentMethod, ...rest } = formData;
+    // paymentStatus est recalculé côté serveur — on ne l'envoie pas.
+    // Le champ contient le montant encaissé maintenant → on l'ajoute au cumul déjà payé.
+    const { paymentStatus, paymentMethod, paidAmount, ...rest } = formData;
+    const alreadyPaid = Number(shipment.paidAmount || 0);
+    const total = Number(shipment.totalAmount || 0);
+    const cumulative = Math.min(
+      total,
+      Math.round((alreadyPaid + Number(paidAmount || 0)) * 100) / 100
+    );
     await onSave({
       ...rest,
+      paidAmount: cumulative,
       paymentMethod: paymentMethod === "NONE" ? null : paymentMethod,
       paidAt: formData.paidAt ? formData.paidAt.toISOString() : null,
     });
   };
 
   if (!shipment) return null;
+
+  const total = Number(shipment.totalAmount || 0);
+  const alreadyPaid = Number(shipment.paidAmount || 0);
+  const remaining = Math.max(0, Math.round((total - alreadyPaid) * 100) / 100);
 
   const statusLabel =
     PAYMENT_STATUS_OPTIONS.find((o) => o.value === formData.paymentStatus)?.label ||
@@ -106,14 +118,14 @@ export function ShipmentEditDialog({ shipment, isOpen, onClose, onSave, loading 
                 type="number"
                 step="0.01"
                 min="0"
-                max={shipment.totalAmount || 0}
-                label="Montant payé (€)"
+                max={remaining}
+                label="Montant à encaisser (€)"
                 value={formData.paidAmount}
                 onChange={(e) => handleChange("paidAmount", parseFloat(e.target.value) || 0)}
                 disabled={loading}
               />
               <p className="text-xs text-muted-foreground mt-1 px-1">
-                Total : {Number(shipment.totalAmount || 0).toFixed(2)}€
+                Reste à payer : {remaining.toFixed(2)}€ • Total : {total.toFixed(2)}€
               </p>
             </div>
 
