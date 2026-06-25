@@ -7,6 +7,7 @@ import { SWRProvider } from '@/components/providers/swr-provider'
 import { MobileSidebar } from '@/components/layout/admin/sidebar/mobile-sidebar'
 import { Sidebar } from '@/components/layout/admin/sidebar/sidebar'
 import { Header } from '@/components/layout/admin/header'
+import { AdminBottomNav } from '@/components/layout/admin/admin-bottom-nav'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -37,6 +38,9 @@ export default function DashboardLayout({ children }) {
                 </main>
               </div>
             </div>
+
+            {/* Bottom navbar mobile (style application) */}
+            <AdminBottomNav />
           </div>
         </LayoutProvider>
       </SWRProvider>
