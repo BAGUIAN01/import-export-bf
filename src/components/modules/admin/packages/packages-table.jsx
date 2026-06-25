@@ -299,7 +299,7 @@ export function PackagesTable({ initialClients, initialContainers }) {
   /* ── Rendu ─────────────────────────────────────────────────────────────── */
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 px-0 py-2 sm:p-4 md:p-6">
       {showStats && <PackagesStats stats={stats} />}
 
       <CustomDataTable

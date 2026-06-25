@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Breadcrumbs from "@/components/ui/custom-breadcums";
 
 export function PageContainer({ children, className }) {
-  return <div className={cn("p-6 space-y-4", className)}>{children}</div>;
+  // Pas de padding horizontal sur mobile : le <main> fournit déjà la gouttière,
+  // ce qui laisse le contenu occuper toute la largeur disponible.
+  return <div className={cn("py-2 sm:p-4 md:p-6 space-y-4", className)}>{children}</div>;
 }
 
 export function PageHeader({
@@ -33,7 +35,7 @@ export function PageHeader({
 }
 
 export function PageBody({ children, className }) {
-  return <div className={cn("space-y-6", className)}>{children}</div>;
+  return <div className={cn("space-y-4 sm:space-y-6", className)}>{children}</div>;
 }
 
 export function PageSection({ title, description, right = null, children, className }) {

@@ -21,19 +21,22 @@ export default function DashboardLayout({ children }) {
     <SessionProvider>
       <SWRProvider>
         <LayoutProvider>
-          <div className={`h-screen bg-background flex flex-col ${inter.className}`}>
+          <div
+            className={`h-[100dvh] bg-background flex flex-col ${inter.className}`}
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
+          >
             <MobileSidebar />
-            
+
             <div className="flex flex-1 overflow-hidden">
               {/* Sidebar fixe */}
               <Sidebar />
-              
+
               <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Header fixe */}
                 <Header/>
-                
-                {/* Zone scrollable avec hauteur calculée */}
-                <main className="flex-1 overflow-y-auto p-4">
+
+                {/* Zone scrollable — marges réduites sur mobile pour occuper la largeur */}
+                <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6">
                   {children}
                 </main>
               </div>

@@ -26,7 +26,7 @@ export function ContainersStats({ stats }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <Card className="border-2 border-blue-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total conteneurs</p>
@@ -40,7 +40,7 @@ export function ContainersStats({ stats }) {
       </Card>
 
       <Card className="border-2 border-orange-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">En transit</p>
@@ -54,7 +54,7 @@ export function ContainersStats({ stats }) {
       </Card>
 
       <Card className="border-2 border-green-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Livrés</p>
@@ -68,7 +68,7 @@ export function ContainersStats({ stats }) {
       </Card>
 
       <Card className="border-2 border-purple-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Colis totaux</p>

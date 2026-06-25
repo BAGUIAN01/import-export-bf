@@ -22,7 +22,7 @@ export default function Dashboard({ user, data }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-2 border-blue-500">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Colis total</p>
@@ -39,7 +39,7 @@ export default function Dashboard({ user, data }) {
         </Card>
 
         <Card className="border-2 border-green-500">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Conteneurs actifs</p>
@@ -54,7 +54,7 @@ export default function Dashboard({ user, data }) {
         </Card>
 
         <Card className="border-2 border-purple-500">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Clients</p>
@@ -69,7 +69,7 @@ export default function Dashboard({ user, data }) {
         </Card>
 
         <Card className="border-2 border-yellow-500">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">CA mensuel</p>

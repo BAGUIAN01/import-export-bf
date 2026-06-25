@@ -46,7 +46,7 @@ export function ShipmentsStats({ stats }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <Card className="border-2 border-blue-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total expéditions</p>
@@ -60,7 +60,7 @@ export function ShipmentsStats({ stats }) {
       </Card>
 
       <Card className="border-2 border-orange-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">En transit</p>
@@ -74,7 +74,7 @@ export function ShipmentsStats({ stats }) {
       </Card>
 
       <Card className="border-2 border-green-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Livrées</p>
@@ -88,7 +88,7 @@ export function ShipmentsStats({ stats }) {
       </Card>
 
       <Card className="border-2 border-yellow-500">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">CA mensuel</p>

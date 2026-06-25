@@ -63,7 +63,7 @@ export function DataTableToolbar({
         <div className="flex items-center gap-2">
           {/* Bouton d'ajout - TOUJOURS VISIBLE (action principale) */}
           {onAdd && (
-            <Button onClick={onAdd} className="h-14 flex-shrink-0">
+            <Button onClick={onAdd} className="h-10 sm:h-12 md:h-14 flex-shrink-0">
               <Plus className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{addButtonText}</span>
             </Button>
@@ -149,7 +149,7 @@ export function DataTableToolbar({
           {filters.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-14 flex-shrink-0 relative">
+                <Button variant="outline" className="h-10 sm:h-12 md:h-14 flex-shrink-0 relative">
                   <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Filtres</span>
                   {isFiltered && (

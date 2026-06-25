@@ -48,8 +48,11 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-background sticky top-0 z-10">
-        <div className="container flex items-center justify-between h-16 px-4">
+      <header
+        className="border-b bg-background sticky top-0 z-10"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div className="flex items-center justify-between h-16 px-3 sm:px-4 max-w-5xl mx-auto">
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo.png"
@@ -81,9 +84,9 @@ export default async function AdminPage() {
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2">Bonjour, {firstName}</h2>
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">Bonjour, {firstName}</h2>
           <p className="text-muted-foreground">Choisissez un outil pour commencer.</p>
         </div>
 
