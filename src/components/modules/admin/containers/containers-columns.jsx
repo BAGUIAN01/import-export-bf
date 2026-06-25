@@ -93,67 +93,6 @@ export const containersColumns = ({ onEdit, onDelete, onView, onTrack }) => [
     },
   },
   {
-    id: "capacity",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Chargement" />
-    ),
-    cell: ({ row }) => {
-      const container = row.original;
-      const percentage = container.capacity > 0 ? 
-        Math.round((container.currentLoad / container.capacity) * 100) : 0;
-      
-      return (
-        <div className="space-y-2 min-w-[120px]">
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {container.currentLoad}/{container.capacity}
-            </span>
-            <span className="font-medium">{percentage}%</span>
-          </div>
-          <Progress value={percentage} className="h-2" />
-        </div>
-      );
-    },
-  },
-  {
-    id: "weight",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Poids" />
-    ),
-    cell: ({ row }) => {
-      const container = row.original;
-      return container.currentWeight ? (
-        <div className="flex items-center gap-1">
-          <Weight className="h-4 w-4 text-muted-foreground" />
-          <span>{container.currentWeight.toFixed(1)} kg</span>
-          {container.maxWeight && (
-            <span className="text-xs text-muted-foreground">
-              / {container.maxWeight.toFixed(0)} kg
-            </span>
-          )}
-        </div>
-      ) : "-";
-    },
-  },
-  {
-    id: "location",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Localisation" />
-    ),
-    cell: ({ row }) => {
-      const container = row.original;
-      return (
-        <div className="flex items-center gap-1">
-          <MapPin className="h-4 w-4 text-muted-foreground" />
-          <span className="max-w-[150px] truncate">
-            {container.currentLocation || container.origin}
-          </span>
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "departureDate",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Départ" />
@@ -176,35 +115,6 @@ export const containersColumns = ({ onEdit, onDelete, onView, onTrack }) => [
         {formatDate(row.getValue("arrivalDate"))}
       </div>
     ),
-  },
-  {
-    id: "transport",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Transport" />
-    ),
-    cell: ({ row }) => {
-      const container = row.original;
-      return container.transportCompany ? (
-        <div className="flex items-center gap-1">
-          <Truck className="h-4 w-4 text-muted-foreground" />
-          <span className="max-w-[120px] truncate">
-            {container.transportCompany}
-          </span>
-        </div>
-      ) : "-";
-    },
-  },
-  {
-    id: "cost",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Coût total" />
-    ),
-    cell: ({ row }) => {
-      const container = row.original;
-      const totalCost = container.totalCost || 
-        ((container.transportCost || 0) + (container.customsCost || 0));
-      return totalCost > 0 ? formatCurrency(totalCost) : "-";
-    },
   },
   {
     id: "actions",

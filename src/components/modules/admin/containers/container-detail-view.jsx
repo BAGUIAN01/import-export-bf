@@ -332,12 +332,8 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
                   <Package className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-muted-foreground">Charge</p>
-                    <p className="text-2xl font-bold">{actualPackagesCount}/{container.capacity}</p>
-                  </div>
-                  <Progress value={loadPercentage} className="h-2 mb-2" />
-                  <p className="text-xs text-muted-foreground">{loadPercentage.toFixed(1)}% de capacité</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Colis</p>
+                  <p className="text-2xl font-bold">{actualPackagesCount}</p>
                 </div>
               </div>
             </CardContent>
@@ -399,8 +395,8 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
 
         {/* Stats supplémentaires */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, idx) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, idx) => (
               <Card key={idx}>
                 <CardContent className="p-6">
                   <Skeleton className="h-24 w-full" />
@@ -409,7 +405,7 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
             ))}
           </div>
         ) : stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
@@ -422,25 +418,6 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
                     {stats.avgPackageValue > 0 && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Moy: {stats.avgPackageValue.toFixed(2)}€/colis
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-orange-50 rounded-lg">
-                    <Weight className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Poids total</p>
-                    <p className="text-2xl font-bold">{stats.totalWeight?.toFixed(1) || 0} kg</p>
-                    {actualPackagesCount > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Moy: {(stats.totalWeight / actualPackagesCount).toFixed(1)}kg/colis
                       </p>
                     )}
                   </div>
@@ -725,11 +702,9 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
                     <thead>
                       <tr className="border-b">
                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">N° Colis</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Client</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Description</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Statut</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Montant</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Poids</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -744,22 +719,6 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
                                 <Package className="h-4 w-4 text-blue-600" />
                                 <span className="font-medium">{pkg.packageNumber}</span>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              {pkg.client ? (
-                                <div>
-                                  <div className="font-medium">
-                                    {pkg.client.firstName} {pkg.client.lastName}
-                                  </div>
-                                  {pkg.client.clientCode && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {pkg.client.clientCode}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
                             </td>
                             <td className="py-3 px-4">
                               <div className="max-w-xs truncate" title={pkg.description}>
@@ -791,11 +750,6 @@ export function ContainerDetailView({ container: initialContainer, currentUser }
                             <td className="py-3 px-4 text-right">
                               <span className="font-medium">
                                 {pkg.totalAmount ? `${Number(pkg.totalAmount).toFixed(2)}€` : '-'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <span className="text-muted-foreground">
-                                {pkg.weight ? `${Number(pkg.weight).toFixed(1)} kg` : '-'}
                               </span>
                             </td>
                           </tr>
