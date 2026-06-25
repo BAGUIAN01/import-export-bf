@@ -45,8 +45,14 @@ export default function CommandePage() {
     selectedClient, orderItems,
     addItem, updateItemQuantity, removeItem,
     orderSubtotal, orderTotal,
-    orderOptions,
+    orderOptions, setOrderOptions,
   } = useCaisse();
+
+  /* ── Appliquer une remise sur la commande ── */
+  const setDiscount = (value) => {
+    const d = Math.max(0, parseFloat(String(value).replace(",", ".")) || 0);
+    setOrderOptions((prev) => ({ ...prev, discount: d }));
+  };
 
   const [selectedCategory, setSelectedCategory] = useState(PACKAGE_CATEGORIES[0]);
   const [categorySearch, setCategorySearch]     = useState("");
@@ -245,6 +251,21 @@ export default function CommandePage() {
                 <span>+{formatPrice(orderOptions.additionalFees)} €</span>
               </div>
             )}
+          </div>
+
+          {/* Remise */}
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="remise-desktop" className="text-xs font-medium text-zinc-600">Remise (€)</label>
+            <input
+              id="remise-desktop"
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={orderOptions.discount || ""}
+              onChange={(e) => setDiscount(e.target.value)}
+              placeholder="0"
+              className="w-24 h-8 text-sm text-right rounded-lg border border-zinc-200 px-2 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+            />
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-zinc-200">
@@ -622,6 +643,21 @@ export default function CommandePage() {
                     <span>+{formatPrice(orderOptions.additionalFees)} €</span>
                   </div>
                 )}
+              </div>
+
+              {/* Remise */}
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="remise-mobile" className="text-xs font-medium text-zinc-600">Remise (€)</label>
+                <input
+                  id="remise-mobile"
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={orderOptions.discount || ""}
+                  onChange={(e) => setDiscount(e.target.value)}
+                  placeholder="0"
+                  className="w-24 h-8 text-sm text-right rounded-lg border border-zinc-200 px-2 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                />
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-zinc-200">

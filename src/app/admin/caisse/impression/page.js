@@ -261,14 +261,39 @@ export default function ImpressionPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
+    <div className="flex flex-col h-screen max-h-screen gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
 
-      {/* ══ Gauche : bordereau ══════════════════════════════════════════════ */}
+      {/* ══ Bordereau ══════════════════════════════════════════════════════ */}
       <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0">
-        <div className="px-4 py-3 border-b border-zinc-100 shrink-0 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-[#010066]" />
-          <p className="font-semibold text-zinc-900">Bordereau d&apos;expédition</p>
-          <span className="text-xs text-zinc-400 ml-auto">{bordereauNum}</span>
+        <div className="px-3 sm:px-4 py-2.5 border-b border-zinc-100 shrink-0 flex items-center gap-2 flex-wrap">
+          <FileText className="h-4 w-4 text-[#010066] shrink-0" />
+          <p className="font-semibold text-zinc-900 text-sm sm:text-base">Bordereau</p>
+          <span className="text-xs text-zinc-400 hidden md:inline">{bordereauNum}</span>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              onClick={handleDownload}
+              disabled={isGenerating}
+              size="sm"
+              className="bg-[#010066] hover:bg-[#010088] text-white"
+            >
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{isGenerating ? "Génération…" : "Télécharger PDF"}</span>
+            </Button>
+            <Button onClick={handlePrint} disabled={isGenerating} size="sm" variant="outline">
+              <Printer className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Imprimer</span>
+            </Button>
+            <Button
+              onClick={() => { clearSession(); router.push("/admin/caisse/client"); }}
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <CheckCircle2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Terminer</span>
+            </Button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
@@ -455,65 +480,6 @@ export default function ImpressionPage() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ══ Droite : contrôles ══════════════════════════════════════════════ */}
-      <div className="hidden lg:flex w-72 shrink-0 flex-col gap-3 overflow-hidden">
-
-        {/* Récap client */}
-        <div className="bg-white rounded-xl border border-zinc-200 p-4 shrink-0 space-y-2">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Client</p>
-          <p className="text-sm font-bold text-zinc-900">{selectedClient.firstName} {selectedClient.lastName}</p>
-          {selectedClient.phone && <p className="text-xs text-zinc-400">{selectedClient.phone}</p>}
-          <div className="pt-2 border-t border-zinc-100">
-            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">N° de suivi</p>
-            <p className="text-sm font-bold text-[#010066]">{shipmentInfo?.shipmentNumber || "—"}</p>
-          </div>
-          {lastContainer && (
-            <div className="pt-2 border-t border-zinc-100">
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Conteneur actif</p>
-              <p className="text-sm font-bold text-zinc-900">{lastContainer.containerNumber}</p>
-              {lastContainer.departureDate && (
-                <p className="text-xs text-zinc-400">Départ : {new Date(lastContainer.departureDate).toLocaleDateString("fr-FR")}</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Récap commande */}
-        <div className="bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden flex-1 min-h-0">
-          <div className="px-4 py-3 border-b border-zinc-100 shrink-0 flex items-center justify-between">
-            <p className="font-semibold text-zinc-900 text-sm">Commande</p>
-            <p className="text-lg font-bold text-orange-600">{formatPrice(orderTotal)} €</p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {orderItems.map((item) => (
-              <div key={item.id} className="bg-zinc-50 border border-zinc-100 rounded-lg p-3">
-                <p className="text-xs font-medium text-zinc-900 line-clamp-2 mb-1">{item.name}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500">{formatPrice(item.price)} × {item.quantity}</span>
-                  <span className="text-sm font-bold text-orange-600">{formatPrice(item.total)} €</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="bg-white rounded-xl border border-zinc-200 p-4 shrink-0 space-y-2">
-          <Button onClick={handleDownload} disabled={isGenerating} className="w-full bg-[#010066] hover:bg-[#010088] text-white">
-            <Download className="h-4 w-4 mr-2" />
-            {isGenerating ? "Génération…" : "Télécharger PDF"}
-          </Button>
-          <Button onClick={handlePrint} disabled={isGenerating} variant="outline" className="w-full">
-            <Printer className="h-4 w-4 mr-2" />Imprimer
-          </Button>
-        </div>
-
-        {/* Terminer */}
-        <Button onClick={() => { clearSession(); router.push("/admin/caisse/client"); }} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white rounded-xl shrink-0">
-          <CheckCircle2 className="h-5 w-5 mr-2" />Terminer
-        </Button>
       </div>
 
     </div>
