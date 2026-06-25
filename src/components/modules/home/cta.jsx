@@ -170,14 +170,17 @@ export default function CTA() {
 
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center mb-12">
-            <Link href={"/#contact"}>
+            <a
+              href="https://wa.me/33670699823?text=Bonjour%2C%20je%20souhaite%20r%C3%A9server%20une%20place%20pour%20le%20prochain%20chargement."
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <button className="group bg-orange-500 hover:bg-orange-400 text-white px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-black text-lg lg:text-xl transition-all duration-300 hover:scale-105 shadow-2xl flex items-center justify-center gap-3">
                 <Package className="w-6 h-6 lg:w-7 lg:h-7" />
                 <span>Réserver ma place</span>
                 <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform" />
               </button>
-              
-            </Link>
+            </a>
             <Link href={"/#contact"}>
               <button className="border-2 border-white/50 hover:border-white text-white hover:bg-white/10 px-8 lg:px-12 py-4 lg:py-5 rounded-2xl font-bold text-lg lg:text-xl transition-all duration-300 backdrop-blur-sm">
                 Calculer le prix

@@ -4,12 +4,10 @@ import {
   ChevronDown,
   Menu,
   X,
-  Globe,
   Phone,
   Mail,
   MapPin,
   ArrowRight,
-  Clock,
   User,
   Settings,
   Package,
@@ -188,13 +186,15 @@ export function Header() {
               <span>
                 Prochain chargement : {nextDeparture.departure.formatted.short}
               </span>
-              <Link
-                href="/tracking"
+              <a
+                href="https://wa.me/33670699823?text=Bonjour%2C%20je%20souhaite%20r%C3%A9server%20une%20place%20pour%20le%20prochain%20chargement."
+                target="_blank"
+                rel="noopener noreferrer"
                 className="hidden sm:inline-flex items-center gap-1 underline underline-offset-2 hover:text-orange-100 transition-colors"
               >
                 Réservez votre place
                 <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ export function Header() {
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors cursor-pointer">
                 <Phone className="w-4 h-4" />
-                <span>+33 1 23 45 67 89</span>
+                <span>+33 670 699 823</span>
               </div>
               <div className="flex items-center space-x-2 hover:text-orange-300 transition-colors cursor-pointer">
                 <Mail className="w-4 h-4" />
@@ -221,17 +221,6 @@ export function Header() {
                 <MapPin className="w-4 h-4" />
                 <span>Paris, France</span>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="flex items-center space-x-1 animate-pulse">
-                <Globe className="w-4 h-4" />
-                <span>150+ pays desservis</span>
-              </span>
-              <div className="h-4 w-px bg-white/30"></div>
-              <span className="flex items-center space-x-1 text-orange-300 font-medium">
-                <Clock className="w-4 h-4" />
-                <span>24/7 Support</span>
-              </span>
             </div>
           </div>
         </div>
