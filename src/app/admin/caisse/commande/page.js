@@ -7,7 +7,8 @@ import {
   Sparkles, Heart, Wind, Pill, Package, Droplets, Sun, Star, Leaf,
 } from "lucide-react";
 
-import { PACKAGE_TYPES, PACKAGE_CATEGORIES } from "@/lib/data/packages";
+import { PACKAGE_CATEGORIES } from "@/lib/data/packages";
+import { usePricing } from "@/hooks/use-pricing";
 import { useCaisse } from "@/contexts/caisse-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,9 @@ export default function CommandePage() {
   const [quoteDesc, setQuoteDesc]         = useState("");
 
   /* ── Types de colis filtrés par catégorie sélectionnée ── */
-  const products = PACKAGE_TYPES.filter((t) => t.category === selectedCategory?.key);
+  // Prix et photos viennent de Gestion → Tarifs (repli sur lib/data/packages.js)
+  const { activeTypes } = usePricing();
+  const products = activeTypes.filter((t) => t.category === selectedCategory?.key);
 
   /* ── Helpers ── */
   const getProductQty = (typeValue) =>
@@ -360,7 +363,12 @@ export default function CommandePage() {
                         </Badge>
                       )}
                       <div className="w-full aspect-square rounded-lg bg-zinc-50 mb-2 overflow-hidden flex items-center justify-center">
-                        <Icon className="h-8 w-8 text-zinc-500" />
+                        {type.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={type.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+                        ) : (
+                          <Icon className="h-8 w-8 text-zinc-500" />
+                        )}
                       </div>
                       <p className="text-xs font-medium text-zinc-800 leading-tight line-clamp-2 mb-1">
                         {type.label}
@@ -394,7 +402,12 @@ export default function CommandePage() {
                         )}
                       >
                         <div className="w-full aspect-square rounded-lg bg-zinc-50 mb-2 overflow-hidden flex items-center justify-center">
-                          <Icon className="h-8 w-8 text-zinc-400" />
+                          {type.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={type.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+                          ) : (
+                            <Icon className="h-8 w-8 text-zinc-400" />
+                          )}
                         </div>
                         <p className="text-xs font-medium text-zinc-800 leading-tight line-clamp-2 mb-1">
                           {type.label}

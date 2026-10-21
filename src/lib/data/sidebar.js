@@ -79,6 +79,11 @@ export const navigationData = {
       url: "/admin/containers"
     },
     {
+      title: "Tarifs",
+      icon: Tag,
+      url: "/admin/pricing"
+    },
+    {
       title: "Finances",
       icon: CreditCard,
       url: "/admin/finances"

@@ -6,7 +6,7 @@ import { packagesColumns } from "@/components/modules/admin/packages/packages-co
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { PackagesStats } from "@/components/modules/admin/packages/packages-stats";
 import { toast } from "sonner";
-import { PACKAGE_TYPES } from "@/lib/data/packages";
+import { usePricing } from "@/hooks/use-pricing";
 import { usePackages, usePackagesStats } from "@/hooks/use-packages";
 
 /* ----------------------------- Helpers utils ----------------------------- */
@@ -21,12 +21,7 @@ function getTypesArray(pkg) {
   return [];
 }
 
-function labelForType(value) {
-  const meta = PACKAGE_TYPES.find((t) => t.value === value);
-  return meta?.label || value || "";
-}
-
-function buildTypesText(pkg) {
+function buildTypesText(pkg, labelForType) {
   const arr = getTypesArray(pkg);
   if (!arr.length) return "";
   return arr.map((t) => `${labelForType(t.type)}×${t.quantity ?? 1}`).join(", ");
@@ -37,7 +32,7 @@ function firstTypeValue(pkg) {
   return arr[0]?.type || "";
 }
 
-function normalizePackage(pkg, clients, containers) {
+function normalizePackage(pkg, clients, containers, labelForType) {
   const client =
     pkg.client || (clients || []).find((c) => c.id === pkg.clientId) || null;
   const container =
@@ -50,7 +45,7 @@ function normalizePackage(pkg, clients, containers) {
     client,
     container,
     type: pkg.type ?? firstTypeValue(pkg),
-    typesText: buildTypesText(pkg),
+    typesText: buildTypesText(pkg, labelForType),
     destination: pkg.destination ?? client?.recipientCity ?? "",
     totalAmount: pkg.totalAmount ?? 0,
   };
@@ -84,10 +79,6 @@ const paymentStatusOptions = [
   { label: "Remboursé",  value: "REFUNDED" },
 ];
 
-const packageTypeOptions = PACKAGE_TYPES.map((t) => ({
-  label: t.label,
-  value: t.value,
-}));
 
 /* ------------------------------- Composant -------------------------------- */
 
@@ -104,10 +95,21 @@ export function PackagesTable({ initialClients, initialContainers }) {
   const { packages: rawPackages, isLoading, mutate }     = usePackages({ limit: 500 });
   const { stats, mutate: mutateStats } = usePackagesStats();
 
+  // Libellés des types : grille Gestion → Tarifs (articles retirés compris)
+  const { allTypes, findType } = usePricing();
+  const packageTypeOptions = useMemo(
+    () => allTypes.map((t) => ({ label: t.label, value: t.value })),
+    [allTypes]
+  );
+
   // Normalise les colis (ajoute typesText, type, destination…)
   const packages = useMemo(
-    () => rawPackages.map((p) => normalizePackage(p, clients, containers)),
-    [rawPackages, clients, containers]
+    () =>
+      rawPackages.map((p) =>
+        normalizePackage(p, clients, containers, (v) => findType(v)?.label || v || "")
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawPackages, clients, containers, allTypes]
   );
 
   // Invalide les deux caches SWR après toute mutation

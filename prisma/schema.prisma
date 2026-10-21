@@ -456,19 +456,30 @@ model Pricing {
   id          String  @id @default(cuid())
   type        String  @unique // CARTON, BARRIQUE, etc.
   name        String
-  description String?
+  description String? // Détail affiché sous le nom (dimensions, contenance…)
+  category    String? // Clé de PACKAGE_CATEGORIES (cartons, futs…)
+  sortOrder   Int     @default(0)
 
   // Tarifs
-  basePrice  Float
-  pickupFee  Float  @default(20)
-  perKgPrice Float?
-  minWeight  Float?
-  maxWeight  Float?
+  priceMode     String @default("FIXED") // FIXED, FROM (« dès »), QUOTE (sur devis)
+  basePrice     Float // Prix Région parisienne
+  priceProvince Float? // Vide = même prix partout
+  pickupFee     Float  @default(20)
+  perKgPrice    Float?
+  minWeight     Float?
+  maxWeight     Float?
 
-  // Validité
-  isActive   Boolean   @default(true)
-  validFrom  DateTime  @default(now())
-  validUntil DateTime?
+  // Photo (Cloudflare R2)
+  imageUrl String?
+  imageKey String?
+
+  // Visibilité
+  isActive      Boolean   @default(true) // Proposé à la caisse et au formulaire de colis
+  showOnWebsite Boolean   @default(true) // Affiché dans la grille du site public
+  validFrom     DateTime  @default(now())
+  validUntil    DateTime?
+
+  updatedByName String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

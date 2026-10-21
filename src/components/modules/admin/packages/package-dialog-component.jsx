@@ -26,13 +26,12 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
-  PACKAGE_TYPES,
   PACKAGE_CATEGORIES,
-  getPackageTypesByCategory,
   getPriceByRegion,
   PRIORITIES,
   PAYMENT_METHODS,
 } from "@/lib/data/packages";
+import { usePricing } from "@/hooks/use-pricing";
 import { getTotal } from "@/lib/utils/package-helpers";
 
 /* ============================
@@ -46,6 +45,7 @@ export const PackageItem = ({
   onRemove,
   onDuplicate,
 }) => {
+  const { findType } = usePricing();
   const getTypesDisplay = () => {
     if (!pkg.selectedTypes || pkg.selectedTypes.length === 0) {
       return "Aucun type sélectionné";
@@ -56,7 +56,7 @@ export const PackageItem = ({
     );
     const typeLabels = pkg.selectedTypes
       .map((item) => {
-        const t = PACKAGE_TYPES.find((x) => x.value === item.type);
+        const t = findType(item.type);
         return `${t?.label || item.type} (${item.quantity || 0})`;
       })
       .join(", ");
@@ -250,10 +250,11 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isParisRegion, setIsParisRegion] = useState(true);
 
-  const categorizedTypes = getPackageTypesByCategory();
+  // Prix et photos viennent de Gestion → Tarifs (repli sur lib/data/packages.js)
+  const { activeTypes, typesByCategory, findType } = usePricing();
   const typesToDisplay = selectedCategory
-    ? categorizedTypes.find((cat) => cat.key === selectedCategory)?.types || []
-    : PACKAGE_TYPES;
+    ? typesByCategory.find((cat) => cat.key === selectedCategory)?.types || []
+    : activeTypes;
 
   const handleTypeSelection = (typeValue, unitPrice, isQuoteOnly = false) => {
     const selectedTypes = form.selectedTypes || [];
@@ -322,7 +323,7 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
           <h4 className="font-medium text-gray-900 mb-3">Types sélectionnés :</h4>
           <div className="space-y-2">
             {selectedTypes.map((item) => {
-              const t = PACKAGE_TYPES.find((x) => x.value === item.type);
+              const t = findType(item.type);
               const Icon = t?.icon || PackageIcon;
               return (
                 <div
@@ -438,7 +439,12 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
                 </div>
               )}
               <div className="flex items-center mb-1.5">
-                <Icon size={18} className={currentQuantity > 0 ? "text-amber-600" : "text-gray-600"} />
+                {type.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={type.imageUrl} alt="" loading="lazy" className="h-8 w-8 rounded object-cover shrink-0" />
+                ) : (
+                  <Icon size={18} className={currentQuantity > 0 ? "text-amber-600" : "text-gray-600"} />
+                )}
                 <span className="ml-2 font-medium text-xs leading-tight">{type.label}</span>
               </div>
               <div className="text-xs text-gray-600 mb-1.5 flex-1 line-clamp-2">
@@ -738,7 +744,9 @@ export const ContainerAndSummaryStep = ({
   isContainerLocked = false, // <-- nouveau : bloque la sélection du conteneur
   sharedData,
   setSharedData,
-}) => (
+}) => {
+  const { findType } = usePricing();
+  return (
   <div className="space-y-6 max-w-4xl mx-auto">
     {/* Conteneur */}
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
@@ -847,7 +855,7 @@ export const ContainerAndSummaryStep = ({
           const typeLines =
             (pkg.selectedTypes || []).length > 0
               ? (pkg.selectedTypes || []).map((item) => {
-                  const t = PACKAGE_TYPES.find((x) => x.value === item.type);
+                  const t = findType(item.type);
                   return `${t?.label || item.type} × ${item.quantity || 0}`;
                 })
               : ["Aucun type sélectionné"];
@@ -949,7 +957,8 @@ export const ContainerAndSummaryStep = ({
       </div>
     </section>
   </div>
-);
+  );
+};
 
 /* ============================
    Stepper + Footer

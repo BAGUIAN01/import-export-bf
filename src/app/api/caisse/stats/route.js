@@ -269,6 +269,12 @@ export async function GET(request) {
 
     // Mapper les types de produits vers des noms lisibles
     // Importons dynamiquement depuis PACKAGE_TYPES si possible, sinon utiliser ce mapping
+    // Noms tenus à jour dans Gestion → Tarifs (y compris les articles ajoutés)
+    const pricingNames = new Map(
+      (await prisma.pricing.findMany({ select: { type: true, name: true } }).catch(() => [])).map(
+        (r) => [r.type, r.name]
+      )
+    );
     const productTypeLabels = {
       // Cartons
       "CARTON": "Carton Standard",
@@ -326,7 +332,7 @@ export async function GET(request) {
     const topProducts = Object.entries(productMap)
       .map(([productName, data]) => ({
         productId: productName,
-        productName: productTypeLabels[productName] || productName,
+        productName: pricingNames.get(productName) || productTypeLabels[productName] || productName,
         quantity: data.quantity,
         revenue: data.revenue,
       }))

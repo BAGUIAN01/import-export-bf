@@ -9,10 +9,53 @@ import {
   Tv,
   Briefcase,
   Car,
+  Luggage,
+  Boxes,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  PRICING_CATEGORIES,
+  SITE_FOOTNOTE_CATEGORY,
+  formatSitePrice,
+} from "@/lib/data/pricing-catalog";
 
-const categories = [
+const CATEGORY_ICONS = {
+  cartons: Box,
+  futs: Package,
+  bagages: Luggage,
+  cantines: Briefcase,
+  electromenager: Snowflake,
+  tv: Tv,
+  mobilier: Sofa,
+  vins: Wine,
+  vehicules: Car,
+  divers: Boxes,
+};
+
+// Grille construite depuis Gestion → Tarifs : une carte par catégorie,
+// l'enlèvement en une ligne sous la grille. Une catégorie sans article visible
+// n'a pas de carte.
+function buildFromPricing(rows) {
+  const cards = PRICING_CATEGORIES.filter((c) => c.key !== SITE_FOOTNOTE_CATEGORY)
+    .map((c) => ({
+      id: c.key,
+      title: c.label,
+      subtitle: c.subtitle,
+      icon: CATEGORY_ICONS[c.key] ?? Package,
+      highlighted: c.highlighted,
+      items: rows
+        .filter((r) => r.category === c.key)
+        .map((r) => ({ name: r.name, detail: r.description, price: formatSitePrice(r) })),
+    }))
+    .filter((c) => c.items.length > 0);
+  const footnotes = rows
+    .filter((r) => r.category === SITE_FOOTNOTE_CATEGORY)
+    .map((r) => `${r.name} : ${formatSitePrice(r)}`);
+  return { cards, footnotes };
+}
+
+// Grille d'origine, gardée si la base ne répond pas.
+const FALLBACK_CATEGORIES = [
   {
     id: "futs",
     title: "Fûts",
@@ -132,7 +175,11 @@ const categories = [
   },
 ];
 
-export default function Tarifs() {
+export default function Tarifs({ pricing = null }) {
+  const { cards: categories, footnotes } = Array.isArray(pricing)
+    ? buildFromPricing(pricing)
+    : { cards: FALLBACK_CATEGORIES, footnotes: [] };
+
   return (
     <section id="tarifs" className="py-20 sm:py-28 bg-white">
       <div className="max-w-6xl mx-auto px-6">
@@ -199,6 +246,15 @@ export default function Tarifs() {
                         }
                       >
                         {item.name}
+                        {item.detail && (
+                          <span
+                            className={`block text-xs ${
+                              cat.highlighted ? "text-white/60" : "text-gray-500"
+                            }`}
+                          >
+                            {item.detail}
+                          </span>
+                        )}
                       </span>
                       <span
                         className={`font-bold whitespace-nowrap ${
@@ -220,6 +276,12 @@ export default function Tarifs() {
             );
           })}
         </div>
+
+        {footnotes.length > 0 && (
+          <p className="text-center text-gray-600 mt-8">
+            {footnotes.join(" · ")}
+          </p>
+        )}
 
         <div className="text-center mt-14">
           <p className="text-gray-600 mb-5">

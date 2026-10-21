@@ -436,6 +436,13 @@ export async function POST(request) {
 
 // ---------- createSinglePackageInternal ----------
 // ---------- createSinglePackageInternal (strict container required) ----------
+// Types connus : la liste d'origine, plus tout article de Gestion → Tarifs
+// (un article ajouté depuis l'écran Tarifs doit pouvoir être enregistré).
+async function loadKnownTypes() {
+  const rows = await prisma.pricing.findMany({ select: { type: true } }).catch(() => []);
+  return new Set([...validTypes, ...rows.map((r) => r.type)]);
+}
+
 async function createSinglePackageInternal(body, session) {
   try {
     // --------- 1) Détection de format + parsing types ----------
@@ -449,7 +456,8 @@ async function createSinglePackageInternal(body, session) {
 
     if (isLegacyFormat) {
       // Ancien format: un seul type + quantity/basePrice
-      if (!validTypes.includes(body.type)) {
+      const knownTypes = await loadKnownTypes();
+      if (!knownTypes.has(body.type)) {
         return { error: `Type invalide: ${body.type}`, status: 400 };
       }
       const q = Math.max(1, parseInt(body.quantity ?? 1, 10) || 1);
@@ -465,8 +473,9 @@ async function createSinglePackageInternal(body, session) {
       if (!body.selectedTypes.length) {
         return { error: "Au moins un type doit être sélectionné", status: 400 };
       }
+      const knownTypes = await loadKnownTypes();
       for (const item of body.selectedTypes) {
-        if (!item?.type || !validTypes.includes(item.type)) {
+        if (!item?.type || !knownTypes.has(item.type)) {
           return { error: `Type invalide: ${item?.type}`, status: 400 };
         }
         const q = Number(item.quantity || 0);
