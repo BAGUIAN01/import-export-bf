@@ -76,39 +76,65 @@
   .tag-new { margin-left: auto; font-size: 10px; font-weight: 600; background: var(--gold); color: oklch(0.25 0.05 70); border-radius: 999px; padding: 1px 7px; }
   .main { display: flex; flex-direction: column; min-width: 0; }
   .top { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
-  .top .crumbs { font-size: 13px; color: var(--muted-fg); display: flex; gap: 6px; align-items: center; }
-  .top .crumbs b { color: var(--fg); font-weight: 500; }
   .avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
   .content { padding: 24px; display: grid; gap: 16px; }
-  .ptitle { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
-  .ptitle h1 { font-size: 24px; margin: 0; letter-spacing: -0.02em; }
-  .ptitle p { margin: 4px 0 0; font-size: 14px; color: var(--muted-fg); }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 8px; font: 500 14px Inter, sans-serif; border: 1px solid var(--border); background: var(--bg); color: var(--fg); white-space: nowrap; }
   .btn.p { background: var(--primary); border-color: var(--primary); color: white; }
   .btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
   .btn.lg { height: 48px; font-size: 15px; width: 100%; }
   .strip { display: flex; gap: 12px; align-items: flex-start; background: var(--primary-soft); border: 1px solid oklch(0.88 0.06 150); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; color: oklch(0.32 0.08 150); }
   .strip .i { margin-top: 2px; }
-  .tools { display: flex; gap: 10px; align-items: center; }
-  .field { height: 36px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--muted-fg); font-size: 14px; background: var(--bg); }
-  .count { margin-left: auto; font-size: 13px; color: var(--muted-fg); }
 
-  /* ---------- tariff table ---------- */
-  .tbl { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .tr { display: grid; grid-template-columns: 1fr 110px 90px 130px 96px 96px 88px; align-items: center; gap: 12px; padding: 0 14px; min-height: 52px; border-top: 1px solid var(--border); font-size: 14px; }
-  .tr.h { min-height: 40px; background: oklch(0.985 0 0); border-top: 0; font-size: 12px; font-weight: 500; color: var(--muted-fg); }
+  /* ---------- CustomDataTable (src/components/modules/data-table) ---------- */
+  .crumbs-row { font-size: 13px; color: var(--muted-fg); display: flex; gap: 6px; align-items: center; }
+  .crumbs-row b { color: var(--fg); font-weight: 500; }
+  .sep { height: 1px; background: var(--border); }
+  .dt-toolbar { display: flex; gap: 8px; align-items: center; }
+  .fl-input { flex: 1; min-width: 0; height: 56px; border: 2px solid oklch(0.871 0.006 286); border-radius: 6px; display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: oklch(0.552 0.016 286); }
+  .btn.h14 { height: 56px; padding: 0 16px; }
+  .rel { position: relative; }
+  .fbadge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 999px; background: var(--primary); color: white; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+  .dt-wrap { border: 1px solid oklch(0.928 0.006 265); border-radius: 6px; overflow: hidden; background: white; }
+  .dt { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .dt th { height: 40px; padding: 0 8px; text-align: left; font-weight: 500; white-space: nowrap; color: oklch(0.21 0.034 265); border-bottom: 1px solid var(--border); }
+  .dt th.r { text-align: right; }
+  .dt td { padding: 8px; white-space: nowrap; vertical-align: middle; border-bottom: 1px solid var(--border); color: oklch(0.21 0.034 265); }
+  .dt tbody tr:last-child td { border-bottom: 0; }
+  .dt tr.hover td { background: oklch(0.97 0 0 / 0.6); }
+  .sorth { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 8px; margin-left: -8px; border-radius: 6px; }
+  .sorth .i { width: 14px; height: 14px; color: var(--muted-fg); }
+  .dt td.art b { display: block; font-weight: 500; } .dt td.art small { display: block; color: var(--muted-fg); font-size: 12.5px; }
+  .cat-c { color: oklch(0.4 0 0); }
+  .dots { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 8px; font-size: 14px; }
+  .pg-sel { color: var(--muted-fg); }
+  .pg-r { display: flex; align-items: center; gap: 32px; }
+  .pg-size { display: flex; align-items: center; gap: 8px; } .pg-size b, .pg-n { font-weight: 500; }
+  .pg-select { height: 32px; width: 70px; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+  .pg-btns { display: flex; gap: 8px; }
+  .pg-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .cat { display: flex; align-items: center; gap: 10px; padding: 0 14px; min-height: 44px; background: oklch(0.975 0 0); border-top: 1px solid var(--border); font-size: 13px; font-weight: 600; }
-  .cat small { font-weight: 400; color: var(--muted-fg); }
-  .cat .pop { font-size: 10.5px; font-weight: 600; background: var(--gold); color: oklch(0.25 0.05 70); border-radius: 999px; padding: 1px 8px; }
-  .cat .chev { margin-left: auto; color: var(--muted-fg); font-weight: 400; display: flex; align-items: center; gap: 4px; }
-  .art b { display: block; font-weight: 500; } .art small { color: var(--muted-fg); font-size: 12.5px; }
-  .dash { color: oklch(0.75 0 0); }
+  .dash { color: oklch(0.72 0 0); }
   .reads { font-weight: 600; color: var(--site-green); font-variant-numeric: tabular-nums; }
   .reads.quote { color: oklch(0.6 0.13 70); font-style: italic; font-weight: 600; }
   .badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 500; }
   .b-on { background: var(--primary-soft); color: oklch(0.4 0.11 150); }
   .b-off { background: var(--muted); color: oklch(0.45 0 0); }
+  /* open menus shown beside the notes */
+  .menus { flex: 1 1 380px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  .menu-col { display: grid; gap: 8px; justify-items: start; }
+  .menu-cap { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); }
+  .menu-note { font-size: 12.5px; color: var(--ink-muted); max-width: 200px; line-height: 1.45; }
+  .menu { background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px -8px oklch(0 0 0 / 0.25); padding: 4px; display: grid; gap: 2px; }
+  .menu.w56 { width: 224px; padding: 12px; gap: 10px; } .menu.w40 { width: 160px; }
+  .menu .ml { font-size: 14px; font-weight: 600; }
+  .menu .mi { height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 8px; font-size: 14px; border-radius: 4px; }
+  .menu .mi:first-child { background: var(--muted); }
+  .ff { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 500; justify-self: start; white-space: nowrap; }
+  .ff.wrap { height: auto; min-height: 28px; flex-wrap: wrap; padding: 4px 10px; row-gap: 4px; }
+  .ff-sep { width: 1px; height: 14px; background: var(--border); margin: 0 2px; }
+  .sbadge { font-size: 11px; font-weight: 500; background: var(--muted); border-radius: 4px; padding: 1px 5px; }
+  .reset { height: 32px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 500; }
 
   /* ---------- dialog / sheet ---------- */
   .backdrop { background: oklch(0.2 0 0 / 0.45); padding: 40px 32px; display: flex; gap: 32px; justify-content: center; align-items: flex-start; }
@@ -118,6 +144,7 @@
   .dlg-b { padding: 18px 24px; display: grid; gap: 14px; }
   .dlg-f { padding: 14px 24px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .dlg-f small { font-size: 12px; color: var(--muted-fg); }
+  .tools { display: flex; gap: 10px; align-items: center; }
   .lbl { font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block; }
   .inp { height: 40px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; padding: 0 12px; font-size: 14px; gap: 8px; }
   .inp .unit { margin-left: auto; color: var(--muted-fg); }
@@ -141,19 +168,13 @@
   .ph-top b { font-size: 17px; }
   .rnd { width: 44px; height: 44px; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
   .ph-body { padding: 12px 16px; display: grid; gap: 10px; }
-  .ph-search { height: 44px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--muted-fg); font-size: 16px; }
-  .chips { display: flex; gap: 8px; overflow: hidden; }
-  .chip { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); display: flex; align-items: center; font-size: 14px; white-space: nowrap; }
-  .chip.on { background: var(--fg); color: white; border-color: var(--fg); }
-  .ph-cat { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-fg); margin-top: 6px; display: flex; gap: 8px; align-items: center; }
-  .card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 12px; min-height: 64px; }
-  .card .art { flex: 1; min-width: 0; }
-  .card .right { text-align: right; display: grid; gap: 4px; justify-items: end; }
-  .ph-fab { position: absolute; left: 16px; right: 16px; bottom: 16px; }
-  .sheet-dim { position: absolute; inset: 0; background: oklch(0.2 0 0 / 0.45); }
-  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--bg); border-radius: 16px 16px 0 0; padding: 8px 16px 16px; display: grid; gap: 12px; }
-  .grab { width: 40px; height: 4px; border-radius: 99px; background: oklch(0.85 0 0); margin: 0 auto 4px; }
-  .sheet .inp { height: 48px; font-size: 16px; }
+  .ph-actions { display: flex; gap: 8px; }
+  .btn.sq { width: 40px; height: 40px; padding: 0; } .btn.sm-sq { width: 36px; height: 32px; align-self: center; }
+  .ph-dt { overflow: hidden; } .ph-dt .dt { width: 720px; }
+  .ph-dt td.art .reads { display: block; margin-top: 2px; }
+  .dim { position: absolute; inset: 0; background: oklch(0.2 0 0 / 0.5); }
+  .mdlg { position: absolute; left: 10px; right: 10px; top: 50%; transform: translateY(-50%); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: grid; gap: 14px; box-shadow: 0 20px 50px -10px oklch(0 0 0 / 0.4); }
+  .ph-inp { height: 44px; font-size: 16px; }
 
   /* ---------- public site ---------- */
   .site { padding: 56px 48px; background: white; }
@@ -214,6 +235,16 @@
   <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1"/></symbol>
   <symbol id="box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
   <symbol id="wine" viewBox="0 0 24 24"><path d="M8 22h8M7 10h10M12 15v7M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5"/></symbol>
+  <symbol id="sliders" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></symbol>
+  <symbol id="updown" viewBox="0 0 24 24"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></symbol>
+  <symbol id="more-h" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="more-v" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+  <symbol id="plus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></symbol>
+  <symbol id="chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="chevs-l" viewBox="0 0 24 24"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+  <symbol id="chevs-r" viewBox="0 0 24 24"><path d="m6 17 5-5-5-5M13 17l5-5-5-5"/></symbol>
+  <symbol id="pencil" viewBox="0 0 24 24"><path d="M21.2 6.8a2.8 2.8 0 0 0-4-4L3.8 16.2a2 2 0 0 0-.5.8l-1.3 4.4a.5.5 0 0 0 .6.6l4.4-1.3a2 2 0 0 0 .8-.5z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="eye-off" viewBox="0 0 24 24"><path d="M10.7 5.1A10.7 10.7 0 0 1 22 12a10.8 10.8 0 0 1-1.4 2.2M14.1 14.2a3 3 0 0 1-4.2-4.2M17.5 17.5A10.7 10.7 0 0 1 2 12a10.8 10.8 0 0 1 4.4-5.4M2 2l20 20"/></symbol>
 </svg>
 
 <div class="doc">
@@ -223,7 +254,7 @@
   <!-- ===================== 1. Desktop list ===================== -->
   <section class="board">
     <h2>Écran 1 · ordinateur</h2>
-    <h3>Gestion → Tarifs</h3>
+    <h3>Gestion → Tarifs, avec le CustomDataTable</h3>
     <div class="scaler" data-w="1180">
       <div class="frame w-desk">
         <div class="app">
@@ -245,67 +276,92 @@
           </aside>
           <div class="main">
             <div class="top">
-              <div class="crumbs">Hub <svg class="i i14"><use href="#chev-r"/></svg> <b>Tarifs</b></div>
+              <b style="font-size:16px">Tarifs</b>
               <div class="avatar">AK</div>
             </div>
             <div class="content">
-              <div class="ptitle">
-                <div>
-                  <h1>Tarifs</h1>
-                  <p>Les prix de la caisse, du formulaire de colis et du site public.</p>
-                </div>
-                <div class="tools">
-                  <span class="btn"><svg class="i"><use href="#ext"/></svg>Voir la grille du site</span>
-                  <span class="btn p"><svg class="i"><use href="#plus"/></svg>Ajouter un article</span>
-                </div>
+              <div class="crumbs-row">Hub <svg class="i i14"><use href="#chev-r"/></svg> <b>Tarifs</b></div>
+              <div class="sep"></div>
+              <div class="strip"><svg class="i"><use href="#info"/></svg><div>Ces prix sont ceux de la <b>caisse</b>, du <b>formulaire de colis</b> et de la <b>grille tarifaire du site public</b>. Un prix modifié s'applique tout de suite aux nouveaux colis. Les colis déjà enregistrés gardent le prix de leur enregistrement.</div></div>
+
+              <!-- CustomDataTable: toolbar -->
+              <div class="dt-toolbar">
+                <div class="fl-input"><span>Rechercher un article</span></div>
+                <span class="btn p h14"><svg class="i"><use href="#plus"/></svg>Ajouter un article</span>
+                <span class="btn sm"><svg class="i"><use href="#ext"/></svg>Voir la grille du site</span>
+                <span class="btn h14 rel"><svg class="i"><use href="#sliders"/></svg>Filtres<span class="fbadge">1</span></span>
               </div>
-              <div class="strip"><svg class="i"><use href="#info"/></svg><div>Un prix modifié ici s'applique tout de suite <b>aux nouveaux colis, à la caisse et sur le site public</b>. Les colis déjà enregistrés gardent le prix de leur enregistrement.</div></div>
-              <div class="tools">
-                <div class="field" style="width:280px"><svg class="i"><use href="#search"/></svg>Rechercher un article</div>
-                <div class="field" style="width:220px;justify-content:space-between;color:var(--fg)">Toutes les catégories<svg class="i"><use href="#chev-d"/></svg></div>
-                <span class="count">55 articles · 51 sur le site · 4 sur devis</span>
+
+              <!-- CustomDataTable: table -->
+              <div class="dt-wrap">
+                <table class="dt">
+                  <thead><tr>
+                    <th><span class="sorth">Article<svg class="i"><use href="#updown"/></svg></span></th>
+                    <th><span class="sorth">Catégorie<svg class="i"><use href="#updown"/></svg></span></th>
+                    <th class="r"><span class="sorth">Région parisienne<svg class="i"><use href="#updown"/></svg></span></th>
+                    <th class="r"><span class="sorth">Province<svg class="i"><use href="#updown"/></svg></span></th>
+                    <th>Sur le site, se lit</th>
+                    <th>Site public</th>
+                    <th>Caisse</th>
+                    <th></th>
+                  </tr></thead>
+                  <tbody>
+                    <tr><td class="art"><b>Carton Standard</b><small>40 × 40 × 35 cm</small></td><td class="cat-c">Cartons</td><td class="num">40 €</td><td class="num dash">—</td><td><span class="reads">40 €</span></td><td><span class="badge b-on">Affiché</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Carton Moyen</b><small>80 × 50 × 50 cm</small></td><td class="cat-c">Cartons</td><td class="num">90 €</td><td class="num">140 €</td><td><span class="reads">90 € / 140 €</span></td><td><span class="badge b-on">Affiché</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Carton Grand</b><small>80 × 60 × 60 cm</small></td><td class="cat-c">Cartons</td><td class="num">100 €</td><td class="num">140 €</td><td><span class="reads">100 € / 140 €</span></td><td><span class="badge b-on">Affiché</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr class="hover"><td class="art"><b>Fût bleu — 220 L</b><small>Barrique</small></td><td class="cat-c">Fûts / Barriques</td><td class="num">120 €</td><td class="num">160 €</td><td><span class="reads">120 € / 160 €</span></td><td><span class="badge b-on">Affiché</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Fût noir — 270 L</b><small>Barrique</small></td><td class="cat-c">Fûts / Barriques</td><td class="num">120 €</td><td class="num">170 €</td><td><span class="reads">120 € / 170 €</span></td><td><span class="badge b-on">Affiché</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Groupe électrogène</b><small>Selon la puissance</small></td><td class="cat-c">Divers</td><td class="num">280 €</td><td class="num dash">—</td><td><span class="reads">dès 280 €</span></td><td><span class="badge b-on">Affiché</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Alimentation</b><small>Produits alimentaires</small></td><td class="cat-c">Divers</td><td class="num">45 €</td><td class="num dash">—</td><td class="dash">pas sur le site</td><td><span class="badge b-off">Masqué</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Vêtements</b><small>Textiles et accessoires</small></td><td class="cat-c">Divers</td><td class="num">40 €</td><td class="num dash">—</td><td class="dash">pas sur le site</td><td><span class="badge b-off">Masqué</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Documents</b><small>Papiers et courrier</small></td><td class="cat-c">Divers</td><td class="num">25 €</td><td class="num dash">—</td><td class="dash">pas sur le site</td><td><span class="badge b-off">Masqué</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                    <tr><td class="art"><b>Matériel industriel</b><small>Machines, outillage</small></td><td class="cat-c">Divers</td><td class="num dash">—</td><td class="num dash">—</td><td><span class="reads quote">Sur devis</span></td><td><span class="badge b-on">Affiché</span></td><td><span class="badge b-on">Proposé</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                  </tbody>
+                </table>
               </div>
-              <div class="tbl">
-                <div class="tr h"><span>Article</span><span class="num">Région parisienne</span><span class="num">Province</span><span>Sur le site, se lit</span><span>Site public</span><span>Caisse</span><span></span></div>
 
-                <div class="cat"><svg class="i"><use href="#box"/></svg>Cartons <small>3 articles</small><span class="pop">Populaire</span></div>
-                <div class="tr"><span class="art"><b>Carton Standard</b><small>40 × 40 × 35 cm</small></span><span class="num">40 €</span><span class="num dash">—</span><span class="reads">40 €</span><span><span class="badge b-on">Affiché</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-                <div class="tr"><span class="art"><b>Carton Moyen</b><small>80 × 50 × 50 cm</small></span><span class="num">90 €</span><span class="num">140 €</span><span class="reads">90 € / 140 €</span><span><span class="badge b-on">Affiché</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-                <div class="tr"><span class="art"><b>Carton Grand</b><small>80 × 60 × 60 cm</small></span><span class="num">100 €</span><span class="num">140 €</span><span class="reads">100 € / 140 €</span><span><span class="badge b-on">Affiché</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Fûts / Barriques <small>2 articles</small></div>
-                <div class="tr"><span class="art"><b>Fût bleu — 220 L</b><small>Barrique</small></span><span class="num">120 €</span><span class="num">160 €</span><span class="reads">120 € / 160 €</span><span><span class="badge b-on">Affiché</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-                <div class="tr"><span class="art"><b>Fût noir — 270 L</b><small>Barrique</small></span><span class="num">120 €</span><span class="num">170 €</span><span class="reads">120 € / 170 €</span><span><span class="badge b-on">Affiché</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-
-                <div class="cat"><svg class="i"><use href="#grid"/></svg>Divers <small>5 articles</small></div>
-                <div class="tr"><span class="art"><b>Groupe électrogène</b><small>Selon la puissance</small></span><span class="num">280 €</span><span class="num dash">—</span><span class="reads">dès 280 €</span><span><span class="badge b-on">Affiché</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-                <div class="tr"><span class="art"><b>Alimentation</b><small>Produits alimentaires</small></span><span class="num">45 €</span><span class="num dash">—</span><span class="dash">pas sur le site</span><span><span class="badge b-off">Masqué</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-                <div class="tr"><span class="art"><b>Vêtements</b><small>Textiles et accessoires</small></span><span class="num">40 €</span><span class="num dash">—</span><span class="dash">pas sur le site</span><span><span class="badge b-off">Masqué</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-                <div class="tr"><span class="art"><b>Documents</b><small>Papiers et courrier</small></span><span class="num">25 €</span><span class="num dash">—</span><span class="dash">pas sur le site</span><span><span class="badge b-off">Masqué</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-                <div class="tr"><span class="art"><b>Matériel industriel</b><small>Machines, outillage</small></span><span class="num dash">—</span><span class="num dash">—</span><span class="reads quote">Sur devis</span><span><span class="badge b-on">Affiché</span></span><span><span class="badge b-on">Proposé</span></span><span class="btn sm">Modifier</span></div>
-
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Bagages &amp; Sacs <small>7 articles</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Cantines <small>4 articles</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Électroménager <small>11 articles</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Téléviseurs <small>8 articles</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Mobilier <small>6 articles</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
-                <div class="cat"><svg class="i"><use href="#wine"/></svg>Vins &amp; Champagnes <small>4 articles</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Véhicules <small>4 articles</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
-                <div class="cat"><svg class="i"><use href="#package"/></svg>Enlèvement <small>1 article</small><span class="chev">Afficher <svg class="i"><use href="#chev-d"/></svg></span></div>
+              <!-- CustomDataTable: pagination -->
+              <div class="pager">
+                <span class="pg-sel">0 sur 10 ligne(s) sélectionnée(s).</span>
+                <div class="pg-r">
+                  <span class="pg-size"><b>Lignes par page</b><span class="pg-select">10<svg class="i"><use href="#chev-d"/></svg></span></span>
+                  <b class="pg-n">1 / 1</b>
+                  <span class="pg-btns"><span class="pg-btn"><svg class="i"><use href="#chevs-l"/></svg></span><span class="pg-btn"><svg class="i"><use href="#chev-l"/></svg></span><span class="pg-btn"><svg class="i"><use href="#chev-r"/></svg></span><span class="pg-btn"><svg class="i"><use href="#chevs-r"/></svg></span></span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
     <div class="row" style="margin-top:16px">
       <div class="notes">
-        <p><b>Où.</b> Une entrée « Tarifs » dans le menu de Gestion, entre Conteneurs et Finances. Réservée à l'administrateur (le droit <code>canManagePricing</code> existe déjà, inutilisé).</p>
-        <p><b>Une ligne = un article</b>, rangé dans sa catégorie (les mêmes catégories que la caisse). La colonne <b>« Sur le site, se lit »</b> montre exactement ce que le client verra : <span class="reads">120 € / 160 €</span>, <span class="reads">dès 280 €</span>, <span class="reads quote">Sur devis</span>.</p>
+        <p><b>Le même tableau que Clients et Colis.</b> <code>CustomDataTable</code> tel quel : recherche, bouton « Ajouter un article », bouton « Filtres », tri en cliquant sur l'en-tête, pagination. « Voir la grille du site » passe par <code>customActions</code>.</p>
+        <p><b>Ici, un filtre est actif</b> (la pastille « 1 » sur Filtres) : Catégorie = Cartons, Fûts / Barriques et Divers. Sans filtre, les 55 articles défilent sur 6 pages de 10.</p>
+        <p><b>Cliquer sur une ligne ouvre le dialogue de modification</b> (écran 2), comme pour un client. La colonne <b>« Sur le site, se lit »</b> montre ce que le client verra : <span class="reads">120 € / 160 €</span>, <span class="reads">dès 280 €</span>, <span class="reads quote">Sur devis</span>.</p>
       </div>
-      <div class="notes">
-        <p><b>Deux interrupteurs par article</b>, montrés en clair dans la table : affiché ou masqué sur le site, proposé ou retiré à la caisse. Un article ne se supprime pas (des colis y font référence) : il se <b>masque</b> ou se <b>retire</b>.</p>
-        <p>Les prix montrés ici sont ceux de la caisse aujourd'hui. Les écarts avec le site sont listés en bas de page : ils sont <b>à trancher avant le branchement</b>.</p>
+      <div class="menus">
+        <div class="menu-col">
+          <span class="menu-cap">Le menu « Filtres »</span>
+          <div class="menu w56">
+            <div class="ml">Filtres</div>
+            <span class="ff wrap"><svg class="i i14"><use href="#plus-circle"/></svg>Catégorie<span class="ff-sep"></span><span class="sbadge">Cartons</span><span class="sbadge">Fûts / Barriques</span><span class="sbadge">+1</span></span>
+            <span class="ff"><svg class="i i14"><use href="#plus-circle"/></svg>Type de prix</span>
+            <span class="ff"><svg class="i i14"><use href="#plus-circle"/></svg>Site public</span>
+            <span class="ff"><svg class="i i14"><use href="#plus-circle"/></svg>Caisse</span>
+            <span class="reset">Réinitialiser<svg class="i i14"><use href="#x"/></svg></span>
+          </div>
+          <span class="menu-note">Avec des noms longs, les pastilles sortent du menu aujourd'hui. Il faudra les laisser passer à la ligne : une retouche d'une ligne dans le filtre.</span>
+        </div>
+        <div class="menu-col">
+          <span class="menu-cap">Le menu « … » d'une ligne</span>
+          <div class="menu w40">
+            <div class="mi"><svg class="i"><use href="#pencil"/></svg>Modifier</div>
+            <div class="mi"><svg class="i"><use href="#eye-off"/></svg>Masquer du site</div>
+          </div>
+          <span class="menu-note">Pour un article masqué : « Afficher sur le site ». Le retrait de la caisse se fait dans le dialogue.</span>
+        </div>
       </div>
     </div>
   </section>
@@ -379,49 +435,58 @@
   <!-- ===================== 3. Phone ===================== -->
   <section class="board">
     <h2>Écran 3 · téléphone</h2>
-    <h3>La liste en cartes, la modification en feuille</h3>
+    <h3>Le même CustomDataTable, et le même dialogue</h3>
     <div class="phones">
       <div class="frame w-phone">
         <div class="ph-top"><span class="rnd"><svg class="i i20"><use href="#menu"/></svg></span><b>Tarifs</b></div>
         <div class="ph-body">
-          <div class="ph-search"><svg class="i i20"><use href="#search"/></svg>Rechercher un article</div>
-          <div class="chips"><span class="chip on">Tout</span><span class="chip">Cartons</span><span class="chip">Fûts</span><span class="chip">Bagages</span><span class="chip">Cantines</span></div>
-          <div class="ph-cat">Cartons <span class="pop" style="font-size:10px;background:var(--gold);color:oklch(0.25 0.05 70);border-radius:999px;padding:1px 7px;text-transform:none;letter-spacing:0">Populaire</span></div>
-          <div class="card"><div class="art"><b>Carton Standard</b><small>40 × 40 × 35 cm</small></div><div class="right"><span class="reads">40 €</span></div><svg class="i" style="color:var(--muted-fg)"><use href="#chev-r"/></svg></div>
-          <div class="card"><div class="art"><b>Carton Moyen</b><small>80 × 50 × 50 cm</small></div><div class="right"><span class="reads">90 € / 140 €</span></div><svg class="i" style="color:var(--muted-fg)"><use href="#chev-r"/></svg></div>
-          <div class="card"><div class="art"><b>Carton Grand</b><small>80 × 60 × 60 cm</small></div><div class="right"><span class="reads">100 € / 140 €</span></div><svg class="i" style="color:var(--muted-fg)"><use href="#chev-r"/></svg></div>
-          <div class="ph-cat">Divers</div>
-          <div class="card"><div class="art"><b>Groupe électrogène</b><small>Selon la puissance</small></div><div class="right"><span class="reads">dès 280 €</span></div><svg class="i" style="color:var(--muted-fg)"><use href="#chev-r"/></svg></div>
-          <div class="card"><div class="art"><b>Alimentation</b><small>Produits alimentaires</small></div><div class="right"><span style="font-weight:600">45 €</span><span class="badge b-off">Masqué du site</span></div><svg class="i" style="color:var(--muted-fg)"><use href="#chev-r"/></svg></div>
-          <div class="card"><div class="art"><b>Matériel industriel</b><small>Machines, outillage</small></div><div class="right"><span class="reads quote">Sur devis</span></div><svg class="i" style="color:var(--muted-fg)"><use href="#chev-r"/></svg></div>
+          <div class="fl-input"><span>Rechercher un article</span></div>
+          <div class="ph-actions">
+            <span class="btn p sq"><svg class="i"><use href="#plus"/></svg></span>
+            <span class="btn sq sm-sq"><svg class="i"><use href="#more-v"/></svg></span>
+            <span class="btn sq"><svg class="i"><use href="#sliders"/></svg></span>
+          </div>
+          <div class="dt-wrap ph-dt">
+            <table class="dt">
+              <thead><tr><th><span class="sorth">Article<svg class="i"><use href="#updown"/></svg></span></th><th></th></tr></thead>
+              <tbody>
+                <tr><td class="art"><b>Carton Standard</b><small>Cartons · 40 × 40 × 35 cm</small><span class="reads">40 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                <tr><td class="art"><b>Carton Moyen</b><small>Cartons · 80 × 50 × 50 cm</small><span class="reads">90 € / 140 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                <tr><td class="art"><b>Carton Grand</b><small>Cartons · 80 × 60 × 60 cm</small><span class="reads">100 € / 140 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                <tr><td class="art"><b>Fût bleu — 220 L</b><small>Fûts / Barriques</small><span class="reads">120 € / 160 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                <tr><td class="art"><b>Fût noir — 270 L</b><small>Fûts / Barriques</small><span class="reads">120 € / 170 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                <tr><td class="art"><b>Petite Valise</b><small>Bagages &amp; Sacs</small><span class="reads">30 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                <tr><td class="art"><b>Valise Moyenne</b><small>Bagages &amp; Sacs</small><span class="reads">50 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+                <tr><td class="art"><b>Grande Valise</b><small>Bagages &amp; Sacs</small><span class="reads">70 €</span></td><td><span class="dots"><svg class="i"><use href="#more-h"/></svg></span></td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="ph-fab"><span class="btn p lg"><svg class="i i20"><use href="#plus"/></svg>Ajouter un article</span></div>
       </div>
 
       <div class="frame w-phone">
         <div class="ph-top"><span class="rnd"><svg class="i i20"><use href="#menu"/></svg></span><b>Tarifs</b></div>
-        <div class="sheet-dim"></div>
-        <div class="sheet">
-          <div class="grab"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center"><div><b style="font-size:17px">Modifier le tarif</b><div style="font-size:13px;color:var(--muted-fg)">Fûts / Barriques</div></div><span class="rnd"><svg class="i i20"><use href="#x"/></svg></span></div>
-          <div><span class="lbl">Nom de l'article</span><div class="inp">Fût bleu — 220 L</div></div>
+        <div class="dim"></div>
+        <div class="mdlg">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><b style="font-size:16px">Modifier le tarif</b><div style="font-size:13px;color:var(--muted-fg);margin-top:2px">Fûts / Barriques</div></div><svg class="i" style="color:var(--muted-fg)"><use href="#x"/></svg></div>
+          <div><span class="lbl">Nom de l'article</span><div class="inp ph-inp">Fût bleu — 220 L</div></div>
           <div><span class="lbl">Type de prix</span><div class="seg"><span class="on" style="height:40px">Prix fixe</span><span style="height:40px">À partir de</span><span style="height:40px">Sur devis</span></div></div>
           <div class="two">
-            <div><span class="lbl">Région parisienne</span><div class="inp">120<span class="unit">€</span></div></div>
-            <div><span class="lbl">Province</span><div class="inp">160<span class="unit">€</span></div></div>
+            <div><span class="lbl">Région parisienne</span><div class="inp ph-inp">120<span class="unit">€</span></div></div>
+            <div><span class="lbl">Province</span><div class="inp ph-inp">160<span class="unit">€</span></div></div>
           </div>
-          <div class="sw" style="min-height:52px"><div>Afficher sur le site public</div><span class="tog"></span></div>
-          <div class="sw" style="min-height:52px"><div>Proposer à la caisse</div><span class="tog"></span></div>
+          <div class="sw" style="min-height:48px"><div>Afficher sur le site public</div><span class="tog"></span></div>
+          <div class="sw" style="min-height:48px"><div>Proposer à la caisse</div><span class="tog"></span></div>
           <div class="preview"><span class="k">Aperçu sur le site</span><div class="prow" style="border:0;padding:0"><span>Fût bleu — 220 L</span><b class="reads">120 € / 160 €</b></div></div>
-          <span class="btn p lg">Enregistrer le tarif</span>
+          <div style="display:grid;gap:8px"><span class="btn p lg">Enregistrer le tarif</span><span class="btn lg">Annuler</span></div>
         </div>
       </div>
 
       <div class="notes" style="flex-basis:260px">
-        <p><b>Les cartes ne portent que ce qui se lit</b> : le nom, le détail, et le prix tel que le site l'écrit. Un article masqué du site le dit en toutes lettres sous son prix.</p>
-        <p><b>Toute la carte s'ouvre</b> (chevron à droite) : pas de petit bouton à viser.</p>
-        <p><b>La feuille</b> reprend le dialogue de l'ordinateur, sans le détail ni la catégorie qu'on change rarement (ils restent accessibles en défilant). Champs à 16 px et cibles de 44 px minimum.</p>
-        <p>« Ajouter un article » est fixé en bas d'écran, pleine largeur.</p>
+        <p><b>Le composant tel qu'il se comporte sur téléphone</b> : la recherche prend toute la largeur, les boutons passent en dessous, et les colonnes marquées <code>hiddenOnMobile</code> disparaissent.</p>
+        <p><b>Une seule colonne reste, « Article »</b>, et elle porte le nécessaire : le nom, la catégorie et le prix tel que le site l'écrit. Sans cela, le tableau garde sa largeur minimale de 720 px et le prix sortirait de l'écran.</p>
+        <p><b>Toucher une ligne ouvre le dialogue</b>, le même composant <code>Dialog</code> que pour un client : boutons pleine largeur, « Enregistrer » au-dessus. Champs à 16 px.</p>
+        <p>Sur téléphone, les boutons de la barre n'ont que leur icône (+, ⋮, filtres) : c'est le comportement actuel du composant, le même sur Clients et Colis.</p>
       </div>
     </div>
   </section>
@@ -523,6 +588,7 @@
     <div class="notes" style="max-width:820px">
       <ul>
         <li>La table <code>Pricing</code> existe déjà : il lui faut le prix Province, le type de prix (fixe / à partir de / sur devis), la catégorie, l'ordre d'affichage, les deux interrupteurs (site, caisse) et l'auteur de la dernière modification.</li>
+        <li>L'écran réutilise <code>CustomDataTable</code> (<code>src/components/modules/data-table</code>), comme Clients et Colis : seules les colonnes sont à écrire. Les filtres Catégorie, Type de prix, Site public et Caisse passent par sa prop <code>filters</code>.</li>
         <li>Une route API : lecture publique (pour le site), modification réservée à l'administrateur.</li>
         <li>La caisse et le formulaire de colis lisent les prix dans cette table au lieu de <code>src/lib/data/packages.js</code> (les icônes et libellés de secours y restent).</li>
         <li>La grille de l'accueil (<code>src/components/modules/home/services.jsx</code>) lit la même table, et la page est régénérée à chaque enregistrement.</li>
