@@ -2,654 +2,805 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Caisse native</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caisse Naange</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
-  /* Layout: a reading column of annotated device frames (tablet landscape, then phone); the devices show the light app, the page around them follows the viewer's theme. */
+  /* Layout: a clickable prototype of the caisse as an installed app — tablet shell (step rail + content) or phone shell (bottom step bar); one deliberate light look, like the POS itself. */
   :root {
-    --page: oklch(0.975 0.003 150); --panel: oklch(1 0 0); --panel-line: oklch(0.922 0.004 150);
-    --ink: oklch(0.17 0.01 150); --ink-2: oklch(0.3 0.01 150); --ink-muted: oklch(0.52 0.01 150);
-    --accent-ink: oklch(0.5 0.14 150); --gold-ink: oklch(0.55 0.12 70); --red-ink: oklch(0.55 0.2 25);
-    --badge-bg: oklch(0.52 0.14 150); --badge-fg: oklch(1 0 0); --code-bg: oklch(0.95 0.004 150);
-    /* app (inside the devices, always light) */
-    --a-bg: #f4f6f3; --a-card: #ffffff; --a-ink: #15191a; --a-sub: #687072; --a-line: #e3e7e2;
-    --a-brand: #0E7A34; --a-brand-2: #0B5C28; --a-brand-soft: #e6f2ea; --a-gold: #F2B705; --a-gold-ink: #6b4f00;
-    --a-red: #d1453b; --a-red-soft: #fdecea; --a-fill: #eef1ed;
+    --bg: #f7f6f3; --card: #ffffff; --ink: #18181b; --sub: #6f6f78; --line: #e7e5e0; --fill: #f1efea;
+    --amber: #f59e0b; --amber-2: #d97706; --amber-3: #b45309; --amber-soft: #fff4dc; --amber-ink: #8a4b04;
+    --green: #0E7A34; --green-soft: #e5f3ea; --red: #c9372c; --red-soft: #fdecea;
+    --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --page: oklch(0.17 0.008 150); --panel: oklch(0.21 0.01 150); --panel-line: oklch(1 0 0 / 0.1);
-      --ink: oklch(0.96 0.003 150); --ink-2: oklch(0.86 0.006 150); --ink-muted: oklch(0.7 0.01 150);
-      --accent-ink: oklch(0.76 0.14 150); --gold-ink: oklch(0.82 0.13 85); --red-ink: oklch(0.74 0.16 25);
-      --badge-bg: oklch(0.62 0.14 150); --badge-fg: oklch(0.15 0.01 150); --code-bg: oklch(0.28 0.01 150);
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --page: oklch(0.17 0.008 150); --panel: oklch(0.21 0.01 150); --panel-line: oklch(1 0 0 / 0.1);
-    --ink: oklch(0.96 0.003 150); --ink-2: oklch(0.86 0.006 150); --ink-muted: oklch(0.7 0.01 150);
-    --accent-ink: oklch(0.76 0.14 150); --gold-ink: oklch(0.82 0.13 85); --red-ink: oklch(0.74 0.16 25);
-    --badge-bg: oklch(0.62 0.14 150); --badge-fg: oklch(0.15 0.01 150); --code-bg: oklch(0.28 0.01 150);
-    color-scheme: dark;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--page); color: var(--ink); -webkit-font-smoothing: antialiased; }
-  .i { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; width: 20px; height: 20px; flex-shrink: 0; }
-  .i16 { width: 16px; height: 16px; } .i24 { width: 24px; height: 24px; } .i28 { width: 28px; height: 28px; } .i40 { width: 40px; height: 40px; }
-
-  /* ---------- document ---------- */
-  .doc { max-width: 1260px; margin: 0 auto; padding-block: 32px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  .doc h1 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 6px; text-wrap: balance; }
-  .lead { font-size: 15px; color: var(--ink-muted); margin: 0 0 8px; max-width: 780px; line-height: 1.55; }
-  .board { margin: 44px 0 0; }
-  .board > h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-ink); margin: 0 0 4px; }
-  .board > h3 { font-size: 20px; margin: 0 0 14px; letter-spacing: -0.01em; text-wrap: balance; }
-  .row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
-  .notes { flex: 1 1 300px; min-width: 0; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
-  .notes p { margin: 0 0 10px; } .notes b { color: var(--ink); }
-  .scaler { width: 100%; overflow: hidden; }
-  .scaler > * { transform-origin: top left; }
-  .phones { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
-  .phone-wrap { width: 410px; max-width: 100%; }
-  .cap { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); margin: 10px 0 0; }
-  .qs { counter-reset: q; display: grid; gap: 12px; }
-  .q { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px; padding: 14px 16px 14px 52px; position: relative; font-size: 14px; line-height: 1.55; }
-  .q::before { counter-increment: q; content: counter(q); position: absolute; left: 16px; top: 14px; width: 24px; height: 24px; border-radius: 999px; background: var(--badge-bg); color: var(--badge-fg); font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; }
-  .q > b:first-child { display: block; margin-bottom: 4px; }
-  .prop { color: var(--accent-ink); font-weight: 500; }
-  .fix { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-  .fix > div { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
-  .fix > div > b:first-child { color: var(--ink); display: block; margin-bottom: 4px; }
-  code { font-size: 12.5px; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
-
-  /* ---------- devices ---------- */
-  .device { background: #0d0f0e; padding: 12px; border-radius: 34px; box-shadow: 0 24px 50px -20px rgb(0 0 0 / 0.45); }
-  .device.tablet { width: 1204px; }
-  .device.phone { width: 410px; padding: 10px; border-radius: 52px; }
-  .screen { position: relative; overflow: hidden; background: var(--a-bg); color: var(--a-ink); border-radius: 22px; font-size: 15px; }
-  .tablet .screen { width: 1180px; height: 820px; }
-  .phone .screen { width: 390px; height: 844px; border-radius: 42px; }
-  .sb { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-size: 13px; font-weight: 600; background: var(--a-card); }
-  .phone .sb { height: 50px; padding: 14px 30px 0; font-size: 15px; background: transparent; }
-  .sb-r { display: flex; gap: 6px; align-items: center; }
-  .batt { width: 24px; height: 12px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
-  .batt::after { content: ""; position: absolute; inset: 1.5px; right: 6px; background: currentColor; border-radius: 1px; }
-  .home-ind { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 99px; background: #111; z-index: 20; }
-
-  /* ---------- shared app pieces ---------- */
-  .chip { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 999px; background: var(--a-card); border: 1px solid var(--a-line); font-size: 14px; font-weight: 500; white-space: nowrap; position: relative; color: var(--a-ink); }
-  .chip.on { background: var(--a-ink); color: #fff; border-color: var(--a-ink); }
-  .chip .n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: var(--a-gold); color: #3a2a00; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
-  .chips { display: flex; gap: 8px; overflow: hidden; }
-  .search { height: 44px; border-radius: 12px; background: var(--a-fill); display: flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--a-sub); font-size: 16px; }
-  .tile { position: relative; background: var(--a-card); border-radius: 16px; padding: 8px 8px 12px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 0 0 1px var(--a-line); }
-  .tile.on { box-shadow: 0 0 0 2px var(--a-brand), 0 6px 16px -8px rgb(14 122 52 / 0.5); }
-  .tile .nm { font-size: 14px; font-weight: 600; margin: 8px 4px 2px; line-height: 1.25; }
-  .tile .pr { font-size: 15px; font-weight: 700; margin: 0 4px; color: var(--a-brand); font-variant-numeric: tabular-nums; }
-  .tile .pr.dev { color: var(--a-gold-ink); font-style: italic; font-weight: 600; font-size: 14px; }
-  .tile .qty { position: absolute; top: -6px; right: -6px; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 99px; background: var(--a-brand); color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--a-bg); }
-  .tile .noph { aspect-ratio: 4 / 3; border-radius: 10px; background: var(--a-fill); display: flex; align-items: center; justify-content: center; color: #9aa29d; }
-  .tile.quote { box-shadow: 0 0 0 1px var(--a-line); background: #fbfbf8; }
-  .btn { display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 20px; border-radius: 14px; font: 600 16px Inter, system-ui, sans-serif; border: 0; background: var(--a-fill); color: var(--a-ink); white-space: nowrap; }
-  .btn.p { background: var(--a-brand); color: #fff; box-shadow: 0 8px 18px -10px rgb(14 122 52 / 0.8); }
-  .btn.xl { height: 60px; font-size: 18px; border-radius: 16px; }
-  .btn.ghost { background: transparent; color: var(--a-brand); }
-  .btn.out { background: var(--a-card); box-shadow: inset 0 0 0 1px var(--a-line); }
-  .stepper { display: inline-flex; align-items: center; background: var(--a-fill); border-radius: 12px; height: 40px; }
-  .stepper span { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
-  .stepper b { min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
-  .avatar { width: 44px; height: 44px; border-radius: 99px; background: var(--a-brand-soft); color: var(--a-brand); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body { margin: 0; font-family: var(--font); background: #2b2a27; color: var(--ink); -webkit-font-smoothing: antialiased; touch-action: manipulation; overscroll-behavior: none; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; background: none; padding: 0; }
+  .i { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; width: 22px; height: 22px; flex-shrink: 0; }
+  .i16 { width: 16px; height: 16px; } .i18 { width: 18px; height: 18px; } .i28 { width: 28px; height: 28px; } .i40 { width: 40px; height: 40px; }
   .num { font-variant-numeric: tabular-nums; }
-  .sub { color: var(--a-sub); font-size: 13px; }
-  .dim { position: absolute; inset: 0; background: rgb(10 14 12 / 0.42); z-index: 5; }
+  .sub { color: var(--sub); font-size: 13px; }
 
-  /* ---------- product photos: CSS stand-ins for the real pictures from Gestion → Tarifs ---------- */
-  .pic { position: relative; display: block; overflow: hidden; aspect-ratio: 4 / 3; border-radius: 10px; background: linear-gradient(160deg, #f2efe9, #e2ddd3); }
-  .pic.s48 { width: 48px; height: 48px; aspect-ratio: auto; border-radius: 10px; flex-shrink: 0; }
+  /* ---------- host: full screen, or a phone frame for review on a computer ---------- */
+  #host { height: 100%; display: flex; align-items: center; justify-content: center; }
+  .app { position: relative; width: 100%; height: 100%; background: var(--bg); overflow: hidden; user-select: none; -webkit-user-select: none; }
+  #host.framed { padding: 20px; }
+  #host.framed .device { width: 410px; height: 864px; padding: 10px; border-radius: 52px; background: #0d0d0c; box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.6); transform-origin: center; flex-shrink: 0; }
+  #host.framed .app { border-radius: 42px; }
+
+  /* ---------- tablet shell ---------- */
+  .t-shell { display: grid; grid-template-columns: 112px 1fr; height: 100%; }
+  .rail { background: linear-gradient(180deg, var(--amber), var(--amber-2)); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: calc(12px + env(safe-area-inset-top, 0px)) 10px calc(12px + env(safe-area-inset-bottom, 0px)); padding-left: max(10px, env(safe-area-inset-left, 0px)); }
+  .rail .logo { width: 64px; height: 64px; border-radius: 18px; background: #fff; color: var(--green); font-weight: 800; font-size: 13px; line-height: 1.05; display: flex; align-items: center; justify-content: center; text-align: center; margin-bottom: 6px; box-shadow: 0 6px 14px -8px rgb(0 0 0 / 0.4); }
+  .step { position: relative; width: 92px; min-height: 70px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #fff; font-size: 12px; font-weight: 600; transition: background 0.15s, transform 0.1s; }
+  .step:active { transform: scale(0.96); }
+  .step.on { background: #fff; color: var(--amber-3); box-shadow: 0 8px 18px -10px rgb(120 60 0 / 0.7); }
+  .step .done { position: absolute; top: 6px; right: 8px; width: 18px; height: 18px; border-radius: 99px; background: rgb(255 255 255 / 0.95); color: var(--green); display: flex; align-items: center; justify-content: center; }
+  .step.on .done { background: var(--green-soft); }
+  .rail .grow { flex: 1; }
+  .rail-client { width: 92px; border-radius: 16px; background: rgb(255 255 255 / 0.16); color: #fff; padding: 10px 8px; text-align: center; font-size: 12px; }
+  .rail-client b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rail-client button { margin-top: 6px; width: 100%; height: 34px; border-radius: 10px; background: rgb(255 255 255 / 0.22); font-weight: 600; font-size: 12px; }
+  .hub { width: 92px; height: 48px; border-radius: 14px; background: rgb(120 53 15 / 0.35); color: #fff; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .t-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: calc(10px + env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 10px 24px; background: var(--bg); }
+  .topbar h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
+  .topbar .lede { margin: 2px 0 0; color: var(--sub); font-size: 14px; }
+  .ctn { display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border-radius: 14px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); text-align: left; max-width: 100%; }
+  .ctn .lbl { font-size: 11px; color: var(--sub); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; display: block; }
+  .ctn b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .content { flex: 1; min-height: 0; overflow: auto; padding: 8px max(24px, env(safe-area-inset-right, 0px)) 24px 24px; -webkit-overflow-scrolling: touch; }
+  .enter { animation: enter 0.22s ease-out; }
+  @keyframes enter { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- phone shell ---------- */
+  .p-shell { display: flex; flex-direction: column; height: 100%; }
+  .p-top { padding: calc(14px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); background: var(--bg); }
+  .framed .p-top { padding-top: 54px; }
+  .p-top .row1 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .p-top h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .p-top .ctn { height: 40px; border-radius: 12px; margin-top: 8px; }
+  .avatar-btn { width: 44px; height: 44px; border-radius: 99px; background: var(--amber-soft); color: var(--amber-ink); font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .p-content { flex: 1; min-height: 0; overflow: auto; padding: 4px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); }
+  .p-nav { display: grid; grid-template-columns: repeat(6, 1fr); background: rgb(255 255 255 / 0.96); border-top: 1px solid var(--line); padding: 6px max(4px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left, 0px)); }
+  .framed .p-nav { padding-bottom: 26px; }
+  .p-nav button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 0; min-height: 52px; font-size: 10.5px; font-weight: 600; color: var(--sub); }
+  .p-nav button .ic { width: 52px; height: 30px; border-radius: 99px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+  .p-nav button.on { color: var(--amber-3); } .p-nav button.on .ic { background: var(--amber-soft); }
+  .p-nav .done { position: absolute; top: 2px; right: calc(50% - 22px); width: 14px; height: 14px; border-radius: 99px; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; }
+
+  /* ---------- shared pieces ---------- */
+  .card { background: var(--card); border-radius: 20px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), inset 0 0 0 1px var(--line); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 20px; border-radius: 16px; font-weight: 600; font-size: 16px; background: var(--fill); color: var(--ink); white-space: nowrap; transition: transform 0.08s, filter 0.15s; }
+  .btn:active { transform: scale(0.97); filter: brightness(0.95); }
+  .btn.p { background: var(--amber); color: #fff; box-shadow: 0 10px 20px -12px rgb(217 119 6 / 0.9); }
+  .btn.g { background: var(--green); color: #fff; box-shadow: 0 10px 20px -12px rgb(14 122 52 / 0.9); }
+  .btn.out { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn.ghost { background: transparent; color: var(--amber-3); }
+  .btn.xl { height: 60px; font-size: 18px; border-radius: 18px; }
+  .btn.block { width: 100%; }
+  .btn[disabled] { background: #e3e1dc; color: #9c9a95; box-shadow: none; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--fill); border-radius: 14px; padding: 4px; gap: 4px; }
+  .seg button { height: 40px; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--sub); display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / 0.1); }
+  .count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: var(--amber); color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+  .search { display: flex; align-items: center; gap: 10px; height: 48px; border-radius: 14px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); padding: 0 14px; color: var(--sub); }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; color: var(--ink); height: 100%; user-select: text; -webkit-user-select: text; }
+  .search:focus-within { box-shadow: inset 0 0 0 2px var(--amber); }
+  .list { border-radius: 20px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+  .li { width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 68px; text-align: left; border-bottom: 1px solid var(--line); transition: background 0.12s; }
+  .li:last-child { border-bottom: 0; }
+  .li:active { background: var(--fill); }
+  .li .main { flex: 1; min-width: 0; } .li .main b { display: block; font-size: 16px; } .li .main .sub { display: block; }
+  .av { width: 44px; height: 44px; border-radius: 99px; background: var(--amber-soft); color: var(--amber-ink); font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sec-t { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--sub); margin: 18px 4px 8px; }
+  .empty { height: 100%; min-height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 24px; }
+  .empty .ico { width: 88px; height: 88px; border-radius: 28px; background: var(--amber-soft); color: var(--amber-2); display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+  .empty h2 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
+  .empty p { margin: 0 0 8px; color: var(--sub); max-width: 340px; line-height: 1.5; }
+  .stepper { display: inline-flex; align-items: center; background: var(--fill); border-radius: 12px; height: 40px; }
+  .stepper button { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+  .stepper button:active { background: #e4e1da; }
+  .stepper b { min-width: 22px; text-align: center; }
+  .kv { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; color: var(--sub); }
+  .kv.total { color: var(--ink); font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+  .kv.total .amt { color: var(--amber-2); }
+
+  /* ---------- dashboard ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .kpi { padding: 18px; }
+  .kpi .l { font-size: 13px; color: var(--sub); font-weight: 600; }
+  .kpi .v { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+  .kpi .d { font-size: 13px; font-weight: 600; color: var(--green); margin-top: 2px; }
+  .start { display: flex; align-items: center; gap: 18px; padding: 18px 20px; margin-top: 16px; border-radius: 22px; background: linear-gradient(120deg, var(--amber), var(--amber-2)); color: #fff; width: 100%; text-align: left; box-shadow: 0 16px 30px -18px rgb(180 83 9 / 0.9); }
+  .start:active { transform: scale(0.99); }
+  .start .ic { width: 56px; height: 56px; border-radius: 18px; background: rgb(255 255 255 / 0.2); display: flex; align-items: center; justify-content: center; }
+  .start b { font-size: 20px; display: block; } .start span { opacity: 0.9; font-size: 14px; }
+  .dash-cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-top: 4px; }
+  .badge { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--green-soft); color: var(--green); }
+
+  /* ---------- client ---------- */
+  .client-wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 14px; }
+  mark { background: #ffe9a8; color: inherit; border-radius: 3px; padding: 0 1px; }
+
+  /* ---------- commande ---------- */
+  .cmd { display: grid; grid-template-columns: 300px minmax(0, 1fr) 128px; gap: 14px; height: 100%; }
+  .cmd-content { padding-top: 4px; padding-bottom: 16px; overflow: hidden; }
+  .order { display: flex; flex-direction: column; min-height: 0; }
+  .order-h { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+  .order-h b { font-size: 18px; }
+  .order-lines { flex: 1; overflow: auto; padding: 4px 14px; }
+  .oline { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+  .oline .nm { font-weight: 600; font-size: 15px; line-height: 1.25; }
+  .oline .tot { font-weight: 700; text-align: right; }
+  .oline .trash { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--sub); }
+  .oline .trash:active { background: var(--red-soft); color: var(--red); }
+  .order-f { padding: 12px 16px 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+  .disc { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: 600; color: var(--sub); }
+  .disc input { width: 110px; height: 44px; border-radius: 12px; border: 0; box-shadow: inset 0 0 0 1px var(--line); text-align: right; padding: 0 12px; font-size: 16px; background: var(--card); color: var(--ink); user-select: text; -webkit-user-select: text; }
+  .disc input:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--amber); }
+  .catalog { display: flex; flex-direction: column; min-height: 0; }
+  .cat-h { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .cat-h b { font-size: 18px; white-space: nowrap; }
+  .cat-h .search { height: 44px; flex: 1; box-shadow: none; background: var(--fill); }
+  .grid { flex: 1; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); align-content: start; gap: 12px; padding: 16px; }
+  .tile { position: relative; text-align: left; background: var(--card); border-radius: 18px; padding: 8px 8px 12px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05), inset 0 0 0 1px var(--line); transition: transform 0.08s, box-shadow 0.15s; }
+  .tile:active { transform: scale(0.96); }
+  .tile.on { box-shadow: inset 0 0 0 2px var(--amber), 0 8px 18px -12px rgb(217 119 6 / 0.8); }
+  .tile.quote { background: #fcfbf8; box-shadow: inset 0 0 0 1.5px #d9d5cc; }
+  .tile .nm { font-size: 13px; font-weight: 600; margin: 8px 4px 2px; line-height: 1.25; min-height: 33px; }
+  .tile .pr { font-size: 15px; font-weight: 700; margin: 0 4px; color: var(--amber-2); }
+  .tile .pr.dev { color: var(--sub); font-size: 13px; }
+  .tile .q { position: absolute; top: -6px; right: -6px; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 99px; background: var(--amber); color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--bg); z-index: 1; }
+  .tile.pop { animation: pop 0.28s ease-out; }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+  .cats { border-radius: 20px; background: linear-gradient(180deg, var(--amber), var(--amber-2)); padding: 10px 8px; display: flex; flex-direction: column; gap: 6px; overflow: auto; }
+  .cats .cap { color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; padding: 4px 0 6px; }
+  .cat { position: relative; border-radius: 14px; padding: 10px 6px; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: #fff; font-size: 11px; font-weight: 600; line-height: 1.2; background: rgb(255 255 255 / 0.12); }
+  .cat.on { background: #fff; color: var(--amber-3); font-weight: 800; }
+  .cat .count { position: absolute; top: -4px; right: -4px; background: #fff; color: var(--amber-3); box-shadow: 0 0 0 2px var(--amber); }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 99px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); font-weight: 600; font-size: 14px; }
+  .chip.on { background: var(--ink); color: #fff; box-shadow: none; }
+  .p-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-bottom: 90px; }
+  .p-grid .tile { border-radius: 16px; padding: 6px 6px 10px; }
+  .p-grid .tile .nm { font-size: 12.5px; min-height: 31px; }
+  .p-grid .tile .q { min-width: 24px; height: 24px; font-size: 12px; }
+  .cartbar { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(82px + env(safe-area-inset-bottom, 0px)); height: 60px; border-radius: 18px; background: var(--amber); color: #fff; display: flex; align-items: center; gap: 12px; padding: 0 16px; box-shadow: 0 16px 30px -14px rgb(180 83 9 / 0.95); z-index: 4; text-align: left; }
+  .framed .cartbar { bottom: 102px; }
+  .cartbar .n { min-width: 34px; height: 34px; border-radius: 11px; background: rgb(255 255 255 / 0.22); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+  .cartbar .t { flex: 1; font-weight: 700; } .cartbar b { font-size: 18px; }
+  .cartbar.empty { background: #fff; color: var(--sub); box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.4), inset 0 0 0 1px var(--line); }
+
+  /* ---------- product pictures (CSS stand-ins for the photos of Gestion → Tarifs) ---------- */
+  .pic { position: relative; display: block; overflow: hidden; aspect-ratio: 4 / 3; border-radius: 12px; background: linear-gradient(160deg, #f3f0ea, #e3ded4); }
   .pic::before, .pic::after { content: ""; position: absolute; }
+  .pic.ph { display: flex; align-items: center; justify-content: center; color: #a7a39a; background: var(--fill); }
   .pic.carton::before { inset: 26% 22% 14%; border-radius: 2px; background: linear-gradient(90deg, transparent 44%, rgb(240 225 190 / 0.85) 44% 56%, transparent 56%), linear-gradient(180deg, #a77845 0 26%, #c08e57 26%); }
-  .pic.fut-bleu::before { inset: 10% 32%; border-radius: 18% / 8%; background: repeating-linear-gradient(180deg, #2f6bd0 0 24%, #2353a8 24% 28%); }
+  .pic.carton.s::before { inset: 38% 32% 16%; } .pic.carton.l::before { inset: 18% 16% 10%; }
+  .pic.fut-bleu::before, .pic.fut-noir::before { inset: 10% 33%; border-radius: 18% / 8%; background: repeating-linear-gradient(180deg, #2f6bd0 0 24%, #2353a8 24% 28%); }
+  .pic.fut-noir::before { background: repeating-linear-gradient(180deg, #3a3b3b 0 24%, #202121 24% 28%); }
   .pic.fridge::before { inset: 8% 34%; border-radius: 4px; border: 1px solid #b9bcb8; background: linear-gradient(180deg, #fbfbfb 0 36%, #b9bcb8 36% 38%, #fbfbfb 38%); }
   .pic.fridge::after { right: 38%; top: 18%; width: 2px; height: 10%; background: #7d817d; }
-  .pic.fridge.small::before { inset: 34% 34% 8%; background: #fbfbfb; } .pic.fridge.small::after { top: 44%; }
-  .pic.fridge.big::before { inset: 5% 29%; }
+  .pic.fridge.s::before { inset: 34% 34% 8%; background: #fbfbfb; } .pic.fridge.s::after { top: 44%; }
+  .pic.fridge.l::before { inset: 5% 29%; }
   .pic.us::before { inset: 8% 22%; border-radius: 4px; border: 1px solid #a9ada9; background: linear-gradient(90deg, #e3e7ec 0 49%, #9ea29e 49% 51%, #e3e7ec 51%); }
   .pic.freezer::before { inset: 40% 22% 12%; border-radius: 4px; border: 1px solid #b9bcb8; background: linear-gradient(180deg, #dcdedb 0 16%, #fbfbfb 16%); }
-  .pic.freezer.mid::before { inset: 34% 16% 12%; } .pic.freezer.big::before { inset: 28% 10% 10%; }
+  .pic.freezer.m::before { inset: 34% 16% 12%; } .pic.freezer.l::before { inset: 28% 10% 10%; }
   .pic.micro::before { inset: 30% 18%; border-radius: 4px; border: 3px solid #d9dbd8; background: linear-gradient(90deg, #2c2f2e 0 64%, #d9dbd8 64%); }
   .pic.washer::before { inset: 14% 27%; border-radius: 6px; border: 1px solid #b9bcb8; background: radial-gradient(circle at 50% 60%, #4a5866 0 24%, #c2c5c1 24% 29%, #fbfbfb 29%); }
+  .pic.tv::before { inset: 22% 14% 26%; border-radius: 3px; background: linear-gradient(160deg, #2a2d33, #121418); border: 2px solid #3a3d42; }
+  .pic.tv::after { left: 44%; right: 44%; bottom: 14%; height: 12%; background: #3a3d42; }
+  .pic.valise::before { inset: 22% 30% 10%; border-radius: 8px; background: linear-gradient(90deg, #26374d 0 30%, #1e2c3e 30% 34%, #26374d 34% 66%, #1e2c3e 66% 70%, #26374d 70%); }
+  .pic.valise::after { left: 42%; right: 42%; top: 12%; height: 12%; border: 3px solid #26374d; border-bottom: 0; border-radius: 6px 6px 0 0; }
 
-  /* ---------- tablet: sale ---------- */
-  .t-body { display: grid; grid-template-columns: 88px 1fr 392px; height: calc(100% - 26px); }
-  .rail { background: var(--a-card); border-right: 1px solid var(--a-line); display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 6px; }
-  .rail .logo { width: 48px; height: 48px; border-radius: 14px; background: var(--a-brand); color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-  .rail a { width: 72px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 8px; font-size: 12px; font-weight: 600; color: var(--a-sub); text-decoration: none; }
-  .rail a .pill { width: 56px; height: 34px; border-radius: 99px; display: flex; align-items: center; justify-content: center; }
-  .rail a.on { color: var(--a-ink); } .rail a.on .pill { background: var(--a-brand-soft); color: var(--a-brand); }
-  .rail .grow { flex: 1; }
-  .cat-area { display: flex; flex-direction: column; min-width: 0; }
-  .appbar { height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 24px; }
-  .appbar h4 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
-  .ctn { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 12px; border-radius: 12px; background: var(--a-card); box-shadow: inset 0 0 0 1px var(--a-line); font-size: 14px; }
-  .ctn b { font-weight: 600; } .ctn .sub { font-size: 13px; }
-  .cat-tools { display: grid; gap: 12px; padding: 0 24px 14px; }
-  .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 6px 24px 24px; }
-  .ticket { background: var(--a-card); border-left: 1px solid var(--a-line); display: flex; flex-direction: column; min-height: 0; }
-  .tk-client { display: flex; align-items: center; gap: 12px; padding: 18px 20px 16px; border-bottom: 1px solid var(--a-line); }
-  .tk-client .who { flex: 1; min-width: 0; } .tk-client .who b { display: block; font-size: 16px; }
-  .tk-lines { flex: 1; overflow: hidden; padding: 4px 20px; }
-  .line { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
-  .line .nm { font-weight: 600; font-size: 15px; } .line .sub { margin-top: 2px; }
-  .line .rt { display: grid; gap: 6px; justify-items: end; }
-  .line .tot { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .tk-foot { padding: 14px 20px 20px; border-top: 1px solid var(--a-line); display: grid; gap: 10px; }
-  .kv { display: flex; justify-content: space-between; font-size: 15px; color: var(--a-sub); }
-  .kv.total { color: var(--a-ink); font-size: 20px; font-weight: 700; padding-top: 4px; }
-  .addlink { display: flex; align-items: center; gap: 8px; color: var(--a-brand); font-weight: 600; font-size: 15px; height: 40px; }
-
-  /* ---------- tablet: client sheet ---------- */
-  .fsheet { position: absolute; z-index: 6; left: 50%; top: 70px; width: 600px; margin-left: -300px; bottom: 40px; background: var(--a-card); border-radius: 20px; box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.5); display: flex; flex-direction: column; overflow: hidden; }
-  .fs-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--a-line); }
-  .fs-head b { font-size: 17px; text-align: center; } .fs-head .r { justify-self: end; color: var(--a-brand); font-weight: 600; }
-  .fs-head .l { color: var(--a-brand); font-weight: 500; }
-  .res { display: flex; align-items: center; gap: 14px; padding: 12px 18px; min-height: 68px; border-bottom: 1px solid var(--a-line); }
-  .res .who { flex: 1; } .res .who b { display: block; }
-  .res.on { background: var(--a-brand-soft); }
-  .sec { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--a-sub); padding: 16px 18px 6px; }
-  mark { background: #fff1b8; color: inherit; border-radius: 3px; padding: 0 1px; }
-
-  /* ---------- payment ---------- */
-  .pay { position: absolute; inset: 26px 0 0; background: var(--a-bg); display: flex; flex-direction: column; }
-  .navbar { height: 64px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 20px; background: var(--a-card); border-bottom: 1px solid var(--a-line); }
-  .navbar .back { display: flex; align-items: center; gap: 4px; color: var(--a-brand); font-weight: 500; font-size: 16px; }
-  .navbar b { font-size: 17px; }
-  .pay-body { flex: 1; display: grid; grid-template-columns: 1fr 440px; gap: 28px; padding: 24px 28px; min-height: 0; }
-  .methods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .meth { height: 104px; border-radius: 16px; background: var(--a-card); box-shadow: inset 0 0 0 1px var(--a-line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 15px; color: var(--a-ink); }
-  .meth.on { box-shadow: inset 0 0 0 2px var(--a-brand); background: var(--a-brand-soft); color: var(--a-brand-2); }
-  .amt { background: var(--a-card); border-radius: 18px; box-shadow: inset 0 0 0 1px var(--a-line); padding: 18px 22px; }
-  .amt .lbl { font-size: 14px; color: var(--a-sub); font-weight: 500; }
-  .amt .big { font-size: 56px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 4px; }
-  .amt .big .cur { width: 3px; height: 48px; display: inline-block; background: var(--a-brand); vertical-align: -6px; margin-left: 4px; border-radius: 2px; }
-  .quick { display: flex; gap: 10px; flex-wrap: wrap; }
-  .change { display: flex; justify-content: space-between; align-items: center; border-radius: 16px; background: var(--a-brand-soft); color: var(--a-brand-2); padding: 16px 22px; font-weight: 600; }
-  .change b { font-size: 30px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  /* ---------- encaissement ---------- */
+  .pay { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 20px; max-width: 1120px; margin: 0 auto; }
+  .pay-h { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; gap: 12px; }
+  .pay-h .t { text-align: right; } .pay-h .t b { display: block; font-size: 30px; font-weight: 800; color: var(--amber-2); letter-spacing: -0.02em; }
+  .arts { padding: 6px 20px 10px; }
+  .arts summary { list-style: none; display: flex; justify-content: space-between; align-items: center; height: 48px; font-weight: 700; cursor: pointer; }
+  .arts summary::-webkit-details-marker { display: none; }
+  .arts .r { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .methods { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .meth { height: 76px; border-radius: 18px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; gap: 12px; padding: 0 16px; font-weight: 700; font-size: 15px; text-align: left; transition: transform 0.08s; }
+  .meth:active { transform: scale(0.98); }
+  .meth .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--fill); display: flex; align-items: center; justify-content: center; }
+  .meth.on { box-shadow: inset 0 0 0 2px var(--amber); background: var(--amber-soft); color: var(--amber-ink); }
+  .meth.on .ic { background: #fff; color: var(--amber-2); }
+  .recu { padding: 16px 20px; }
+  .recu .l { font-size: 13px; color: var(--sub); font-weight: 600; }
+  .recu .big { font-size: 52px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-top: 4px; min-height: 58px; }
+  .recu .big.ph { color: #c4c1ba; }
+  .caret { display: inline-block; width: 3px; height: 44px; border-radius: 2px; background: var(--amber); vertical-align: -6px; margin-left: 4px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
   .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .key { height: 76px; border-radius: 16px; background: var(--a-card); box-shadow: 0 1px 0 var(--a-line), inset 0 0 0 1px var(--a-line); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; font-variant-numeric: tabular-nums; }
-  .key.fn { background: var(--a-fill); box-shadow: none; font-size: 20px; }
-  .key.press { background: #dfe6df; transform: scale(0.97); }
+  .key { height: 70px; border-radius: 18px; background: var(--card); box-shadow: 0 1px 0 var(--line), inset 0 0 0 1px var(--line); font-size: 28px; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: background 0.08s, transform 0.08s; }
+  .key:active { background: #ece9e2; transform: scale(0.96); }
+  .key.fn { background: var(--fill); box-shadow: none; font-size: 18px; color: var(--sub); }
+  .change { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 18px; padding: 14px 18px; font-weight: 700; }
+  .change.ok { background: var(--green-soft); color: var(--green); }
+  .change.ko { background: var(--red-soft); color: var(--red); }
+  .change b { font-size: 26px; letter-spacing: -0.02em; }
+  .obs { width: 100%; min-height: 84px; border: 0; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); padding: 12px 14px; font-size: 16px; resize: none; user-select: text; -webkit-user-select: text; }
+  .obs:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--amber); }
 
-  /* ---------- success ---------- */
-  .done { position: absolute; inset: 26px 0 0; background: var(--a-card); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 24px; }
-  .check { width: 112px; height: 112px; border-radius: 99px; background: var(--a-brand); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 16px var(--a-brand-soft); margin-bottom: 18px; }
-  .done h5 { margin: 0; font-size: 32px; letter-spacing: -0.02em; }
-  .done .meta { color: var(--a-sub); font-size: 16px; line-height: 1.5; }
-  .shp { display: inline-flex; gap: 10px; align-items: center; background: var(--a-fill); border-radius: 12px; padding: 10px 14px; font-size: 15px; margin-top: 6px; }
-  .done-acts { display: grid; gap: 12px; width: 420px; margin-top: 22px; }
+  /* ---------- impression ---------- */
+  .impr { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; max-width: 1120px; margin: 0 auto; align-items: start; }
+  .paper-wrap { background: #e9e6df; border-radius: 22px; padding: 20px; overflow: hidden; }
+  .paper { background: #fff; border-radius: 6px; box-shadow: 0 10px 30px -14px rgb(0 0 0 / 0.35); aspect-ratio: 210 / 297; padding: 0 0 18px; font-size: 9.5px; color: #222; overflow: hidden; display: flex; flex-direction: column; }
+  .paper .hd { background: var(--green); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; gap: 10px; }
+  .paper .hd b { font-size: 15px; letter-spacing: 0.04em; }
+  .qr { width: 52px; height: 52px; background: #fff; border-radius: 4px; padding: 4px; background-image: repeating-conic-gradient(#111 0 25%, #fff 0 50%); background-size: 11px 11px; background-origin: content-box; background-clip: content-box; }
+  .paper .band { display: flex; justify-content: space-between; padding: 8px 16px; background: #eef6f0; color: var(--green); font-weight: 600; }
+  .paper .boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 16px; }
+  .paper .box { border: 1px solid #ddd; border-radius: 4px; padding: 8px; line-height: 1.5; }
+  .paper .box b { display: block; color: var(--green); text-transform: uppercase; font-size: 8.5px; letter-spacing: 0.06em; }
+  .paper table { width: calc(100% - 32px); margin: 0 16px; border-collapse: collapse; }
+  .paper th { background: #f2f2f2; text-align: left; padding: 5px 6px; font-weight: 600; }
+  .paper td { padding: 5px 6px; border-bottom: 1px solid #eee; }
+  .paper .r { text-align: right; }
+  .paper .tots { margin: 10px 16px 0 auto; width: 46%; display: grid; gap: 3px; }
+  .paper .tots div { display: flex; justify-content: space-between; }
+  .paper .tots .g { font-weight: 800; font-size: 11px; border-top: 1px solid #222; padding-top: 4px; }
+  .paper .sign { margin-top: auto; padding: 0 16px; display: flex; justify-content: space-between; color: #777; }
+  .spin { width: 64px; height: 64px; border-radius: 99px; border: 5px solid var(--amber-soft); border-top-color: var(--amber); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .okmark { width: 56px; height: 56px; border-radius: 99px; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 10px var(--green-soft); }
 
-  /* ---------- phone ---------- */
-  .p-top { padding: 4px 20px 0; }
-  .p-top h4 { margin: 0; font-size: 34px; letter-spacing: -0.02em; }
-  .p-ctn { display: flex; align-items: center; gap: 6px; color: var(--a-sub); font-size: 14px; margin-top: 2px; }
-  .p-client { display: flex; align-items: center; gap: 10px; background: var(--a-card); border-radius: 14px; padding: 10px 12px; margin: 12px 16px 0; box-shadow: 0 0 0 1px var(--a-line); }
-  .p-client .who { flex: 1; min-width: 0; } .p-client .who b { display: block; font-size: 15px; }
-  .p-client .avatar { width: 38px; height: 38px; font-size: 13px; }
-  .p-tools { display: grid; gap: 10px; padding: 12px 16px 6px; }
-  .p-tools .chip { height: 36px; padding: 0 14px; }
-  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 8px 16px; }
-  .grid3 .tile { border-radius: 14px; padding: 6px 6px 10px; }
-  .grid3 .tile .nm { font-size: 13px; margin: 6px 2px 2px; } .grid3 .tile .pr { font-size: 14px; margin: 0 2px; }
-  .grid3 .tile .qty { min-width: 24px; height: 24px; font-size: 13px; }
-  .cartbar { position: absolute; left: 12px; right: 12px; bottom: 96px; height: 60px; border-radius: 18px; background: var(--a-brand); color: #fff; display: flex; align-items: center; gap: 12px; padding: 0 16px; box-shadow: 0 14px 28px -12px rgb(14 122 52 / 0.9); z-index: 3; }
-  .cartbar .cnt { min-width: 32px; height: 32px; border-radius: 10px; background: rgb(255 255 255 / 0.18); display: flex; align-items: center; justify-content: center; font-weight: 700; }
-  .cartbar .t { flex: 1; font-weight: 600; } .cartbar b { font-size: 18px; font-variant-numeric: tabular-nums; }
-  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: 86px; padding-bottom: 22px; background: rgb(255 255 255 / 0.94); border-top: 1px solid var(--a-line); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 4; }
-  .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--a-sub); text-decoration: none; }
-  .tabbar a.on { color: var(--a-brand); }
-  .bsheet { position: absolute; left: 0; right: 0; bottom: 0; top: 150px; z-index: 6; background: var(--a-card); border-radius: 24px 24px 0 0; display: flex; flex-direction: column; box-shadow: 0 -10px 30px -10px rgb(0 0 0 / 0.3); }
-  .grab { width: 40px; height: 5px; border-radius: 99px; background: #cfd3cf; margin: 8px auto 4px; }
-  .bs-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 20px 10px; }
-  .bs-head b { font-size: 20px; }
-  .bs-lines { padding: 0 20px; flex: 1; overflow: hidden; }
-  .swipe { position: relative; margin: 0 -20px; overflow: hidden; }
-  .swipe .del { position: absolute; right: 0; top: 0; bottom: 0; width: 96px; background: var(--a-red); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; gap: 2px; }
-  .swipe .line { background: var(--a-card); padding-left: 20px; padding-right: 20px; transform: translateX(-96px); }
-  .bs-foot { padding: 12px 20px 34px; border-top: 1px solid var(--a-line); display: grid; gap: 10px; }
-  .p-pay { position: absolute; inset: 50px 0 0; display: flex; flex-direction: column; background: var(--a-bg); }
-  .p-pay .navbar { height: 52px; padding: 0 12px; }
-  .p-pay .body { padding: 14px 16px; display: grid; gap: 12px; }
-  .p-meth { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .p-meth .meth { height: 72px; font-size: 12px; gap: 6px; border-radius: 14px; }
-  .p-pay .amt { padding: 12px 16px; } .p-pay .amt .big { font-size: 40px; } .p-pay .amt .big .cur { height: 34px; }
-  .p-pay .change { padding: 10px 16px; } .p-pay .change b { font-size: 22px; }
-  .p-pay .keypad { gap: 8px; } .p-pay .key { height: 52px; font-size: 24px; border-radius: 12px; }
-  .p-pay .quick .chip { height: 36px; padding: 0 12px; font-size: 13px; }
-  .p-pay .cta { padding: 4px 16px 34px; }
+  /* ---------- terminer ---------- */
+  .recap { max-width: 720px; margin: 0 auto; display: grid; gap: 14px; }
+  .recap .blk { padding: 16px 20px; }
+  .recap .blk h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--sub); }
+  .recap .r { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .recap .r:first-of-type { border-top: 0; }
+
+  /* ---------- sheets, toasts ---------- */
+  .scrim { position: absolute; inset: 0; background: rgb(20 18 14 / 0.45); z-index: 20; animation: fade 0.18s ease-out; }
+  @keyframes fade { from { opacity: 0; } }
+  .sheet { position: absolute; z-index: 21; left: 0; right: 0; bottom: 0; max-height: 88%; background: var(--card); border-radius: 26px 26px 0 0; display: flex; flex-direction: column; box-shadow: 0 -16px 40px -16px rgb(0 0 0 / 0.4); animation: up 0.26s cubic-bezier(.2,.9,.3,1.05); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .framed .sheet { padding-bottom: 18px; }
+  .sheet.center { left: 50%; right: auto; bottom: auto; top: 50%; width: min(560px, 92%); max-height: 86%; border-radius: 24px; transform: translate(-50%, -50%); animation: zoom 0.22s ease-out; }
+  @keyframes up { from { transform: translateY(100%); } }
+  @keyframes zoom { from { opacity: 0; transform: translate(-50%, -46%) scale(0.97); } }
+  .grab { width: 40px; height: 5px; border-radius: 99px; background: #d6d3cc; margin: 8px auto 2px; flex-shrink: 0; }
+  .sh-h { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 16px 12px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .sh-h b { font-size: 17px; text-align: center; }
+  .sh-h .l, .sh-h .r { color: var(--amber-3); font-weight: 600; font-size: 16px; min-height: 40px; display: flex; align-items: center; }
+  .sh-h .r { justify-self: end; }
+  .sh-b { overflow: auto; padding: 14px 16px 18px; display: grid; gap: 12px; }
+  .field { display: grid; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 600; color: var(--sub); }
+  .field input { height: 50px; border: 0; border-radius: 14px; background: var(--fill); padding: 0 14px; font-size: 16px; user-select: text; -webkit-user-select: text; }
+  .field input:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--amber); background: #fff; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .toasts { position: absolute; z-index: 40; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: grid; gap: 8px; width: min(440px, 92%); pointer-events: none; }
+  .framed .toasts { top: 52px; }
+  .toast { background: #1f1e1b; color: #fff; border-radius: 16px; padding: 12px 16px; font-size: 15px; font-weight: 500; display: flex; gap: 10px; align-items: center; box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.5); animation: drop 0.25s ease-out; }
+  .toast .ok { color: #6ee7a0; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-12px); } }
+  .demo-pill { position: absolute; z-index: 30; top: calc(6px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); height: 30px; padding: 0 12px; border-radius: 99px; background: rgb(24 24 27 / 0.82); color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .framed .demo-pill { top: 14px; }
+  .demo-pill.inline { position: static; transform: none; width: 44px; height: 44px; padding: 0; justify-content: center; flex-shrink: 0; }
+  .about p { margin: 0; line-height: 1.55; font-size: 15px; color: #3c3b38; }
+  .about h4 { margin: 8px 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amber-3); }
+  .about ul { margin: 0; padding-left: 18px; line-height: 1.55; font-size: 15px; color: #3c3b38; }
+  .about li { margin-bottom: 4px; }
+
+  /* phone tweaks for shared views */
+  .is-phone .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .is-phone .kpi { padding: 14px; } .is-phone .kpi .v { font-size: 24px; }
+  .is-phone .dash-cols, .is-phone .pay, .is-phone .impr { grid-template-columns: minmax(0, 1fr); }
+  .is-phone .recu .big { font-size: 42px; } .is-phone .key { height: 56px; font-size: 24px; border-radius: 14px; }
+  .is-phone .meth { height: 64px; }
+  .is-phone .paper-wrap { padding: 12px; }
+  .is-phone #payBtn { position: sticky; bottom: 10px; z-index: 2; }
+  .is-phone .recap .two { grid-template-columns: 1fr; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+  <symbol id="user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="user-plus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></symbol>
+  <symbol id="cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
+  <symbol id="card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+  <symbol id="printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+  <symbol id="flag" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
   <symbol id="plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
   <symbol id="minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
   <symbol id="chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
-  <symbol id="chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
-  <symbol id="cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
-  <symbol id="chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16V9M12 16V5M17 16v-4"/></symbol>
-  <symbol id="users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
-  <symbol id="more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="container" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="1"/><path d="M6 6v12M10 6v12M14 6v12M18 6v12"/></symbol>
   <symbol id="cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
-  <symbol id="card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
   <symbol id="mobile" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
   <symbol id="bank" viewBox="0 0 24 24"><path d="M3 10h18M5 10v8M9 10v8M15 10v8M19 10v8M3 21h18M12 3l9 5H3z"/></symbol>
   <symbol id="del" viewBox="0 0 24 24"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="m18 9-6 6M12 9l6 6"/></symbol>
-  <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
-  <symbol id="printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
   <symbol id="download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
-  <symbol id="trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
-  <symbol id="tag" viewBox="0 0 24 24"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".5"/></symbol>
   <symbol id="image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
-  <symbol id="wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
-  <symbol id="note" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
-  <symbol id="user-plus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></symbol>
+  <symbol id="tag" viewBox="0 0 24 24"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".5"/></symbol>
+  <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
+  <symbol id="edit" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
 </svg>
 
-<div class="doc">
-  <h1>Maquette : la caisse comme une application</h1>
-  <p class="lead">La caisse s'ouvre depuis l'icône « Caisse » de l'écran d'accueil de la tablette ou du téléphone, en plein écran, sans barre d'adresse. Elle se tient comme une caisse enregistreuse : <b>un seul écran de vente</b>, le ticket toujours visible, puis le paiement et le reçu. Les six étapes de la colonne orange (Dashboard, Client, Commande, Encaissement, Impression, Terminer) deviennent ce parcours unique.</p>
-  <p class="lead">Les articles, leurs prix et leurs photos viennent de Gestion → Tarifs. Les dessins des produits ci-dessous remplacent les vraies photos.</p>
-
-  <!-- ===================== Tablet: sale ===================== -->
-  <section class="board">
-    <h2>Tablette · 1</h2>
-    <h3>L'écran de vente : le catalogue à gauche, le ticket à droite</h3>
-    <div class="scaler" data-w="1204">
-      <div class="device tablet"><div class="screen">
-        <div class="sb"><span>9:41</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span>82 %</span><span class="batt"></span></span></div>
-        <div class="t-body">
-          <nav class="rail">
-            <div class="logo">NE</div>
-            <a class="on"><span class="pill"><svg class="i"><use href="#cart"/></svg></span>Vente</a>
-            <a><span class="pill"><svg class="i"><use href="#chart"/></svg></span>Journée</a>
-            <a><span class="pill"><svg class="i"><use href="#users"/></svg></span>Clients</a>
-            <span class="grow"></span>
-            <a><span class="pill"><svg class="i"><use href="#more"/></svg></span>Plus</a>
-          </nav>
-
-          <div class="cat-area">
-            <div class="appbar">
-              <h4>Vente</h4>
-              <div class="ctn"><svg class="i" style="color:var(--a-brand)"><use href="#container"/></svg><div><b>CNT2026014</b> <span class="sub">· départ le 28 oct.</span></div><svg class="i i16" style="color:var(--a-sub)"><use href="#chev-d"/></svg></div>
-            </div>
-            <div class="cat-tools">
-              <div class="search"><svg class="i"><use href="#search"/></svg>Rechercher un article</div>
-              <div class="chips">
-                <span class="chip">Cartons <span class="n">2</span></span>
-                <span class="chip">Fûts / Barriques <span class="n">1</span></span>
-                <span class="chip">Bagages &amp; Sacs</span>
-                <span class="chip">Cantines</span>
-                <span class="chip on">Électroménager <span class="n">1</span></span>
-                <span class="chip">Téléviseurs</span>
-              </div>
-            </div>
-            <div class="grid4">
-              <div class="tile"><span class="pic micro"></span><p class="nm">Micro-ondes</p><p class="pr">30 €</p></div>
-              <div class="tile"><span class="pic fridge small"></span><p class="nm">Petit frigo</p><p class="pr">100 €</p></div>
-              <div class="tile on"><span class="qty">1</span><span class="pic fridge"></span><p class="nm">Frigo standard</p><p class="pr">dès 160 €</p></div>
-              <div class="tile"><span class="pic fridge big"></span><p class="nm">Grand frigo</p><p class="pr">dès 200 €</p></div>
-              <div class="tile"><span class="pic us"></span><p class="nm">Frigo américain</p><p class="pr">300 €</p></div>
-              <div class="tile"><span class="pic freezer"></span><p class="nm">Petit congélateur</p><p class="pr">140 €</p></div>
-              <div class="tile"><span class="pic freezer mid"></span><p class="nm">Congélateur moyen</p><p class="pr">dès 300 €</p></div>
-              <div class="tile"><span class="pic freezer big"></span><p class="nm">Grand congélateur</p><p class="pr">dès 380 €</p></div>
-              <div class="tile"><span class="pic washer"></span><p class="nm">Lave-linge</p><p class="pr">120 €</p></div>
-              <div class="tile"><span class="noph"><svg class="i i28"><use href="#image"/></svg></span><p class="nm">Gazinière</p><p class="pr">120 €</p></div>
-              <div class="tile quote"><span class="noph"><svg class="i i28"><use href="#tag"/></svg></span><p class="nm">Très grand congélateur</p><p class="pr dev">Sur devis</p></div>
-            </div>
-          </div>
-
-          <aside class="ticket">
-            <div class="tk-client">
-              <div class="avatar">MO</div>
-              <div class="who"><b>Moussa Ouédraogo</b><span class="sub">+33 6 12 34 56 78 · Paris</span></div>
-              <span class="btn ghost" style="height:40px;padding:0 6px">Changer</span>
-            </div>
-            <div class="tk-lines">
-              <div class="line"><span class="pic carton s48"></span><div><div class="nm">Carton Moyen</div><div class="sub num">90 € · 80 × 50 × 50 cm</div></div><div class="rt"><span class="tot">180 €</span><span class="stepper"><span><svg class="i i16"><use href="#minus"/></svg></span><b>2</b><span><svg class="i i16"><use href="#plus"/></svg></span></span></div></div>
-              <div class="line"><span class="pic fut-bleu s48"></span><div><div class="nm">Fût bleu 220 L</div><div class="sub num">120 €</div></div><div class="rt"><span class="tot">120 €</span><span class="stepper"><span><svg class="i i16"><use href="#minus"/></svg></span><b>1</b><span><svg class="i i16"><use href="#plus"/></svg></span></span></div></div>
-              <div class="line"><span class="pic fridge s48"></span><div><div class="nm">Frigo standard</div><div class="sub num">160 €</div></div><div class="rt"><span class="tot">160 €</span><span class="stepper"><span><svg class="i i16"><use href="#minus"/></svg></span><b>1</b><span><svg class="i i16"><use href="#plus"/></svg></span></span></div></div>
-            </div>
-            <div class="tk-foot">
-              <span class="addlink"><svg class="i"><use href="#plus"/></svg>Remise ou frais</span>
-              <div class="kv"><span>Sous-total · 4 colis</span><span class="num">460 €</span></div>
-              <div class="kv total"><span>Total</span><span class="num">460 €</span></div>
-              <span class="btn p xl">Encaisser 460 €</span>
-            </div>
-          </aside>
-        </div>
-      </div></div>
-    </div>
-    <div class="row" style="margin-top:16px">
-      <div class="notes">
-        <p><b>Un seul écran pour vendre.</b> On touche une photo : l'article tombe dans le ticket, la tuile se cercle de vert avec sa quantité. Un appui long ouvre la quantité et le prix (pour un article « dès » ou « sur devis »).</p>
-        <p><b>Les catégories passent en haut</b>, en pastilles qui défilent au doigt, avec le nombre d'articles déjà pris. La colonne orange de droite disparaît : le catalogue gagne une colonne de photos.</p>
-      </div>
-      <div class="notes">
-        <p><b>Le ticket ne se cache jamais</b> : client, lignes avec − et + de 40 px, total, et un seul gros bouton « Encaisser 460 € ». « Remise ou frais » ouvre une petite feuille : aujourd'hui les frais s'affichent mais ne se saisissent nulle part.</p>
-        <p><b>À gauche, une barre de navigation d'application</b> : Vente, Journée (l'actuel tableau de bord), Clients, et Plus (Gestion, Hub, se déconnecter). Le conteneur de destination reste en haut, comme aujourd'hui.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== Tablet: client sheet ===================== -->
-  <section class="board">
-    <h2>Tablette · 2</h2>
-    <h3>Choisir le client, sans quitter la vente</h3>
-    <div class="scaler" data-w="1204">
-      <div class="device tablet"><div class="screen">
-        <div class="sb"><span>9:41</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span>82 %</span><span class="batt"></span></span></div>
-        <div class="t-body">
-          <nav class="rail">
-            <div class="logo">NE</div>
-            <a class="on"><span class="pill"><svg class="i"><use href="#cart"/></svg></span>Vente</a>
-            <a><span class="pill"><svg class="i"><use href="#chart"/></svg></span>Journée</a>
-            <a><span class="pill"><svg class="i"><use href="#users"/></svg></span>Clients</a>
-            <span class="grow"></span>
-            <a><span class="pill"><svg class="i"><use href="#more"/></svg></span>Plus</a>
-          </nav>
-          <div class="cat-area">
-            <div class="appbar"><h4>Vente</h4></div>
-            <div class="cat-tools"><div class="search"><svg class="i"><use href="#search"/></svg>Rechercher un article</div></div>
-            <div class="grid4">
-              <div class="tile"><span class="pic carton"></span><p class="nm">Carton Standard</p><p class="pr">40 €</p></div>
-              <div class="tile"><span class="pic carton"></span><p class="nm">Carton Moyen</p><p class="pr">90 € / 140 €</p></div>
-              <div class="tile"><span class="pic carton"></span><p class="nm">Carton Grand</p><p class="pr">100 € / 140 €</p></div>
-              <div class="tile"><span class="pic fut-bleu"></span><p class="nm">Fût bleu 220 L</p><p class="pr">120 € / 160 €</p></div>
-            </div>
-          </div>
-          <aside class="ticket">
-            <div class="tk-client"><div class="avatar" style="background:var(--a-fill);color:var(--a-sub)"><svg class="i"><use href="#users"/></svg></div><div class="who"><b>Aucun client</b><span class="sub">Touchez pour choisir</span></div></div>
-          </aside>
-        </div>
-        <div class="dim"></div>
-        <div class="fsheet">
-          <div class="fs-head"><span class="l">Annuler</span><b>Choisir le client</b><span class="r">Nouveau</span></div>
-          <div style="padding:14px 18px 6px"><div class="search" style="color:var(--a-ink)"><svg class="i" style="color:var(--a-sub)"><use href="#search"/></svg>Moussa<span style="width:2px;height:22px;background:var(--a-brand);display:inline-block;margin-left:-6px"></span></div></div>
-          <div class="sec">3 clients trouvés</div>
-          <div class="res on"><div class="avatar">MO</div><div class="who"><b><mark>Moussa</mark> Ouédraogo</b><span class="sub">+33 6 12 34 56 78 · Paris · client depuis 2024</span></div><svg class="i" style="color:var(--a-brand)"><use href="#check"/></svg></div>
-          <div class="res"><div class="avatar">MS</div><div class="who"><b><mark>Moussa</mark> Sawadogo</b><span class="sub">+33 7 45 21 09 88 · Lyon</span></div><svg class="i" style="color:var(--a-sub)"><use href="#chev-r"/></svg></div>
-          <div class="res"><div class="avatar">MT</div><div class="who"><b><mark>Moussa</mark> Traoré</b><span class="sub">+226 70 11 22 33 · Ouagadougou</span></div><svg class="i" style="color:var(--a-sub)"><use href="#chev-r"/></svg></div>
-          <div class="sec">Clients récents</div>
-          <div class="res"><div class="avatar">AK</div><div class="who"><b>Aminata Kaboré</b><span class="sub">Hier · 3 colis</span></div><svg class="i" style="color:var(--a-sub)"><use href="#chev-r"/></svg></div>
-          <div class="res"><div class="avatar">IZ</div><div class="who"><b>Issa Zongo</b><span class="sub">Lundi · 1 colis</span></div><svg class="i" style="color:var(--a-sub)"><use href="#chev-r"/></svg></div>
-        </div>
-      </div></div>
-    </div>
-    <div class="row" style="margin-top:16px">
-      <div class="notes">
-        <p><b>Une feuille par-dessus la vente</b>, au lieu d'un écran à part : on garde le ticket en cours. On tape trois lettres ou un numéro, <b>tous les clients qui correspondent</b> s'affichent (aujourd'hui seul le premier apparaît).</p>
-      </div>
-      <div class="notes">
-        <p><b>« Nouveau »</b> ouvre le même formulaire qu'aujourd'hui (Expéditeur, Destinataire), dans la feuille. Le client créé est <b>choisi tout de suite</b> : aujourd'hui il faut le rechercher une seconde fois.</p>
-        <p>Les clients récents évitent de taper pour les habitués.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== Tablet: payment ===================== -->
-  <section class="board">
-    <h2>Tablette · 3</h2>
-    <h3>Le paiement : le mode, le montant reçu au pavé, la monnaie à rendre</h3>
-    <div class="scaler" data-w="1204">
-      <div class="device tablet"><div class="screen">
-        <div class="sb"><span>9:42</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span>82 %</span><span class="batt"></span></span></div>
-        <div class="pay">
-          <div class="navbar"><span class="back"><svg class="i"><use href="#chev-l"/></svg>Vente</span><b>Paiement · Moussa Ouédraogo</b><span></span></div>
-          <div class="pay-body">
-            <div style="display:grid;gap:18px;align-content:start">
-              <div class="kv total" style="font-size:22px"><span>Total à payer</span><span class="num">460 €</span></div>
-              <div class="methods">
-                <div class="meth on"><svg class="i i28"><use href="#cash"/></svg>Espèces</div>
-                <div class="meth"><svg class="i i28"><use href="#card"/></svg>Carte bancaire</div>
-                <div class="meth"><svg class="i i28"><use href="#mobile"/></svg>Mobile Money</div>
-                <div class="meth"><svg class="i i28"><use href="#bank"/></svg>Virement</div>
-              </div>
-              <div class="amt"><div class="lbl">Montant reçu</div><div class="big">500 €<span class="cur"></span></div></div>
-              <div class="quick"><span class="chip">Exact · 460 €</span><span class="chip on">500 €</span><span class="chip">550 €</span><span class="chip">600 €</span></div>
-              <div class="change"><span>Monnaie à rendre</span><b>40 €</b></div>
-              <span class="addlink"><svg class="i"><use href="#note"/></svg>Ajouter une observation</span>
-            </div>
-            <div style="display:grid;gap:14px;align-content:start">
-              <div class="keypad">
-                <span class="key">1</span><span class="key">2</span><span class="key">3</span>
-                <span class="key">4</span><span class="key press">5</span><span class="key">6</span>
-                <span class="key">7</span><span class="key">8</span><span class="key">9</span>
-                <span class="key fn">C</span><span class="key">0</span><span class="key fn"><svg class="i i28"><use href="#del"/></svg></span>
-              </div>
-              <span class="btn p xl" style="margin-top:6px">Valider le paiement</span>
-              <p class="sub" style="margin:0;text-align:center">L'expédition est créée à cet instant, une seule fois.</p>
-            </div>
-          </div>
-        </div>
-      </div></div>
-    </div>
-    <div class="row" style="margin-top:16px">
-      <div class="notes">
-        <p><b>Les quatre modes d'aujourd'hui</b> en grandes tuiles : Espèces, Carte bancaire, Mobile Money, Virement. En espèces, <b>un pavé numérique</b> à la place du clavier du système (qui couvre la moitié de l'écran) et des montants ronds en un geste.</p>
-        <p><b>La monnaie à rendre</b> s'écrit en grand, en vert. S'il manque de l'argent, la même zone passe en rouge : « Il manque 20 € », et le bouton reste à sa place mais dit pourquoi on ne peut pas valider.</p>
-      </div>
-      <div class="notes">
-        <p><b>L'expédition est créée au moment de « Valider le paiement »</b>, avec une clé unique. Aujourd'hui elle se crée à l'ouverture de l'écran Impression, et revenir sur cet écran la crée <b>une deuxième fois</b>.</p>
-        <p>Pour la carte, le Mobile Money et le virement, le pavé disparaît : le montant est le total.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== Tablet: done ===================== -->
-  <section class="board">
-    <h2>Tablette · 4</h2>
-    <h3>C'est encaissé : le bordereau, puis la vente suivante</h3>
-    <div class="scaler" data-w="1204">
-      <div class="device tablet"><div class="screen">
-        <div class="sb"><span>9:42</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span>82 %</span><span class="batt"></span></span></div>
-        <div class="done">
-          <div class="check"><svg class="i" style="width:56px;height:56px;stroke-width:3"><use href="#check"/></svg></div>
-          <h5>Paiement enregistré</h5>
-          <div class="meta">460 € en espèces · <b style="color:var(--a-brand-2)">40 € à rendre</b></div>
-          <div class="shp"><svg class="i" style="color:var(--a-brand)"><use href="#container"/></svg><span><b>SHP2026100231</b> · 4 colis · Conteneur CNT2026014</span></div>
-          <div class="done-acts">
-            <span class="btn p xl"><svg class="i"><use href="#printer"/></svg>Imprimer le bordereau</span>
-            <span class="btn out"><svg class="i"><use href="#download"/></svg>Télécharger le PDF</span>
-            <span class="btn ghost">Nouvelle vente</span>
-          </div>
-        </div>
-      </div></div>
-    </div>
-    <div class="row" style="margin-top:16px">
-      <div class="notes">
-        <p><b>Un écran de fin franc</b>, comme sur un terminal de paiement : la coche, le montant, la monnaie à rendre rappelée, le numéro d'expédition. Le bordereau est celui d'aujourd'hui (le même PDF A4).</p>
-      </div>
-      <div class="notes">
-        <p><b>« Nouvelle vente »</b> vide le ticket et rouvre l'écran de vente, le conteneur reste choisi. Les écrans « Impression » et « Terminer » disparaissent : ils sont réunis ici.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== Phone ===================== -->
-  <section class="board">
-    <h2>Téléphone</h2>
-    <h3>La même caisse dans la main : le panier en bas, le pavé au pouce</h3>
-    <div class="phones">
-      <div class="phone-wrap">
-        <div class="scaler" data-w="410"><div class="device phone"><div class="screen">
-          <div class="sb"><span>9:41</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span class="batt"></span></span></div>
-          <div class="p-top"><h4>Vente</h4><div class="p-ctn"><svg class="i i16"><use href="#container"/></svg>CNT2026014 · départ le 28 oct.<svg class="i i16"><use href="#chev-d"/></svg></div></div>
-          <div class="p-client"><div class="avatar">MO</div><div class="who"><b>Moussa Ouédraogo</b><span class="sub">+33 6 12 34 56 78</span></div><span style="color:var(--a-brand);font-weight:600;font-size:15px">Changer</span></div>
-          <div class="p-tools">
-            <div class="search"><svg class="i"><use href="#search"/></svg>Rechercher un article</div>
-            <div class="chips"><span class="chip">Cartons <span class="n">2</span></span><span class="chip on">Électroménager <span class="n">1</span></span><span class="chip">Fûts</span></div>
-          </div>
-          <div class="grid3">
-            <div class="tile"><span class="pic micro"></span><p class="nm">Micro-ondes</p><p class="pr">30 €</p></div>
-            <div class="tile"><span class="pic fridge small"></span><p class="nm">Petit frigo</p><p class="pr">100 €</p></div>
-            <div class="tile on"><span class="qty">1</span><span class="pic fridge"></span><p class="nm">Frigo standard</p><p class="pr">dès 160 €</p></div>
-            <div class="tile"><span class="pic fridge big"></span><p class="nm">Grand frigo</p><p class="pr">dès 200 €</p></div>
-            <div class="tile"><span class="pic us"></span><p class="nm">Frigo américain</p><p class="pr">300 €</p></div>
-            <div class="tile"><span class="pic freezer"></span><p class="nm">Petit congélateur</p><p class="pr">140 €</p></div>
-          </div>
-          <div class="cartbar"><span class="cnt">4</span><span class="t">Voir le panier</span><b>460 €</b></div>
-          <nav class="tabbar">
-            <a class="on"><svg class="i i24"><use href="#cart"/></svg>Vente</a>
-            <a><svg class="i i24"><use href="#chart"/></svg>Journée</a>
-            <a><svg class="i i24"><use href="#users"/></svg>Clients</a>
-            <a><svg class="i i24"><use href="#more"/></svg>Plus</a>
-          </nav>
-          <div class="home-ind"></div>
-        </div></div></div>
-        <p class="cap">Vente</p>
-      </div>
-
-      <div class="phone-wrap">
-        <div class="scaler" data-w="410"><div class="device phone"><div class="screen">
-          <div class="sb"><span>9:41</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span class="batt"></span></span></div>
-          <div class="p-top"><h4>Vente</h4></div>
-          <div class="dim"></div>
-          <div class="bsheet">
-            <div class="grab"></div>
-            <div class="bs-head"><b>Panier · 4 colis</b><span style="color:var(--a-sub);font-size:14px">Moussa Ouédraogo</span></div>
-            <div class="bs-lines">
-              <div class="line"><span class="pic carton s48"></span><div><div class="nm">Carton Moyen</div><div class="sub num">90 € · 180 €</div></div><span class="stepper"><span><svg class="i i16"><use href="#minus"/></svg></span><b>2</b><span><svg class="i i16"><use href="#plus"/></svg></span></span></div>
-              <div class="swipe"><div class="del"><svg class="i"><use href="#trash"/></svg>Retirer</div><div class="line"><span class="pic fut-bleu s48"></span><div><div class="nm">Fût bleu 220 L</div><div class="sub num">120 €</div></div><span class="stepper"><span><svg class="i i16"><use href="#minus"/></svg></span><b>1</b><span><svg class="i i16"><use href="#plus"/></svg></span></span></div></div>
-              <div class="line"><span class="pic fridge s48"></span><div><div class="nm">Frigo standard</div><div class="sub num">160 €</div></div><span class="stepper"><span><svg class="i i16"><use href="#minus"/></svg></span><b>1</b><span><svg class="i i16"><use href="#plus"/></svg></span></span></div>
-              <span class="addlink" style="margin-top:6px"><svg class="i"><use href="#plus"/></svg>Remise ou frais</span>
-            </div>
-            <div class="bs-foot">
-              <div class="kv total"><span>Total</span><span class="num">460 €</span></div>
-              <span class="btn p xl">Encaisser 460 €</span>
-            </div>
-          </div>
-          <div class="home-ind"></div>
-        </div></div></div>
-        <p class="cap">Panier</p>
-      </div>
-
-      <div class="phone-wrap">
-        <div class="scaler" data-w="410"><div class="device phone"><div class="screen">
-          <div class="sb"><span>9:42</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span class="batt"></span></span></div>
-          <div class="p-pay">
-            <div class="navbar"><span class="back"><svg class="i"><use href="#chev-l"/></svg>Panier</span><b>Paiement</b><span></span></div>
-            <div class="body">
-              <div class="kv total"><span>Total à payer</span><span class="num">460 €</span></div>
-              <div class="p-meth">
-                <div class="meth on"><svg class="i i24"><use href="#cash"/></svg>Espèces</div>
-                <div class="meth"><svg class="i i24"><use href="#card"/></svg>Carte</div>
-                <div class="meth"><svg class="i i24"><use href="#mobile"/></svg>Mobile M.</div>
-                <div class="meth"><svg class="i i24"><use href="#bank"/></svg>Virement</div>
-              </div>
-              <div class="amt"><div class="lbl">Montant reçu</div><div class="big">500 €<span class="cur"></span></div></div>
-              <div class="quick"><span class="chip">Exact</span><span class="chip on">500 €</span><span class="chip">550 €</span><span class="chip">600 €</span></div>
-              <div class="change"><span>À rendre</span><b>40 €</b></div>
-              <div class="keypad">
-                <span class="key">1</span><span class="key">2</span><span class="key">3</span>
-                <span class="key">4</span><span class="key">5</span><span class="key">6</span>
-                <span class="key">7</span><span class="key">8</span><span class="key">9</span>
-                <span class="key fn">C</span><span class="key">0</span><span class="key fn"><svg class="i i24"><use href="#del"/></svg></span>
-              </div>
-            </div>
-            <div class="cta"><span class="btn p xl">Valider le paiement</span></div>
-          </div>
-          <div class="home-ind"></div>
-        </div></div></div>
-        <p class="cap">Paiement</p>
-      </div>
-
-      <div class="phone-wrap">
-        <div class="scaler" data-w="410"><div class="device phone"><div class="screen">
-          <div class="sb"><span>9:42</span><span class="sb-r"><svg class="i i16"><use href="#wifi"/></svg><span class="batt"></span></span></div>
-          <div class="done" style="inset:50px 0 0">
-            <div class="check" style="width:96px;height:96px"><svg class="i" style="width:48px;height:48px;stroke-width:3"><use href="#check"/></svg></div>
-            <h5 style="font-size:28px">Paiement enregistré</h5>
-            <div class="meta">460 € en espèces<br><b style="color:var(--a-brand-2)">40 € à rendre</b></div>
-            <div class="shp" style="font-size:14px"><span><b>SHP2026100231</b> · 4 colis</span></div>
-            <div class="done-acts" style="width:100%;padding:0 4px">
-              <span class="btn p xl"><svg class="i"><use href="#printer"/></svg>Imprimer le bordereau</span>
-              <span class="btn out"><svg class="i"><use href="#download"/></svg>Télécharger le PDF</span>
-              <span class="btn ghost">Nouvelle vente</span>
-            </div>
-          </div>
-          <div class="home-ind"></div>
-        </div></div></div>
-        <p class="cap">Encaissé</p>
-      </div>
-    </div>
-    <div class="row" style="margin-top:16px">
-      <div class="notes">
-        <p><b>Trois colonnes de photos</b> et, en bas, <b>la barre du panier</b> toujours visible (nombre de colis, total). Elle s'ouvre en feuille qu'on tire du pouce.</p>
-        <p><b>Dans le panier</b>, on glisse une ligne vers la gauche pour la retirer, ou on la descend à zéro avec −.</p>
-      </div>
-      <div class="notes">
-        <p><b>La barre d'onglets du bas</b> remplace les six étapes serrées de la barre actuelle : Vente, Journée, Clients, Plus. Tout se touche au pouce, rien sous 44 px.</p>
-        <p><b>Le pavé du paiement</b> est en bas de l'écran, sous le pouce, comme sur un terminal de carte.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== Native feel ===================== -->
-  <section class="board">
-    <h2>Ce qui fait « application »</h2>
-    <h3>Ce qu'on ressent sans le voir sur une image</h3>
-    <div class="fix">
-      <div><b>Elle s'ouvre comme une application</b>Depuis l'icône « Caisse » de l'écran d'accueil (le raccourci existe déjà dans le site), en plein écran, sans barre d'adresse, la barre d'état aux couleurs de Naange.</div>
-      <div><b>La vente en cours ne se perd pas</b>La tablette se met en veille, la page se recharge, le réseau coupe : le ticket et le client sont gardés sur l'appareil. Aujourd'hui tout est perdu au moindre rechargement.</div>
-      <div><b>Chaque toucher répond tout de suite</b>Le bouton s'enfonce sous le doigt, la tuile fait un petit rebond quand l'article tombe dans le ticket, le téléphone vibre brièvement s'il le permet.</div>
-      <div><b>Les feuilles glissent</b>Client, panier, remise : elles montent du bas ou s'ouvrent par-dessus, se ferment d'un glissement vers le bas, et la vente reste dessous.</div>
-      <div><b>L'écran ne s'éteint pas pendant une vente</b>Tant qu'un ticket est ouvert, l'écran reste allumé ; il peut se mettre en veille une fois la vente encaissée.</div>
-      <div><b>Rien ne bouge par erreur</b>Pas de zoom en touchant deux fois, pas de page qui rebondit ou se recharge en tirant vers le bas, pas de texte sélectionné par un appui long.</div>
-    </div>
-  </section>
-
-  <!-- ===================== Fixes ===================== -->
-  <section class="board">
-    <h2>Corrigé au passage</h2>
-    <h3>Des défauts de la caisse actuelle que ce parcours fait disparaître</h3>
-    <div class="fix">
-      <div><b>La commande créée deux fois</b>Aujourd'hui l'expédition se crée à l'ouverture de l'écran Impression ; y revenir par la barre la crée à nouveau. Elle se crée désormais une seule fois, à « Valider le paiement ».</div>
-      <div><b>Le client cherché, puis cherché encore</b>La recherche ne montre que le premier client trouvé, et un client créé n'est pas choisi. Ici : tous les résultats, et le client créé est pris tout de suite.</div>
-      <div><b>Des francs CFA au milieu des euros</b>L'écran « Terminer » affiche les montants en FCFA alors que tout le reste est en euros. Il disparaît ; tout est en euros.</div>
-      <div><b>Des frais qu'on ne peut pas saisir</b>Le ticket affiche « Frais supplémentaires » mais aucun champ ne permet de les entrer. « Remise ou frais » les rend saisissables.</div>
-    </div>
-  </section>
-
-  <!-- ===================== Questions ===================== -->
-  <section class="board">
-    <h2>Questions</h2>
-    <h3>Ce qui change la forme des écrans</h3>
-    <div class="qs" style="max-width:900px">
-      <div class="q"><b>Sur quoi travaille-t-on au comptoir ?</b>La maquette part d'une <b>tablette en paysage</b> au comptoir et d'un <b>téléphone</b> pour les agents. Si le comptoir a un ordinateur avec souris, l'écran de vente reste le même, en plus large.</div>
-      <div class="q"><b>Vert de la marque ou orange de la caisse ?</b>La caisse est orange aujourd'hui ; le reste de Naange est vert et or. <span class="prop">Je propose le vert</span> pour qu'elle ressemble au reste de l'application, l'or servant aux quantités.</div>
-      <div class="q"><b>Que remet-on au client ?</b>Aujourd'hui seulement le bordereau A4. Un <b>ticket de caisse</b> sur imprimante thermique (80 mm), ou le bordereau <b>envoyé par WhatsApp</b> au client (Twilio est déjà branché pour les SMS), changent l'écran de fin. <span class="prop">Je propose de garder le bordereau A4 pour cette version.</span></div>
-      <div class="q"><b>Le prix Province à la caisse ?</b>La caisse encaisse toujours le prix Région parisienne. Si le comptoir sert aussi la province, un interrupteur « Province » dans le ticket appliquerait les bons prix. <span class="prop">Je propose de ne pas l'ajouter tant que le comptoir est en région parisienne.</span></div>
-    </div>
-  </section>
-</div>
+<div id="host"></div>
 
 <script>
-  // Scale fixed-width device frames down to the available width.
-  const scalers = document.querySelectorAll(".scaler");
-  function fit() {
-    scalers.forEach((s) => {
-      const frame = s.firstElementChild;
-      const w = Number(s.dataset.w);
-      const scale = Math.min(1, s.clientWidth / w);
-      frame.style.transform = `scale(${scale})`;
-      s.style.height = `${frame.offsetHeight * scale}px`;
-    });
+/* ======================= data ======================= */
+const STEPS = [
+  { id: "dashboard", label: "Dashboard", short: "Accueil", icon: "home", title: "Caisse" },
+  { id: "client", label: "Client", short: "Client", icon: "user", title: "Sélection du client" },
+  { id: "commande", label: "Commande", short: "Commande", icon: "cart", title: "Commande" },
+  { id: "encaissement", label: "Encaissement", short: "Paiement", icon: "card", title: "Encaissement" },
+  { id: "impression", label: "Impression", short: "Reçu", icon: "printer", title: "Impression" },
+  { id: "terminer", label: "Terminer", short: "Terminer", icon: "flag", title: "Terminer" },
+];
+const CATS = [
+  ["cartons", "Cartons"], ["futs", "Fûts / Barriques"], ["bagages", "Bagages & Sacs"], ["cantines", "Cantines"],
+  ["electromenager", "Électroménager"], ["tv", "Téléviseurs"], ["mobilier", "Mobilier"], ["vins", "Vins & Champagnes"],
+  ["vehicules", "Véhicules"], ["divers", "Divers"], ["enlevement", "Enlèvement"],
+];
+// [type, name, detail, category, mode, price, picture]
+const P = [
+  ["CARTON","Carton Standard","40 × 40 × 35 cm","cartons","F",40,"carton s"],["CARTON_MEDIUM","Carton Moyen","80 × 50 × 50 cm","cartons","F",90,"carton"],["CARTON_LARGE","Carton Grand","80 × 60 × 60 cm","cartons","F",100,"carton l"],
+  ["BARRIQUE","Fût bleu 220 L","","futs","F",120,"fut-bleu"],["FUT_BLACK_270L","Fût noir 270 L","","futs","F",120,"fut-noir"],
+  ["VALISE_SMALL","Petite valise","Valise cabine","bagages","F",30,"valise"],["VALISE_MEDIUM","Valise moyenne","","bagages","F",50,"valise"],["VALISE_LARGE","Grande valise","","bagages","F",70,"valise"],["VALISE_XLARGE","Très grande valise","","bagages","F",100,"valise"],["SAC_MEDIUM","Sac moyen","","bagages","F",60,""],["SAC_LARGE","Grand sac","Sac de voyage, sac boudin","bagages","F",70,""],["SAC_XLARGE","Très grand sac","","bagages","F",100,""],
+  ["CANTINE_SMALL","Petite cantine","","cantines","F",70,""],["CANTINE_MEDIUM","Cantine moyenne","","cantines","F",120,""],["CANTINE_LARGE","Grande cantine","","cantines","F",160,""],["CANTINE_XLARGE","Très grande cantine","","cantines","F",180,""],
+  ["ELECTRONICS","Micro-ondes","","electromenager","F",30,"micro"],["FRIDGE_SMALL","Petit frigo","","electromenager","F",100,"fridge s"],["FRIDGE_STANDARD","Frigo standard","","electromenager","D",160,"fridge"],["FRIDGE_LARGE","Grand frigo","","electromenager","D",200,"fridge l"],["FRIDGE_AMERICAN","Frigo américain","","electromenager","F",300,"us"],["FREEZER_SMALL","Petit congélateur","","electromenager","F",140,"freezer"],["FREEZER_MEDIUM","Congélateur moyen","","electromenager","D",300,"freezer m"],["FREEZER_LARGE","Grand congélateur","","electromenager","D",380,"freezer l"],["WASHING_MACHINE","Lave-linge","","electromenager","F",120,"washer"],["STOVE","Gazinière","","electromenager","F",120,""],["FREEZER_XLARGE","Très grand congélateur","","electromenager","Q",0,""],
+  ["TV_32",'TV 32"',"80 cm","tv","F",90,"tv"],["TV_40",'TV 40"',"100 cm","tv","F",130,"tv"],["TV_48",'TV 48"',"123 cm","tv","F",150,"tv"],["TV_55",'TV 55"',"140 cm","tv","F",180,"tv"],["TV_65",'TV 65"',"163 cm","tv","F",200,"tv"],["TV_75",'TV 75"',"189 cm","tv","F",270,"tv"],["TV_80",'TV 80"',"203 cm","tv","F",300,"tv"],["TV_OTHER","TV autre taille","","tv","Q",0,""],
+  ["CHAIR_STACKABLE","Chaise empilable","","mobilier","F",10,""],["CHAIR_STANDARD","Chaise non empilable","","mobilier","F",30,""],["OFFICE_CHAIR","Chaise de bureau","","mobilier","F",40,""],["ARMCHAIR","Fauteuil","","mobilier","F",120,""],["SOFA_SEAT","Canapé (par place)","","mobilier","F",100,""],["MATTRESS_SEAT","Matelas (par place)","","mobilier","F",60,""],
+  ["WINE_6_BOTTLES","Carton 6 bouteilles de vin","","vins","D",10,""],["WINE_12_BOTTLES","Carton 12 bouteilles de vin","","vins","F",18,""],["CHAMPAGNE_6_BOTTLES","Carton 6 bouteilles de champagne","","vins","F",28,""],["CHAMPAGNE_12_BOTTLES","Carton 12 bouteilles de champagne","","vins","F",32,""],
+  ["VEHICLE","Petite voiture","Chargée","vehicules","F",1500,""],["SUV_4X4","SUV 4×4","Chargé","vehicules","D",2000,""],["MOTORCYCLE","Vélo","","vehicules","D",30,""],["OTHER","Autre véhicule","","vehicules","Q",0,""],
+  ["GENERATOR_SMALL","Groupe électrogène","","divers","D",280,""],["FOOD","Alimentation","Produits alimentaires","divers","F",45,""],["CLOTHING","Vêtements","","divers","F",40,""],["DOCUMENTS","Documents","","divers","F",25,""],["INDUSTRIAL","Matériel industriel","","divers","Q",0,""],
+  ["ENLEVEMENT","Enlèvement à domicile","","enlevement","F",20,""],
+].map(([id, name, detail, cat, mode, price, pic]) => ({ id, name, detail, cat, mode, price, pic }));
+const CLIENTS = [
+  { id: "c1", code: "CLI20240012", first: "Moussa", last: "Ouédraogo", phone: "+33 6 12 34 56 78", email: "moussa.ouedraogo@gmail.com", city: "Paris", since: "mars 2024", rName: "Awa Ouédraogo", rPhone: "+226 70 45 12 88", rCity: "Ouagadougou" },
+  { id: "c2", code: "CLI20240031", first: "Aminata", last: "Kaboré", phone: "+33 6 98 45 12 30", email: "", city: "Montreuil", since: "juin 2024", rName: "Rasmané Kaboré", rPhone: "+226 76 11 02 54", rCity: "Koudougou" },
+  { id: "c3", code: "CLI20250004", first: "Issa", last: "Zongo", phone: "+33 7 51 22 89 04", email: "issa.zongo@outlook.fr", city: "Lyon", since: "janvier 2025", rName: "", rPhone: "", rCity: "" },
+  { id: "c4", code: "CLI20250019", first: "Fatimata", last: "Sawadogo", phone: "+33 6 44 10 77 21", email: "", city: "Créteil", since: "avril 2025", rName: "Adama Sawadogo", rPhone: "+226 70 98 33 10", rCity: "Bobo-Dioulasso" },
+  { id: "c5", code: "CLI20250040", first: "Moussa", last: "Traoré", phone: "+33 7 66 03 41 90", email: "", city: "Saint-Denis", since: "août 2025", rName: "Mariam Traoré", rPhone: "+226 78 20 61 47", rCity: "Ouagadougou" },
+  { id: "c6", code: "CLI20260007", first: "Salif", last: "Compaoré", phone: "+33 6 03 56 89 47", email: "s.compaore@gmail.com", city: "Paris", since: "février 2026", rName: "", rPhone: "", rCity: "" },
+];
+const CONTAINERS = [
+  { id: "CNT2026014", name: "Conteneur octobre", dep: "départ le 28 oct." },
+  { id: "CNT2026015", name: "Conteneur novembre", dep: "départ le 18 nov." },
+  { id: "CNT2026013", name: "Conteneur septembre", dep: "en chargement" },
+];
+const METHODS = [["ESPECES", "Espèces", "cash"], ["CARTE", "Carte bancaire", "card"], ["MOBILE", "Mobile Money", "mobile"], ["VIREMENT", "Virement", "bank"]];
+
+/* ======================= state ======================= */
+const KEY = "naange-caisse-maquette-v2";
+const fresh = () => ({
+  step: "dashboard", client: null, container: "CNT2026014", items: [], discount: 0, cat: "cartons", q: "",
+  clientTab: "search", clientQ: "", pay: { mode: "ESPECES", recu: "", obs: "" }, paid: false, processing: false,
+  order: null, creating: false, sheet: null, view: "auto", sales: 12, amount: 3480, colis: 31, extraClients: [], seq: 231, lastAdded: null,
+});
+let S = fresh();
+try { const saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) S = { ...fresh(), ...saved, sheet: null, creating: false, processing: false, lastAdded: null }; } catch {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+
+const euro = (n) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(n) + " €";
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ic = (id, cls = "") => `<svg class="i ${cls}"><use href="#${id}"/></svg>`;
+const allClients = () => [...S.extraClients, ...CLIENTS];
+const fullName = (c) => `${c.first} ${c.last}`;
+const initials = (c) => (c.first[0] + c.last[0]).toUpperCase();
+const subtotal = () => S.items.reduce((s, l) => s + l.price * l.qty, 0);
+const total = () => Math.max(0, subtotal() - (Number(S.discount) || 0));
+const qtyCount = () => S.items.reduce((s, l) => s + l.qty, 0);
+const container = () => CONTAINERS.find((c) => c.id === S.container) || CONTAINERS[0];
+const isPhone = () => S.view === "phone" || window.innerWidth < 820;
+const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
+const done = {
+  dashboard: () => false, client: () => !!S.client, commande: () => S.items.length > 0,
+  encaissement: () => S.paid, impression: () => !!S.order, terminer: () => false,
+};
+const priceLabel = (p) => (p.mode === "Q" ? "Sur devis" : p.mode === "D" ? `dès ${euro(p.price)}` : euro(p.price));
+const picHTML = (p) => (p.pic ? `<span class="pic ${p.pic}"></span>` : `<span class="pic ph">${ic(p.mode === "Q" ? "tag" : "image", "i28")}</span>`);
+
+/* ======================= toasts ======================= */
+let toasts = [];
+function toast(msg) {
+  const id = Math.random();
+  toasts.push({ id, msg });
+  renderToasts();
+  setTimeout(() => { toasts = toasts.filter((t) => t.id !== id); renderToasts(); }, 2600);
+}
+function renderToasts() {
+  const el = document.querySelector(".toasts");
+  if (el) el.innerHTML = toasts.map((t) => `<div class="toast">${ic("check", "ok")}<span>${t.msg}</span></div>`).join("");
+}
+
+/* ======================= views ======================= */
+function guard(kind) {
+  if (kind === "client")
+    return `<div class="empty enter"><div class="ico">${ic("cart", "i40")}</div><h2>Aucun client sélectionné</h2><p>Sélectionnez d'abord un client pour commencer une commande.</p><button class="btn p xl" data-act="go" data-v="client">Sélectionner un client</button></div>`;
+  if (kind === "items")
+    return `<div class="empty enter"><div class="ico">${ic("box", "i40")}</div><h2>Commande vide</h2><p>Ajoutez des produits à la commande.</p><button class="btn p xl" data-act="go" data-v="commande">Retour à la commande</button></div>`;
+  return `<div class="empty enter"><div class="ico">${ic("card", "i40")}</div><h2>Paiement non validé</h2><p>Encaissez la commande avant d'imprimer le bordereau.</p><button class="btn p xl" data-act="go" data-v="encaissement">Aller à l'encaissement</button></div>`;
+}
+
+function vDashboard() {
+  const sales = [
+    ["SHP2026100230", "Aminata Kaboré", 3, 270, "09:12"], ["SHP2026100229", "Issa Zongo", 1, 120, "08:47"],
+    ["SHP2026100228", "Fatimata Sawadogo", 5, 640, "08:20"], ["SHP2026100227", "Salif Compaoré", 2, 180, "hier"],
+  ];
+  return `<div class="enter">
+    <div class="kpis">
+      <div class="card kpi"><div class="l">Ventes aujourd'hui</div><div class="v num">${S.sales}</div><div class="d">+20 % vs hier</div></div>
+      <div class="card kpi"><div class="l">Montant encaissé</div><div class="v num">${euro(S.amount)}</div><div class="d">+12 % vs hier</div></div>
+      <div class="card kpi"><div class="l">Ticket moyen</div><div class="v num">${euro(Math.round(S.amount / S.sales))}</div><div class="d">−4 % vs hier</div></div>
+      <div class="card kpi"><div class="l">Colis vendus</div><div class="v num">${S.colis}</div><div class="d" style="color:var(--sub)">aujourd'hui</div></div>
+    </div>
+    <button class="start" data-act="go" data-v="client"><span class="ic">${ic("plus", "i28")}</span><span style="flex:1"><b>Nouvelle vente</b><span>Choisir le client, puis les colis</span></span>${ic("chev-r", "i28")}</button>
+    <div class="dash-cols">
+      <div><div class="sec-t">Dernières ventes</div><div class="list">${sales.map(([n, who, a, t, h]) => `<div class="li"><div class="main"><b>${who}</b><span class="sub">${n} · ${a} article${a > 1 ? "s" : ""}</span></div><div style="text-align:right"><b class="num">${euro(t)}</b><div class="sub">${h}</div></div></div>`).join("")}</div></div>
+      <div><div class="sec-t">Top produits vendus</div><div class="list">${[["CARTON_MEDIUM", 14, 1260], ["BARRIQUE", 6, 720], ["FRIDGE_STANDARD", 3, 480]].map(([id, n, t], i) => { const p = P.find((x) => x.id === id); return `<div class="li"><span class="sub" style="width:14px;font-weight:700">${i + 1}</span><span style="width:52px">${picHTML(p)}</span><div class="main"><b>${p.name}</b><span class="sub">${n} unités · ${euro(t)}</span></div></div>`; }).join("")}</div></div>
+    </div></div>`;
+}
+
+function clientRow(c, q) {
+  const hl = (s) => (q ? esc(s).replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig"), "<mark>$1</mark>") : esc(s));
+  const on = S.client && S.client.id === c.id;
+  return `<button class="li" data-act="pickClient" data-v="${c.id}"><span class="av">${initials(c)}</span><span class="main"><b>${hl(fullName(c))}</b><span class="sub">${hl(c.phone)} · ${esc(c.city)} · client depuis ${esc(c.since)}</span></span>${on ? `<span class="badge">Sélectionné</span>` : ic("chev-r")}</button>`;
+}
+function vClient() {
+  const list = allClients();
+  const q = S.clientQ.trim();
+  const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const hits = q ? list.filter((c) => norm(`${fullName(c)} ${c.phone} ${c.email}`).includes(norm(q)) || c.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""))) : [];
+  const body =
+    S.clientTab === "search"
+      ? `<div class="search">${ic("search")}<input id="clientQ" data-in="clientQ" placeholder="Nom, email ou téléphone" value="${esc(S.clientQ)}" autocomplete="off" inputmode="search"></div>
+         <div id="clientResults">${clientResults(q, hits)}</div>`
+      : `<div class="list">${list.map((c) => clientRow(c, "")).join("")}</div>`;
+  return `<div class="client-wrap enter">
+    <div class="seg"><button class="${S.clientTab === "search" ? "on" : ""}" data-act="clientTab" data-v="search">${ic("search", "i18")}Recherche</button><button class="${S.clientTab === "list" ? "on" : ""}" data-act="clientTab" data-v="list">${ic("user", "i18")}Liste des clients <span class="count">${list.length}</span></button></div>
+    ${body}
+    <button class="btn out block" data-act="sheet" data-v="newClient">${ic("user-plus")}Nouveau client</button>
+  </div>`;
+}
+function clientResults(q, hits) {
+  if (!q) return `<div class="sec-t">Clients récents</div><div class="list">${allClients().slice(0, 3).map((c) => clientRow(c, "")).join("")}</div>`;
+  if (!hits.length) return `<p class="sub" style="text-align:center;padding:24px 0;font-size:15px">Aucun client trouvé pour « ${esc(q)} »</p>`;
+  return `<div class="sec-t">${hits.length} client${hits.length > 1 ? "s" : ""} trouvé${hits.length > 1 ? "s" : ""}</div><div class="list">${hits.map((c) => clientRow(c, q)).join("")}</div>`;
+}
+
+function catQty(key) { return S.items.filter((l) => l.cat === key).reduce((s, l) => s + l.qty, 0); }
+function prodQty(id) { return S.items.filter((l) => l.pid === id).reduce((s, l) => s + l.qty, 0); }
+function tiles() {
+  const q = S.q.trim().toLowerCase();
+  const prods = P.filter((p) => p.cat === S.cat && (!q || `${p.name} ${p.detail}`.toLowerCase().includes(q)));
+  if (!prods.length) return `<p class="sub" style="grid-column:1/-1;text-align:center;padding:40px 0;font-size:15px">${q ? "Aucun type trouvé" : "Aucun type dans cette catégorie"}</p>`;
+  return prods.map((p) => {
+    const n = prodQty(p.id);
+    return `<button class="tile ${n ? "on" : ""} ${p.mode === "Q" ? "quote" : ""} ${S.lastAdded === p.id ? "pop" : ""}" data-act="add" data-v="${p.id}">${n ? `<span class="q">${n}</span>` : ""}${picHTML(p)}<p class="nm">${esc(p.name)}</p><p class="pr ${p.mode === "Q" ? "dev" : ""}">${priceLabel(p)}</p></button>`;
+  }).join("");
+}
+function orderLines() {
+  if (!S.items.length) return `<p class="sub" style="text-align:center;padding:36px 0;font-size:15px">Aucun colis ajouté</p>`;
+  return S.items.map((l) => `<div class="oline"><div class="nm">${esc(l.name)}<div class="sub num">${euro(l.price)}</div></div><button class="trash" data-act="del" data-v="${l.id}" aria-label="Retirer">${ic("trash", "i18")}</button>
+    <span class="stepper"><button data-act="dec" data-v="${l.id}" aria-label="Moins">${ic("minus", "i18")}</button><b class="num">${l.qty}</b><button data-act="inc" data-v="${l.id}" aria-label="Plus">${ic("plus", "i18")}</button></span><span class="tot num">${euro(l.price * l.qty)}</span></div>`).join("");
+}
+function orderFoot() {
+  return `<div class="disc"><label for="discount">Remise (€)</label><input id="discount" data-in="discount" inputmode="numeric" placeholder="0" value="${S.discount || ""}"></div>
+    <div class="kv"><span>Sous-total</span><span class="num" id="subT">${euro(subtotal())}</span></div>
+    <div class="kv total"><span>Total</span><span class="amt num" id="totT">${euro(total())}</span></div>
+    <button class="btn p xl block" data-act="go" data-v="encaissement" ${S.items.length ? "" : "disabled"}>Valider la commande</button>`;
+}
+function vCommande() {
+  if (!S.client) return guard("client");
+  const catLabel = CATS.find(([k]) => k === S.cat)[1];
+  if (isPhone()) {
+    return `<div class="enter">
+      <div class="search" style="margin-bottom:10px">${ic("search")}<input id="q" data-in="q" placeholder="Rechercher un type de colis…" value="${esc(S.q)}" autocomplete="off"></div>
+      <div class="chips">${CATS.map(([k, l]) => { const n = catQty(k); return `<button class="chip ${S.cat === k ? "on" : ""}" data-act="cat" data-v="${k}">${l}${n ? ` <span class="count">${n}</span>` : ""}</button>`; }).join("")}</div>
+      <div class="p-grid" id="tiles">${tiles()}</div></div>`;
   }
-  new ResizeObserver(fit).observe(document.body);
-  fit();
+  return `<div class="cmd enter">
+    <div class="card order"><div class="order-h"><b>Commande</b><div class="sub">${esc(fullName(S.client))}</div></div><div class="order-lines" id="lines">${orderLines()}</div><div class="order-f">${orderFoot()}</div></div>
+    <div class="card catalog"><div class="cat-h"><b>${catLabel}</b>${qtyCount() ? `<span class="count">${qtyCount()} colis</span>` : ""}<div class="search">${ic("search")}<input id="q" data-in="q" placeholder="Rechercher un type de colis…" value="${esc(S.q)}" autocomplete="off"></div></div><div class="grid" id="tiles">${tiles()}</div></div>
+    <div class="cats"><div class="cap">Catégories</div>${CATS.map(([k, l]) => { const n = catQty(k); return `<button class="cat ${S.cat === k ? "on" : ""}" data-act="cat" data-v="${k}">${n ? `<span class="count">${n}</span>` : ""}${ic("box", "i18")}${l}</button>`; }).join("")}</div>
+  </div>`;
+}
+
+function changeBox() {
+  if (S.pay.mode !== "ESPECES") return "";
+  const recu = Number(S.pay.recu || 0);
+  if (!S.pay.recu) return `<div class="change" style="background:var(--fill);color:var(--sub)"><span>Saisissez le montant reçu</span></div>`;
+  return recu >= total()
+    ? `<div class="change ok"><span>Monnaie à rendre</span><b class="num">${euro(recu - total())}</b></div>`
+    : `<div class="change ko"><span>Montant insuffisant</span><b class="num">Il manque ${euro(total() - recu)}</b></div>`;
+}
+function canValidate() { return S.pay.mode !== "ESPECES" || Number(S.pay.recu || 0) >= total(); }
+function vEncaissement() {
+  if (!S.client) return guard("client");
+  if (!S.items.length) return guard("items");
+  const cash = S.pay.mode === "ESPECES";
+  const left = `<div style="display:grid;gap:14px;align-content:start">
+      <div class="card pay-h"><div><div class="sub">Client</div><b style="font-size:18px">${esc(fullName(S.client))}</b></div><div class="t"><span class="sub">Total à payer</span><b class="num">${euro(total())}</b></div></div>
+      <details class="card arts" ${isPhone() ? "" : "open"}><summary><span>Articles (${qtyCount()})</span>${ic("chev-d", "i18")}</summary>${S.items.map((l) => `<div class="r"><span>${esc(l.name)} × ${l.qty}</span><span class="num">${euro(l.price * l.qty)}</span></div>`).join("")}${S.discount ? `<div class="r"><span>Remise</span><span class="num">−${euro(S.discount)}</span></div>` : ""}</details>
+      <div class="sec-t" style="margin-top:4px">Mode de paiement</div>
+      <div class="methods">${METHODS.map(([v, l, i]) => `<button class="meth ${S.pay.mode === v ? "on" : ""}" data-act="mode" data-v="${v}"><span class="ic">${ic(i)}</span>${l}</button>`).join("")}</div>
+      ${isPhone() ? "" : `<div class="sec-t" style="margin-top:4px">Observations</div><textarea class="obs" id="obs" data-in="obs" placeholder="Notes optionnelles sur cette vente…">${esc(S.pay.obs)}</textarea>`}
+    </div>`;
+  const right = `<div style="display:grid;gap:12px;align-content:start">
+      ${cash ? `<div class="card recu"><div class="l">Montant reçu</div><div class="big num ${S.pay.recu ? "" : "ph"}" id="recu">${S.pay.recu ? euro(Number(S.pay.recu)) : "0 €"}<span class="caret"></span></div></div>
+      <button class="btn out block" data-act="exact">Exact — ${euro(total())}</button>
+      <div id="change">${changeBox()}</div>
+      <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<button class="key num" data-act="key" data-v="${d}">${d}</button>`).join("")}<button class="key fn" data-act="keyC">C</button><button class="key num" data-act="key" data-v="0">0</button><button class="key fn" data-act="keyDel" aria-label="Effacer">${ic("del", "i28")}</button></div>`
+      : `<div class="card recu"><div class="l">Montant encaissé</div><div class="big num">${euro(total())}</div><p class="sub" style="margin:6px 0 0">${S.pay.mode === "CARTE" ? "Passez la carte sur le terminal, puis validez." : S.pay.mode === "MOBILE" ? "Vérifiez la réception du paiement Mobile Money, puis validez." : "Vérifiez la réception du virement, puis validez."}</p></div>`}
+      ${isPhone() ? `<textarea class="obs" id="obs" data-in="obs" placeholder="Observations (facultatif)">${esc(S.pay.obs)}</textarea>` : ""}
+      <button class="btn g xl block" id="payBtn" data-act="pay" ${canValidate() && !S.processing ? "" : "disabled"}>${S.processing ? "Traitement…" : `Valider — ${euro(total())}`}</button>
+    </div>`;
+  return `<div class="pay enter">${left}${right}</div>`;
+}
+
+function paper() {
+  const c = S.client, o = S.order, ct = container();
+  const mode = METHODS.find(([v]) => v === S.pay.mode)[1];
+  return `<div class="paper">
+    <div class="hd"><div><b>NAANGE ENVOI</b><div style="opacity:.9;margin-top:4px">+33 6 70 69 98 23 · +226 76 60 19 81</div></div><div style="display:flex;gap:10px;align-items:center"><div style="text-align:right">N° de suivi<br><b style="font-size:11px">${o.shp}</b><br>Date : 22/10/2026</div><div class="qr"></div></div></div>
+    <div class="band"><span>Conteneur : ${ct.id}</span><span>Départ : ${ct.dep.replace("départ le ", "")}</span><span>${qtyCount()} colis</span></div>
+    <div class="boxes"><div class="box"><b>Expéditeur</b>Code : ${c.code}<br>Nom : ${esc(fullName(c))}<br>Tél : ${c.phone}<br>Adresse : ${esc(c.city)}</div><div class="box"><b>Destinataire</b>Nom : ${esc(c.rName || "Non renseigné")}<br>Tél : ${esc(c.rPhone || "Non renseigné")}<br>Adresse : ${esc(c.rCity || "Non renseignée")}</div></div>
+    <div style="padding:0 16px 6px;font-weight:700;color:var(--green)">Détail de la commande (${qtyCount()} colis)</div>
+    <table><tr><th>Désignation</th><th class="r">Qté</th><th class="r">P.U.</th><th class="r">Total</th></tr>${S.items.map((l) => `<tr><td>${esc(l.name)}</td><td class="r">${l.qty}</td><td class="r">${euro(l.price)}</td><td class="r">${euro(l.price * l.qty)}</td></tr>`).join("")}</table>
+    <div class="tots"><div><span>Sous-total</span><span>${euro(subtotal())}</span></div>${S.discount ? `<div><span>Remise</span><span>−${euro(S.discount)}</span></div>` : ""}<div class="g"><span>Total général</span><span>${euro(total())}</span></div><div><span>Montant payé</span><span>${euro(total())}</span></div><div><span>Reste à payer</span><span>0 €</span></div><div><span>Mode de paiement</span><span>${mode}</span></div></div>
+    <div class="sign"><span>Réf. bordereau : ${o.brd}</span><span>Signature</span></div>
+  </div>`;
+}
+function vImpression() {
+  if (!S.client) return guard("client");
+  if (!S.items.length) return guard("items");
+  if (!S.paid) return guard("paid");
+  if (!S.order) {
+    startCreate();
+    return `<div class="empty enter"><div class="spin"></div><h2 style="margin-top:14px">Création de l'expédition…</h2><p>Veuillez patienter</p></div>`;
+  }
+  const acts = `<div style="display:grid;gap:12px;align-content:start">
+      <div class="card" style="padding:18px;display:flex;gap:14px;align-items:center"><div class="okmark">${ic("check", "i28")}</div><div><b style="font-size:17px">Expédition créée</b><div class="sub">N° ${S.order.shp} · ${qtyCount()} colis</div></div></div>
+      <button class="btn p xl block" data-act="print">${ic("printer")}Imprimer</button>
+      <button class="btn out block" data-act="pdf">${ic("download")}Télécharger PDF</button>
+      <button class="btn ghost block" data-act="go" data-v="terminer">Terminer ${ic("chev-r", "i18")}</button>
+      <p class="sub" style="margin:4px 4px 0;line-height:1.5">Bordereau ${S.order.brd}. Revenir sur cet écran ne recrée pas l'expédition.</p>
+    </div>`;
+  return `<div class="impr enter">${isPhone() ? acts + `<div class="paper-wrap">${paper()}</div>` : `<div class="paper-wrap">${paper()}</div>` + acts}</div>`;
+}
+
+function vTerminer() {
+  if (!S.client && !S.items.length)
+    return `<div class="empty enter"><div class="ico">${ic("flag", "i40")}</div><h2>Aucune transaction en cours</h2><p>Vous pouvez commencer une nouvelle transaction.</p><button class="btn p xl" data-act="go" data-v="client">Nouvelle transaction</button></div>`;
+  const c = S.client;
+  const mode = METHODS.find(([v]) => v === S.pay.mode)[1];
+  return `<div class="recap enter">
+    <p class="sub" style="margin:0 4px;font-size:15px">Vérifiez les informations avant de finaliser.</p>
+    ${c ? `<div class="card blk"><h3>Client</h3><div style="display:flex;gap:12px;align-items:center"><span class="av">${initials(c)}</span><div><b style="font-size:17px">${esc(fullName(c))}</b><div class="sub">${c.phone}${c.email ? " · " + esc(c.email) : ""}</div></div></div></div>` : ""}
+    <div class="card blk"><h3>Items commandés</h3>${S.items.map((l) => `<div class="r"><span>${esc(l.name)} × ${l.qty}</span><span class="num">${euro(l.price * l.qty)}</span></div>`).join("") || `<p class="sub">Aucun article</p>`}
+      <div class="r" style="font-weight:800;font-size:20px"><span>Total</span><span class="num" style="color:var(--amber-2)">${euro(total())}</span></div></div>
+    ${S.paid ? `<div class="card blk"><h3>Paiement</h3><div class="r"><span>${mode}</span><span class="num">${euro(total())}</span></div>${S.pay.mode === "ESPECES" ? `<div class="r"><span>Reçu · rendu</span><span class="num">${euro(Number(S.pay.recu))} · ${euro(Number(S.pay.recu) - total())}</span></div>` : ""}${S.order ? `<div class="r"><span>Expédition</span><span>${S.order.shp}</span></div>` : ""}</div>` : ""}
+    <div class="two"><button class="btn out" data-act="go" data-v="commande">${ic("edit", "i18")}Modifier la commande</button><button class="btn g" data-act="finish">${ic("check", "i18")}Terminer</button></div>
+  </div>`;
+}
+
+/* ======================= sheets ======================= */
+function sheetHTML() {
+  if (!S.sheet) return "";
+  const phone = isPhone();
+  const wrap = (head, body, center = !phone) => `<div class="scrim" data-act="close"></div><div class="sheet ${center ? "center" : ""}">${center ? "" : `<div class="grab"></div>`}${head}<div class="sh-b">${body}</div></div>`;
+  if (S.sheet === "container")
+    return wrap(`<div class="sh-h"><span></span><b>Conteneur de destination</b><button class="r" data-act="close">OK</button></div>`,
+      `<div class="list">${CONTAINERS.map((c) => `<button class="li" data-act="pickContainer" data-v="${c.id}"><span class="av" style="background:#e9f3ec;color:var(--green)">${ic("container", "i18")}</span><span class="main"><b>${c.id} — ${c.name}</b><span class="sub">${c.dep}</span></span>${S.container === c.id ? ic("check") : ""}</button>`).join("")}</div>`);
+  if (S.sheet === "cart")
+    return wrap(`<div class="sh-h"><span></span><b>Panier · ${qtyCount()} colis</b><button class="r" data-act="close">Fermer</button></div>`,
+      `<div class="sub" style="margin-top:-4px">${esc(fullName(S.client))}</div><div id="lines">${orderLines()}</div>${orderFoot()}`, false);
+  if (S.sheet.startsWith("quote:")) {
+    const p = P.find((x) => x.id === S.sheet.slice(6));
+    return wrap(`<div class="sh-h"><button class="l" data-act="close">Annuler</button><b>${esc(p.name)}</b><button class="r" data-act="addQuote" data-v="${p.id}">Ajouter</button></div>`,
+      `<p class="sub" style="margin:0;font-size:14px">Article sur devis : saisissez le prix convenu avec le client.</p>
+       <div class="field"><label for="qPrice">Prix (€) *</label><input id="qPrice" inputmode="numeric" placeholder="Ex : 350"></div>
+       <div class="field"><label for="qDesc">Description (optionnel)</label><input id="qDesc" placeholder="${esc(p.name)}"></div>
+       <button class="btn p xl block" data-act="addQuote" data-v="${p.id}">Ajouter à la commande</button>`);
+  }
+  if (S.sheet === "newClient")
+    return wrap(`<div class="sh-h"><button class="l" data-act="close">Annuler</button><b>Nouveau client</b><button class="r" data-act="createClient">Créer</button></div>`,
+      `<div class="seg"><button class="on">Expéditeur</button><button>Destinataire</button></div>
+       <div class="two"><div class="field"><label for="nFirst">Prénom *</label><input id="nFirst" autocomplete="off"></div><div class="field"><label for="nLast">Nom *</label><input id="nLast" autocomplete="off"></div></div>
+       <div class="field"><label for="nPhone">Téléphone *</label><input id="nPhone" inputmode="tel" placeholder="+33 6 …"></div>
+       <div class="two"><div class="field"><label for="nCity">Ville *</label><input id="nCity" value="Paris"></div><div class="field"><label>Pays *</label><input value="France" readonly></div></div>
+       <p class="sub" id="nErr" style="color:var(--red);margin:0"></p>
+       <button class="btn p xl block" data-act="createClient">Créer et sélectionner</button>`);
+  if (S.sheet === "about")
+    return wrap(`<div class="sh-h"><span></span><b>À propos de cette maquette</b><button class="r" data-act="close">Fermer</button></div>`, aboutHTML());
+  return "";
+}
+function aboutHTML() {
+  return `<div class="about" style="display:grid;gap:10px">
+    <p><b>Votre flux, inchangé :</b> Dashboard → Client → Commande → Encaissement → Impression → Terminer, dans le même ordre, avec les mêmes écrans et les mêmes boutons. Seule la façon de les tenir en main change.</p>
+    <h4>Ce qui fait « application »</h4>
+    <ul><li>Ouverte depuis l'icône « Caisse » de l'écran d'accueil : plein écran, sans barre d'adresse.</li>
+    <li>Tablette : la colonne orange des étapes devient une barre d'application, avec une coche sur chaque étape faite. Téléphone : les six étapes en barre du bas.</li>
+    <li>Gros boutons (44 px et plus), réponse immédiate au toucher, petite vibration quand un colis est ajouté, feuilles qui glissent depuis le bas.</li>
+    <li>Pavé numérique pour le montant reçu, à la place du clavier du téléphone.</li>
+    <li>La vente en cours est gardée sur l'appareil : rechargez cette page, elle est toujours là.</li>
+    <li>Pas de zoom au double toucher, pas de page qui rebondit, pas de texte sélectionné par un appui long.</li></ul>
+    <h4>Corrigé au passage</h4>
+    <ul><li>Revenir sur Impression ne recrée plus l'expédition (aujourd'hui, elle est créée une deuxième fois).</li>
+    <li>Impression demande un paiement validé.</li>
+    <li>La recherche montre tous les clients trouvés, et un client créé est sélectionné tout de suite.</li>
+    <li>Terminer affiche des euros (aujourd'hui des FCFA) ; le bordereau écrit « Espèces » au lieu de « ESPECES ».</li>
+    <li>Le bouton « Terminer » d'Impression mène à l'écran Terminer au lieu de le sauter.</li></ul>
+    <h4>Voir</h4>
+    <div class="seg"><button class="${S.view === "auto" ? "on" : ""}" data-act="view" data-v="auto">Plein écran</button><button class="${S.view === "phone" ? "on" : ""}" data-act="view" data-v="phone">Téléphone</button></div>
+    <button class="btn out block" data-act="reset">Recommencer la démonstration</button>
+    <p class="sub">Maquette : les clients, conteneurs et ventes sont des exemples. Rien n'est envoyé.</p>
+  </div>`;
+}
+
+/* ======================= shell ======================= */
+function containerChip(compact) {
+  const c = container();
+  return `<button class="ctn" data-act="sheet" data-v="container">${ic("container")}<span style="min-width:0">${compact ? "" : `<span class="lbl">Conteneur de destination</span>`}<b>${c.id} — ${c.name}</b></span>${ic("chev-d", "i18")}</button>`;
+}
+function view() {
+  return { dashboard: vDashboard, client: vClient, commande: vCommande, encaissement: vEncaissement, impression: vImpression, terminer: vTerminer }[S.step]();
+}
+function stepTitle() {
+  const s = STEPS.find((x) => x.id === S.step);
+  return s.title;
+}
+function tabletShell() {
+  const lede = S.step === "dashboard" ? "Gestion des encaissements et paiements · mercredi 22 octobre" : S.step === "client" ? "Recherchez un client existant ou créez-en un nouveau" : S.client ? fullName(S.client) : "";
+  return `<div class="t-shell">
+    <nav class="rail">
+      <div class="logo">NAANGE<br>ENVOI</div>
+      ${STEPS.map((s) => `<button class="step ${S.step === s.id ? "on" : ""}" data-act="go" data-v="${s.id}">${done[s.id]() ? `<span class="done">${ic("check", "i16")}</span>` : ""}${ic(s.icon)}${s.label}</button>`).join("")}
+      <span class="grow"></span>
+      ${S.client ? `<div class="rail-client"><b>${esc(S.client.first)}</b>${esc(S.client.phone.slice(0, 9))}…<button data-act="go" data-v="client">Changer</button></div>` : ""}
+      <button class="hub" data-act="hub">${ic("home", "i18")}Hub</button>
+    </nav>
+    <div class="t-main">
+      <header class="topbar"><div style="min-width:0"><h1>${stepTitle()}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ""}</div>${containerChip(false)}</header>
+      <main class="content ${S.step === "commande" && S.client ? "cmd-content" : ""}" id="content">${view()}</main>
+    </div>
+  </div>`;
+}
+function phoneShell() {
+  const showCart = S.step === "commande" && S.client;
+  return `<div class="p-shell">
+    <header class="p-top"><div class="row1"><h1>${S.step === "client" ? "Client" : stepTitle()}</h1><div style="display:flex;gap:8px;align-items:center"><button class="demo-pill inline" data-act="sheet" data-v="about" aria-label="À propos de la maquette">${ic("info", "i18")}</button>${S.client ? `<button class="avatar-btn" data-act="go" data-v="client" aria-label="Changer de client">${initials(S.client)}</button>` : ""}</div></div>${containerChip(true)}</header>
+    <main class="p-content" id="content">${view()}</main>
+    ${showCart ? `<button class="cartbar ${S.items.length ? "" : "empty"}" data-act="sheet" data-v="cart"><span class="n">${qtyCount()}</span><span class="t">${S.items.length ? "Voir le panier" : "Panier vide"}</span><b class="num">${euro(total())}</b></button>` : ""}
+    <nav class="p-nav">${STEPS.map((s) => `<button class="${S.step === s.id ? "on" : ""}" data-act="go" data-v="${s.id}"><span class="ic">${ic(s.icon)}</span>${s.short}${done[s.id]() ? `<span class="done">${ic("check", "i16")}</span>` : ""}</button>`).join("")}</nav>
+  </div>`;
+}
+
+/* ======================= render ======================= */
+const host = document.getElementById("host");
+function render() {
+  const active = document.activeElement;
+  const focusId = active && active.id && active.tagName !== "BUTTON" ? active.id : null;
+  const caret = focusId && active.selectionStart != null ? active.selectionStart : null;
+  const scroll = document.getElementById("content")?.scrollTop || 0;
+  const framed = S.view === "phone" && window.innerWidth >= 820;
+  host.className = framed ? "framed" : "";
+  const app = `<div class="app ${isPhone() ? "is-phone" : ""}">${isPhone() ? phoneShell() : tabletShell()}${sheetHTML()}<div class="toasts"></div>${isPhone() ? "" : `<button class="demo-pill" data-act="sheet" data-v="about">${ic("info", "i16")}Maquette</button>`}</div>`;
+  host.innerHTML = framed ? `<div class="device">${app}</div>` : app;
+  if (framed) fitDevice();
+  renderToasts();
+  const c = document.getElementById("content");
+  if (c && !stepChanged) c.scrollTop = scroll;
+  stepChanged = false;
+  if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); if (caret != null && el.setSelectionRange) try { el.setSelectionRange(caret, caret); } catch {} } }
+  S.lastAdded = null;
+  save();
+}
+let stepChanged = false;
+function fitDevice() {
+  const d = host.querySelector(".device");
+  if (!d) return;
+  const scale = Math.min(1, (window.innerHeight - 40) / 864, (window.innerWidth - 40) / 410);
+  d.style.transform = `scale(${scale})`;
+}
+
+/* ======================= actions ======================= */
+function go(step) { if (S.step !== step) stepChanged = true; S.step = step; S.sheet = null; render(); }
+function startCreate() {
+  if (S.creating || S.order) return;
+  S.creating = true;
+  setTimeout(() => {
+    S.creating = false;
+    if (S.order) return;
+    S.seq += 1;
+    S.order = { shp: `SHP2026100${S.seq}`, brd: `BRD20261022${String(S.seq).slice(-3)}` };
+    toast(`Expédition créée avec succès · N° ${S.order.shp}`);
+    if (S.step === "impression") render(); else save();
+  }, 1300);
+}
+const A = {
+  go: (v) => go(v),
+  hub: () => toast("Retour au Hub de gestion"),
+  sheet: (v) => { S.sheet = v; render(); if (v === "newClient") setTimeout(() => document.getElementById("nFirst")?.focus(), 250); if (v.startsWith?.("quote:")) setTimeout(() => document.getElementById("qPrice")?.focus(), 250); },
+  close: () => { S.sheet = null; render(); },
+  pickContainer: (v) => { S.container = v; S.sheet = null; toast(`Conteneur ${v} choisi`); render(); },
+  clientTab: (v) => { S.clientTab = v; render(); },
+  pickClient: (v) => { S.client = allClients().find((c) => c.id === v); vibrate(); toast(`Client sélectionné : ${fullName(S.client)}`); go("commande"); },
+  createClient: () => {
+    const val = (id) => document.getElementById(id)?.value.trim() || "";
+    const first = val("nFirst"), last = val("nLast"), phone = val("nPhone"), city = val("nCity");
+    const err = !first ? "Le prénom est requis" : !last ? "Le nom est requis" : !phone ? "Le téléphone est requis" : !city ? "La ville est requise" : "";
+    if (err) { document.getElementById("nErr").textContent = err; return; }
+    const c = { id: "n" + Date.now(), code: "CLI2026" + String(S.extraClients.length + 51).padStart(4, "0"), first, last, phone, email: "", city, since: "aujourd'hui", rName: "", rPhone: "", rCity: "" };
+    S.extraClients = [c, ...S.extraClients]; S.client = c;
+    toast("Client créé avec succès"); go("commande");
+  },
+  cat: (v) => { S.cat = v; S.q = ""; render(); },
+  add: (v) => {
+    const p = P.find((x) => x.id === v);
+    if (p.mode === "Q") { A.sheet("quote:" + v); return; }
+    const l = S.items.find((x) => x.pid === v && !x.quote);
+    if (l) l.qty += 1; else S.items.push({ id: v, pid: v, name: p.name, price: p.price, qty: 1, cat: p.cat });
+    S.paid = false; S.order = null; S.lastAdded = v; vibrate(); render();
+  },
+  addQuote: (v) => {
+    const p = P.find((x) => x.id === v);
+    const price = Number((document.getElementById("qPrice")?.value || "").replace(",", "."));
+    if (!(price > 0)) { document.getElementById("qPrice")?.focus(); return; }
+    const desc = document.getElementById("qDesc")?.value.trim();
+    S.items.push({ id: `${v}-q-${Date.now()}`, pid: v, quote: true, name: desc || p.name, price, qty: 1, cat: p.cat });
+    S.paid = false; S.order = null; S.sheet = null; vibrate(); render();
+  },
+  inc: (v) => { const l = S.items.find((x) => x.id === v); l.qty += 1; S.paid = false; S.order = null; render(); },
+  dec: (v) => { const l = S.items.find((x) => x.id === v); l.qty -= 1; if (l.qty <= 0) S.items = S.items.filter((x) => x.id !== v); S.paid = false; S.order = null; if (!S.items.length && S.sheet === "cart") S.sheet = null; render(); },
+  del: (v) => { S.items = S.items.filter((x) => x.id !== v); S.paid = false; S.order = null; if (!S.items.length && S.sheet === "cart") S.sheet = null; render(); },
+  mode: (v) => { S.pay.mode = v; render(); },
+  key: (v) => { if (S.pay.recu.length < 6 && !(S.pay.recu === "" && v === "0")) S.pay.recu += v; vibrate(); render(); },
+  keyC: () => { S.pay.recu = ""; render(); },
+  keyDel: () => { S.pay.recu = S.pay.recu.slice(0, -1); render(); },
+  exact: () => { S.pay.recu = String(Math.ceil(total())); render(); },
+  pay: () => {
+    if (!canValidate() || S.processing) return;
+    S.processing = true; render();
+    setTimeout(() => { S.processing = false; S.paid = true; S.pay.paidAt = Date.now(); go("impression"); }, 800);
+  },
+  print: () => toast("PDF ouvert pour impression"),
+  pdf: () => toast("PDF téléchargé"),
+  finish: () => {
+    if (S.paid) { S.sales += 1; S.amount += total(); S.colis += qtyCount(); }
+    S.client = null; S.items = []; S.discount = 0; S.pay = { mode: "ESPECES", recu: "", obs: "" }; S.paid = false; S.order = null; S.clientQ = ""; S.q = "";
+    toast("Transaction terminée"); render();
+    setTimeout(() => go("client"), 1000);
+  },
+  view: (v) => { S.view = v; S.sheet = null; render(); },
+  reset: () => { const v = S.view; S = { ...fresh(), view: v }; toasts = []; render(); },
+};
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!el || el.disabled) return;
+  A[el.dataset.act]?.(el.dataset.v);
+});
+document.addEventListener("input", (e) => {
+  const k = e.target.dataset?.in;
+  if (!k) return;
+  const v = e.target.value;
+  if (k === "clientQ") { S.clientQ = v; const q = v.trim(); const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); const hits = q ? allClients().filter((c) => norm(`${fullName(c)} ${c.phone} ${c.email}`).includes(norm(q)) || c.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""))) : []; document.getElementById("clientResults").innerHTML = clientResults(q, hits); save(); }
+  if (k === "q") { S.q = v; document.getElementById("tiles").innerHTML = tiles(); save(); }
+  if (k === "discount") { const n = Math.max(0, parseInt(v.replace(/\D/g, ""), 10) || 0); S.discount = n; e.target.value = n || ""; document.getElementById("subT").textContent = euro(subtotal()); document.getElementById("totT").textContent = euro(total()); const cb = document.querySelector(".cartbar b"); if (cb) cb.textContent = euro(total()); S.paid = false; S.order = null; save(); }
+  if (k === "obs") { S.pay.obs = v; save(); }
+});
+window.addEventListener("resize", () => { if (S.view === "phone" && window.innerWidth >= 820) fitDevice(); else render(); });
+render();
 </script>
 </body>
 </html>
