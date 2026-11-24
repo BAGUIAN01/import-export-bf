@@ -8,7 +8,8 @@ import { GardeClient } from "@/components/caisse/sans-client";
 import { Ticket } from "@/components/caisse/colis/ticket";
 import { FeuilleDevis, FeuilleQuantite } from "@/components/caisse/colis/feuilles-saisie";
 import { VignetteArticle } from "@/components/caisse/vignette-article";
-import { FAMILLES, articlesDe, chercherArticles } from "@/lib/caisse/familles";
+import { articlesDe, chercherArticles } from "@/lib/caisse/familles";
+import { useCatalogue } from "@/hooks/use-catalogue";
 import { formatMontant } from "@/lib/caisse/montants";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,9 @@ export default function CaisseColisPage() {
   );
 }
 
+/** Ce que la ligne du ticket garde de l'article pour son image. */
+const vignetteDe = (a) => ({ icone: a.icone, teinte: a.teinte, image: a.image });
+
 function Colis() {
   const { orderItems, addItem, setItemQuantity, removeItem } = useCaisse();
   const [famille, setFamille] = useState("frequents");
@@ -33,13 +37,17 @@ function Colis() {
   const [devis, setDevis] = useState(null);
   const [ligneQuantite, setLigneQuantite] = useState(null);
 
+  const { catalogue, erreur, chargement } = useCatalogue({ pourCaisse: true });
+  const familles = catalogue?.familles || [];
+  // Famille affichée : « Fréquents » s'il y en a, sinon la première
+  const familleAffichee = familles.some((f) => f.cle === famille) ? famille : familles[0]?.cle;
   const articles = useMemo(
-    () => (recherche.trim() ? chercherArticles(recherche) : articlesDe(famille)),
-    [famille, recherche]
+    () => (recherche.trim() ? chercherArticles(catalogue, recherche) : articlesDe(catalogue, familleAffichee)),
+    [catalogue, familleAffichee, recherche]
   );
 
   const quantiteDe = (article) =>
-    orderItems.filter((l) => l.productId === article.id || (article.surDevis && l.type === article.code && l.categoryId === article.famille)).reduce((s, l) => s + l.quantity, 0);
+    orderItems.filter((l) => l.productId === article.id || (article.surDevis && l.productId?.startsWith(`${article.id}:devis:`))).reduce((s, l) => s + l.quantity, 0);
 
   const quantiteFamille = (cle) =>
     cle === "frequents" ? 0 : orderItems.filter((l) => l.categoryId === cle).reduce((s, l) => s + l.quantity, 0);
@@ -49,7 +57,7 @@ function Colis() {
       setDevis(article);
       return;
     }
-    addItem({ id: article.id, type: article.code, name: article.nom, price: article.prix, categoryId: article.famille });
+    addItem({ id: article.id, type: article.code, name: article.nom, price: article.prix, categoryId: article.famille, vignette: vignetteDe(article) });
   }
 
   return (
@@ -76,8 +84,8 @@ function Colis() {
           </label>
 
           <div role="tablist" aria-label="Familles d'articles" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-5 sm:px-5 [scrollbar-width:none]">
-            {FAMILLES.map((f) => {
-              const choisie = !recherche.trim() && famille === f.cle;
+            {familles.map((f) => {
+              const choisie = !recherche.trim() && familleAffichee === f.cle;
               const n = quantiteFamille(f.cle);
               return (
                 <button
@@ -106,9 +114,17 @@ function Colis() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
-          {articles.length === 0 ? (
+          {chargement ? (
+            <ul className="grid grid-cols-3 gap-3 xl:grid-cols-4" aria-hidden="true">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <li key={i} className="h-[196px] animate-pulse rounded-2xl bg-white" />
+              ))}
+            </ul>
+          ) : erreur ? (
+            <p role="alert" className="rounded-2xl bg-danger-soft p-6 text-center text-danger">{erreur}</p>
+          ) : articles.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-line-strong bg-white p-8 text-center text-ink-muted">
-              Aucun article pour « {recherche.trim()} ».
+              {recherche.trim() ? `Aucun article pour « ${recherche.trim()} ».` : "Aucun article dans cette famille."}
             </p>
           ) : (
             <ul className="grid grid-cols-3 gap-3 xl:grid-cols-4">
@@ -124,9 +140,13 @@ function Colis() {
                         q > 0 ? "border-2 border-brand" : "border-line"
                       )}
                     >
-                      <span className="grid h-24 place-items-center" style={{ background: a.teinte.fond }}>
-                        <VignetteArticle article={a} taille="size-16" icone="size-10" className="bg-transparent" />
-                      </span>
+                      {a.image ? (
+                        <VignetteArticle article={a} taille="h-24 w-full" className="rounded-none" />
+                      ) : (
+                        <span className="grid h-24 place-items-center" style={{ background: a.teinte.fond }}>
+                          <VignetteArticle article={a} taille="size-16" icone="size-10" />
+                        </span>
+                      )}
                       {q > 0 && (
                         <span className="chiffres absolute top-2 right-2 grid h-8 min-w-8 place-items-center rounded-full bg-brand px-2 text-sm font-semibold text-white shadow">
                           {q}
@@ -162,6 +182,7 @@ function Colis() {
             addItem({
               id: `${devis.id}:devis:${Date.now()}`,
               type: devis.code,
+              vignette: vignetteDe(devis),
               name: description || devis.nom,
               description: description ? devis.nom : null,
               price: prix,

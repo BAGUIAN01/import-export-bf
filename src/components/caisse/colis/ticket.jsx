@@ -41,7 +41,7 @@ export function Ticket({ onQuantite, className }) {
         <ul className="min-h-0 flex-1 divide-y divide-line overflow-y-auto overscroll-contain">
           {orderItems.map((l) => (
             <li key={l.id} className="flex items-center gap-3 px-4 py-2.5">
-              <VignetteArticle code={l.type} taille="size-11" icone="size-5" />
+              <VignetteArticle vignette={l.vignette} code={l.type} taille="size-11" icone="size-5" />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium">{l.name}</div>
                 <div className="chiffres truncate text-[13px] text-ink-muted">

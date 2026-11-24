@@ -1,9 +1,11 @@
 // lib/caisse/familles.js
-// Familles et articles de la caisse, construits à partir du catalogue
-// existant (lib/data/packages.js) : une teinte par famille, une liste
-// « Fréquents » pour l'accès en un toucher.
+// Catalogue de la caisse : familles (teinte, icône) et articles (prix, photo).
+// Les données vivent en base (FamilleArticle, Article, écran Gestion › Tarifs) ;
+// ce module fournit les teintes, la reprise initiale depuis lib/data/packages.js
+// et la mise en forme pour la caisse.
 
 import { PACKAGE_TYPES, PACKAGE_CATEGORIES } from "@/lib/data/packages";
+import { nomIcone } from "@/lib/caisse/icones";
 
 /** Couleurs des tuiles : fond de l'image et couleur du dessin. */
 export const TEINTES = {
@@ -17,22 +19,27 @@ export const TEINTES = {
   cyan: { fond: "#E3F4F7", trait: "#0E6B7A" },
 };
 
-const TEINTE_FAMILLE = {
-  cartons: "ambre",
-  futs: "violet",
-  bagages: "cyan",
-  cantines: "vert",
-  electromenager: "bleu",
-  tv: "gris",
-  mobilier: "sable",
-  vins: "rose",
-  vehicules: "gris",
-  divers: "vert",
-  enlevement: "cyan",
+export function teinte(nom) {
+  return TEINTES[nom] || TEINTES.gris;
+}
+
+/* ── Reprise initiale du catalogue (premier démarrage) ─────────── */
+
+const DEPART_FAMILLES = {
+  cartons: { teinte: "ambre", icone: "package" },
+  futs: { teinte: "violet", icone: "cylinder" },
+  bagages: { teinte: "cyan", icone: "luggage" },
+  cantines: { teinte: "vert", icone: "archive" },
+  electromenager: { teinte: "bleu", icone: "refrigerator" },
+  tv: { teinte: "gris", icone: "tv" },
+  mobilier: { teinte: "sable", icone: "armchair" },
+  vins: { teinte: "rose", icone: "wine" },
+  vehicules: { teinte: "gris", icone: "car" },
+  divers: { teinte: "vert", icone: "package" },
+  enlevement: { teinte: "cyan", icone: "map-pin" },
 };
 
-/** Articles proposés dans « Fréquents » (codes de PACKAGE_TYPES). */
-const FREQUENTS = [
+const DEPART_FREQUENTS = [
   "CARTON",
   "CARTON_MEDIUM",
   "CARTON_LARGE",
@@ -47,42 +54,84 @@ const FREQUENTS = [
   "ENLEVEMENT",
 ];
 
-function teinteDe(categorie) {
-  return TEINTES[TEINTE_FAMILLE[categorie]] || TEINTES.gris;
+/** Familles et articles de lib/data/packages.js, au format des tables. */
+export function catalogueInitial() {
+  const familles = PACKAGE_CATEGORIES.map((c, i) => ({
+    cle: c.key,
+    nom: c.label,
+    teinte: DEPART_FAMILLES[c.key]?.teinte || "gris",
+    icone: DEPART_FAMILLES[c.key]?.icone || "package",
+    ordre: i,
+  }));
+  const articles = PACKAGE_TYPES.map((t, i) => ({
+    code: t.value,
+    nom: t.label,
+    detail: t.desc || null,
+    prix: t.price || 0,
+    surDevis: !!t.isQuoteOnly,
+    famille: t.category,
+    icone: nomIcone(t.icon),
+    frequent: !t.isQuoteOnly && DEPART_FREQUENTS.includes(t.value),
+    ordre: i,
+  }));
+  return { familles, articles };
 }
 
-/** Tous les articles, avec leur teinte et un identifiant stable. */
-export const ARTICLES = PACKAGE_TYPES.map((t) => ({
-  id: `${t.category}:${t.value}:${t.label}`,
-  code: t.value,
-  nom: t.label,
-  detail: t.desc || "",
-  prix: t.price || 0,
-  surDevis: !!t.isQuoteOnly,
-  famille: t.category,
-  icone: t.icon,
-  teinte: teinteDe(t.category),
-}));
+/* ── Mise en forme pour la caisse ───────────────────────────────── */
 
-/** Familles affichées en puces : « Fréquents » puis celles du catalogue. */
-export const FAMILLES = [
-  { cle: "frequents", nom: "Fréquents", teinte: TEINTES.vert },
-  ...PACKAGE_CATEGORIES.map((c) => ({ cle: c.key, nom: c.label, teinte: teinteDe(c.key) })),
-];
+/** URL de la photo d'un article (versionnée pour le cache). */
+export function urlImage(article) {
+  if (!article?.aImage) return null;
+  const v = article.updatedAt ? new Date(article.updatedAt).getTime() : "";
+  return `/api/tarifs/articles/${article.id}/image?v=${v}`;
+}
 
-/** Articles d'une famille ; « frequents » suit l'ordre de FREQUENTS. */
-export function articlesDe(cle) {
-  if (cle === "frequents") {
-    return FREQUENTS.map((code) => ARTICLES.find((a) => a.code === code && !a.surDevis)).filter(Boolean);
-  }
-  return ARTICLES.filter((a) => a.famille === cle);
+/**
+ * Réponse de GET /api/tarifs → catalogue de la caisse :
+ * familles (« Fréquents » d'abord) et articles prêts à afficher.
+ */
+export function construireCatalogue(famillesApi = []) {
+  const familles = famillesApi.map((f) => ({ cle: f.cle, nom: f.nom, teinte: teinte(f.teinte), icone: f.icone }));
+  const articles = famillesApi.flatMap((f) =>
+    (f.articles || []).map((a) => ({
+      id: a.id,
+      code: a.code,
+      nom: a.nom,
+      detail: a.detail || "",
+      prix: a.prix || 0,
+      surDevis: !!a.surDevis,
+      frequent: !!a.frequent,
+      famille: f.cle,
+      icone: a.icone || f.icone,
+      teinte: teinte(f.teinte),
+      image: urlImage(a),
+    }))
+  );
+  const aFrequents = articles.some((a) => a.frequent);
+  return {
+    familles: [...(aFrequents ? [{ cle: "frequents", nom: "Fréquents", teinte: TEINTES.vert, icone: "package" }] : []), ...familles],
+    articles,
+  };
+}
+
+export function articlesDe(catalogue, cle) {
+  if (!catalogue) return [];
+  if (cle === "frequents") return catalogue.articles.filter((a) => a.frequent && !a.surDevis);
+  return catalogue.articles.filter((a) => a.famille === cle);
 }
 
 /** Recherche sans accents sur le nom, le détail et le code. */
-export function chercherArticles(texte) {
+export function chercherArticles(catalogue, texte) {
   const q = sansAccents(texte).trim();
-  if (!q) return [];
-  return ARTICLES.filter((a) => sansAccents(`${a.nom} ${a.detail} ${a.code}`).includes(q));
+  if (!q || !catalogue) return [];
+  return catalogue.articles.filter((a) => sansAccents(`${a.nom} ${a.detail} ${a.code}`).includes(q));
+}
+
+/** Dessin d'une ligne enregistrée avant le catalogue en base (repli). */
+export function vignetteParCode(code) {
+  const t = PACKAGE_TYPES.find((x) => x.value === code);
+  if (!t) return { icone: "package", teinte: TEINTES.gris, image: null };
+  return { icone: nomIcone(t.icon), teinte: teinte(DEPART_FAMILLES[t.category]?.teinte), image: null };
 }
 
 export function sansAccents(s) {

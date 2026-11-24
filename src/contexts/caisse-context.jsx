@@ -95,6 +95,8 @@ export function CaisseProvider({ children }) {
           total: arrondi(prix * quantite),
           sku: product.sku ?? "",
           unit: product.unit ?? "PIECE",
+          // Dessin ou photo de l'article, pour le ticket et le récapitulatif
+          vignette: product.vignette ?? null,
         },
       ];
     });

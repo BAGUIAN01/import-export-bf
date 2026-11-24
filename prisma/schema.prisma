@@ -793,6 +793,7 @@ model Article {
   prix          Float   @default(0) // devise de référence
   surDevis      Boolean @default(false)
   image         String? // photo (data URL JPEG réduite)
+  icone         String? // dessin quand il n'y a pas de photo (sinon celui de la famille)
   frequent      Boolean @default(false) // dans « Fréquents » à la caisse
   proposeCaisse Boolean @default(true)
   ordre         Int     @default(0)
