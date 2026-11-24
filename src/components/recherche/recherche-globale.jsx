@@ -26,7 +26,16 @@ import {
 } from "lucide-react";
 import { Etat } from "@/components/epure";
 import { Scanneur } from "@/components/recherche/scanneur";
-import { actionsResultat, analyserRecherche, pagesAccessibles, pagesCorrespondantes, rechercheUtile } from "@/lib/recherche";
+import {
+  actionsResultat,
+  analyserRecherche,
+  pagesAccessibles,
+  pagesCorrespondantes,
+  rechercheUtile,
+  segmentsSurlignes,
+  termesSurlignes,
+  typesVisibles,
+} from "@/lib/recherche";
 import { geist, geistMono } from "@/lib/polices";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +50,32 @@ const TEINTES = {
   recent: "bg-surface-muted text-ink-muted",
 };
 const CLE_RECENTS = "recherche:recents";
+
+// Palette vide : ce qu'on peut chercher (selon le profil)
+const AIDE = [
+  { type: "envoi", titre: "Envoi", exemple: "SHP… ou QR du bordereau" },
+  { type: "client", titre: "Client", exemple: "Nom, téléphone, CLI…" },
+  { type: "colis", titre: "Colis", exemple: "PKG… ou « colis valise »" },
+  { type: "conteneur", titre: "Conteneur", exemple: "CNT…, plomb, lieu" },
+];
+
+/** Les termes trouvés, surlignés (sans tenir compte des accents). */
+function Surligne({ texte, termes }) {
+  if (!termes.length) return texte;
+  return segmentsSurlignes(texte, termes).map((s, i) =>
+    s.fort ? (
+      <mark key={i} className="rounded-[3px] bg-brand-soft text-ink">
+        {s.texte}
+      </mark>
+    ) : (
+      s.texte
+    )
+  );
+}
+
+function Touche({ children }) {
+  return <kbd className="rounded-md border border-line bg-surface-page px-1.5 py-px font-caisse text-[11px] text-ink-muted">{children}</kbd>;
+}
 
 function lireRecents() {
   try {
@@ -128,29 +163,51 @@ export function RechercheGlobale({ apparence = "barre", prefere = null }) {
   return (
     <>
       {apparence === "grand" ? (
-        <div className="flex h-14 w-full items-center gap-2 rounded-2xl border border-line-strong bg-white pr-2 pl-4 shadow-[0_1px_2px_rgba(15,23,20,.04)] focus-within:border-brand">
-          <button ref={declencheur} type="button" onClick={() => ouvrir()} className="flex h-full min-w-0 flex-1 items-center gap-3 text-left text-ink-muted">
-            <Search className="size-5 shrink-0" aria-hidden="true" />
-            <span className="truncate">Rechercher un envoi, un client, un colis, un téléphone…</span>
+        // Accueil : le point d'entrée principal, un vrai champ avec le scanneur dedans
+        <div className="flex h-16 w-full items-center gap-2 rounded-[20px] border border-line-strong bg-white pr-2 pl-5 shadow-[0_1px_3px_rgba(15,23,20,.06)] transition-colors hover:border-ink-subtle">
+          <button ref={declencheur} type="button" onClick={() => ouvrir()} className="flex h-full min-w-0 flex-1 items-center gap-3 text-left">
+            <Search className="size-[22px] shrink-0 text-ink" aria-hidden="true" />
+            <span className="truncate text-[17px] text-ink-subtle">
+              <span className="sm:hidden">Rechercher…</span>
+              <span className="hidden sm:inline">N° de suivi, client, téléphone, colis, conteneur…</span>
+            </span>
           </button>
           <kbd className="hidden rounded-md border border-line bg-surface-page px-1.5 py-0.5 font-caisse text-xs text-ink-muted lg:block">{raccourci}</kbd>
-          <button type="button" onClick={() => ouvrir({ scanner: true })} className="flex h-11 items-center gap-2 rounded-xl bg-ink px-3.5 text-sm font-semibold text-white">
+          <span aria-hidden="true" className="mx-1 hidden h-8 w-px bg-line lg:block" />
+          <button
+            type="button"
+            onClick={() => ouvrir({ scanner: true })}
+            className="flex h-12 items-center gap-2 rounded-[14px] bg-brand-soft px-4 font-semibold text-brand-strong transition-colors hover:bg-brand hover:text-white"
+          >
             <ScanLine className="size-5" aria-hidden="true" />
             <span className="hidden sm:inline">Scanner</span>
           </button>
         </div>
       ) : (
-        <button
-          ref={declencheur}
-          type="button"
-          onClick={() => ouvrir()}
-          aria-label="Rechercher"
-          className="flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-line-strong bg-surface-page px-3 text-ink-muted hover:text-ink min-[1400px]:w-[230px]"
-        >
-          <Search className="size-5 shrink-0" aria-hidden="true" />
-          <span className="hidden flex-1 text-left text-[15px] min-[1400px]:block">Rechercher…</span>
-          <kbd className="hidden rounded-md border border-line bg-white px-1.5 py-0.5 font-caisse text-xs min-[1400px]:block">{raccourci}</kbd>
-        </button>
+        // Barres des modules : chercher | scanner, en une pièce (un toucher pour scanner sur tablette)
+        <div className="flex h-12 shrink-0 items-stretch rounded-2xl border border-line-strong bg-white">
+          <button
+            ref={declencheur}
+            type="button"
+            onClick={() => ouvrir()}
+            aria-label="Rechercher"
+            className="flex items-center gap-2 rounded-l-[15px] pr-2.5 pl-3 text-ink-muted transition-colors hover:bg-surface-page hover:text-ink min-[1400px]:w-[200px]"
+          >
+            <Search className="size-5 shrink-0" aria-hidden="true" />
+            <span className="hidden flex-1 text-left text-[15px] min-[1400px]:block">Rechercher…</span>
+            <kbd className="hidden rounded-md border border-line bg-surface-page px-1.5 py-0.5 font-caisse text-xs min-[1400px]:block">{raccourci}</kbd>
+          </button>
+          <span aria-hidden="true" className="my-2.5 w-px bg-line" />
+          <button
+            type="button"
+            onClick={() => ouvrir({ scanner: true })}
+            aria-label="Scanner un code"
+            title="Scanner un QR code"
+            className="grid w-12 place-items-center rounded-r-[15px] text-ink-muted transition-colors hover:bg-surface-page hover:text-brand-strong"
+          >
+            <ScanLine className="size-5" aria-hidden="true" />
+          </button>
+        </div>
       )}
       {ouvert && <Palette depart={depart} prefere={prefere} onFermer={fermer} />}
     </>
@@ -182,6 +239,9 @@ function Palette({ depart, prefere, onFermer }) {
   const [recents, setRecents] = useState([]);
 
   useEffect(() => setRecents(lireRecents()), []);
+  // Téléphone : texte d'aide court (le long serait coupé)
+  const [court, setCourt] = useState(false);
+  useEffect(() => setCourt(window.matchMedia("(max-width: 639px)").matches), []);
 
   // Défilement de la page bloqué, focus dans le champ
   useEffect(() => {
@@ -257,6 +317,7 @@ function Palette({ depart, prefere, onFermer }) {
 
   // Lignes affichées, dans l'ordre du clavier
   const pages = useMemo(() => pagesCorrespondantes(analyse, role), [analyse, role]);
+  const termes = useMemo(() => termesSurlignes(analyse), [analyse]);
   const sections = useMemo(() => {
     if (!utile) {
       return [
@@ -272,6 +333,7 @@ function Palette({ depart, prefere, onFermer }) {
     if (prefere && !tries.some(exactAilleurs)) tries.sort((a, b) => (b.type === prefere) - (a.type === prefere));
     const groupes = tries.map((g) => ({
       titre: g.titre,
+      compte: g.resultats.length,
       lignes: g.resultats.map((r) => ({ ...r, cle: `${r.type}-${r.id}` })),
     }));
     if (pages.length) groupes.push({ titre: "Pages", lignes: pages.map((p) => ({ type: "page", cle: `p-${p.id}`, titre: p.libelle, href: p.href, icone: p.icone })) });
@@ -341,11 +403,11 @@ function Palette({ depart, prefere, onFermer }) {
         className="relative flex h-[100dvh] w-full flex-col bg-white shadow-2xl lg:h-auto lg:max-h-[78vh] lg:max-w-2xl lg:rounded-[22px]"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex items-center gap-2 border-b border-line px-3 py-3 sm:px-4">
-          <label className="flex h-14 min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface-page px-4 focus-within:ring-2 focus-within:ring-brand/25">
+        <div className="flex items-center gap-2 border-b border-line p-3 sm:p-4">
+          <div className="flex h-14 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-line-strong bg-white pr-1.5 pl-4 transition-shadow focus-within:border-brand focus-within:ring-4 focus-within:ring-brand/10">
             {chargement ? <Loader2 className="size-5 shrink-0 animate-spin text-ink-muted" aria-hidden="true" /> : <Search className="size-5 shrink-0 text-ink-muted" aria-hidden="true" />}
-            <span className="sr-only">Rechercher</span>
             <input
+              aria-label="Rechercher"
               ref={champ}
               value={saisie}
               onChange={(e) => {
@@ -353,7 +415,7 @@ function Palette({ depart, prefere, onFermer }) {
                 setAuto(false);
               }}
               onFocus={() => setScanner(false)}
-              placeholder="N° de suivi, colis, conteneur, nom, téléphone…"
+              placeholder={court ? "Rechercher ou scanner…" : "N° de suivi, colis, conteneur, nom, téléphone…"}
               role="combobox"
               aria-expanded="true"
               aria-controls={`${id}-liste`}
@@ -365,23 +427,32 @@ function Palette({ depart, prefere, onFermer }) {
               className="h-full min-w-0 flex-1 bg-transparent text-[17px] outline-none placeholder:text-ink-subtle"
             />
             {saisie && (
-              <button type="button" onClick={() => {
+              <button
+                type="button"
+                onClick={() => {
                   setSaisie("");
                   champ.current?.focus();
-                }} aria-label="Effacer" className="-mr-2 grid size-10 place-items-center rounded-xl text-ink-muted hover:bg-white">
+                }}
+                aria-label="Effacer"
+                className="grid size-10 shrink-0 place-items-center rounded-xl text-ink-muted hover:bg-surface-page"
+              >
                 <X className="size-5" aria-hidden="true" />
               </button>
             )}
-          </label>
-          <button
-            type="button"
-            onClick={() => setScanner((s) => !s)}
-            aria-pressed={scanner}
-            className={cn("flex h-14 items-center gap-2 rounded-2xl px-4 font-semibold", scanner ? "bg-brand text-white" : "bg-ink text-white")}
-          >
-            <ScanLine className="size-5" aria-hidden="true" />
-            <span className="hidden sm:inline">Scanner</span>
-          </button>
+            <span aria-hidden="true" className="h-7 w-px shrink-0 bg-line" />
+            <button
+              type="button"
+              onClick={() => setScanner((s) => !s)}
+              aria-pressed={scanner}
+              className={cn(
+                "flex h-11 shrink-0 items-center gap-2 rounded-xl px-3 font-semibold transition-colors",
+                scanner ? "bg-brand text-white" : "text-brand-strong hover:bg-brand-soft"
+              )}
+            >
+              <ScanLine className="size-5" aria-hidden="true" />
+              <span className="hidden sm:inline">{scanner ? "Arrêter" : "Scanner"}</span>
+            </button>
+          </div>
           <button type="button" onClick={onFermer} className="h-14 rounded-2xl px-3 font-semibold text-ink-muted hover:text-ink lg:hidden">
             Fermer
           </button>
@@ -393,15 +464,29 @@ function Palette({ depart, prefere, onFermer }) {
           ) : (
             <>
               {!utile && (
-                <p className="px-5 pt-4 text-sm text-ink-muted">
-                  Tapez ou scannez un n° de suivi (SHP…), de colis (PKG…), de conteneur (CNT…), un code client, un nom ou un téléphone.
-                </p>
+                <div className="grid grid-cols-2 gap-2 px-3 pt-3 sm:px-4 lg:grid-cols-4">
+                  {AIDE.filter((x) => typesVisibles(role).includes(x.type)).map((x) => {
+                    const Icone = ICONES_TYPE[x.type];
+                    return (
+                      <div key={x.type} className="flex flex-col gap-1.5 rounded-2xl bg-surface-page p-3">
+                        <span aria-hidden="true" className={cn("grid size-8 place-items-center rounded-lg", TEINTES[x.type])}>
+                          <Icone className="size-4" />
+                        </span>
+                        <span className="text-sm font-semibold">{x.titre}</span>
+                        <span className="text-xs leading-snug text-ink-muted">{x.exemple}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
               {reponse?.erreur && <p className="px-5 pt-4 text-sm text-danger">{reponse.erreur}</p>}
               <ul id={`${id}-liste`} role="listbox" aria-label="Résultats" className="flex flex-col pb-3">
                 {sections.map((s) => (
                   <li key={s.titre} role="presentation">
-                    <div className="px-5 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">{s.titre}</div>
+                    <div className="flex items-center gap-2 px-5 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                      {s.titre}
+                      {s.compte > 0 && <span className="chiffres rounded-full bg-surface-muted px-1.5 py-px text-[11px] font-medium tracking-normal">{s.compte}</span>}
+                    </div>
                     <ul role="presentation" className="flex flex-col px-2">
                       {s.lignes.map((l) => {
                         index += 1;
@@ -428,9 +513,19 @@ function Palette({ depart, prefere, onFermer }) {
                               <Icone className="size-5" />
                             </span>
                             <span className="flex min-w-0 flex-1 flex-col">
-                              <span className={cn("truncate font-semibold", (l.type === "envoi" || l.type === "colis" || l.type === "conteneur") && "chiffres")}>{l.titre}</span>
-                              {l.sousTitre && <span className="truncate text-[13px] text-ink-muted">{l.sousTitre}</span>}
-                              {l.details && <span className="truncate text-xs text-ink-subtle">{l.details}</span>}
+                              <span className={cn("truncate font-semibold", (l.type === "envoi" || l.type === "colis" || l.type === "conteneur") && "chiffres")}>
+                                <Surligne texte={l.titre} termes={termes} />
+                              </span>
+                              {l.sousTitre && (
+                                <span className="truncate text-[13px] text-ink-muted">
+                                  <Surligne texte={l.sousTitre} termes={termes} />
+                                </span>
+                              )}
+                              {l.details && (
+                                <span className="truncate text-xs text-ink-subtle">
+                                  <Surligne texte={l.details} termes={termes} />
+                                </span>
+                              )}
                             </span>
                             {l.etat && (
                               <span className="hidden shrink-0 sm:block">
@@ -470,10 +565,20 @@ function Palette({ depart, prefere, onFermer }) {
         </div>
 
         <div className="hidden items-center gap-4 border-t border-line px-5 py-2.5 text-xs text-ink-muted lg:flex">
-          <span>↑ ↓ choisir</span>
-          <span>Entrée ouvrir</span>
-          <span>Échap fermer</span>
-          <span className="ml-auto">Douchette : scannez n&apos;importe où</span>
+          <span className="flex items-center gap-1.5">
+            <Touche>↑</Touche>
+            <Touche>↓</Touche> choisir
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Touche>Entrée</Touche> ouvrir
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Touche>Échap</Touche> fermer
+          </span>
+          <span className="ml-auto flex items-center gap-1.5">
+            <ScanLine className="size-3.5" aria-hidden="true" />
+            Douchette : scannez n&apos;importe où
+          </span>
         </div>
       </section>
     </div>,

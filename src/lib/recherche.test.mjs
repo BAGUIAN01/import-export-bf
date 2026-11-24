@@ -85,3 +85,15 @@ test("où mène un résultat", () => {
   assert.equal(actionsResultat(colis, "TRACKER").principale.href, "/admin/shipments/e1");
   assert.equal(actionsResultat(colis, "AGENT").principale.libelle, "Retrait");
 });
+
+test("surlignage sans accents ni majuscules", async () => {
+  const { segmentsSurlignes, termesSurlignes } = await import("./recherche.js");
+  assert.deepEqual(segmentsSurlignes("Moussa Ouédraogo", ["ouedr"]), [
+    { texte: "Moussa ", fort: false },
+    { texte: "Ouédr", fort: true },
+    { texte: "aogo", fort: false },
+  ]);
+  assert.deepEqual(segmentsSurlignes("SHP202600032", termesSurlignes(analyserRecherche("shp202600032"))), [{ texte: "SHP202600032", fort: true }]);
+  assert.deepEqual(segmentsSurlignes("abc", []), [{ texte: "abc", fort: false }]);
+  assert.deepEqual(termesSurlignes(analyserRecherche("colis 0071")), ["0071"]);
+});

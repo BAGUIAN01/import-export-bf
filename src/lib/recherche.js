@@ -208,3 +208,40 @@ export function typesVisibles(role) {
   if (gestion || canAccess(role, "/admin/caisse/conteneurs")) types.push("conteneur");
   return types;
 }
+
+/* ── Surlignage des termes trouvés ─────────────────────────── */
+
+/** Termes à surligner : mots, numéro exact, chiffres (2 caractères au moins). */
+export function termesSurlignes(analyse) {
+  const termes = [...analyse.mots, analyse.code?.valeur, analyse.chiffres].filter(Boolean).map((t) => normaliser(t));
+  return [...new Set(termes)].filter((t) => t.length >= 2);
+}
+
+/**
+ * Découpe `texte` en morceaux, `fort` pour ceux qui correspondent à un terme,
+ * sans tenir compte des accents ni des majuscules : « Ouédraogo » + « ouedr ».
+ */
+export function segmentsSurlignes(texte, termes) {
+  const caracteres = [...String(texte ?? "")];
+  let normalise = "";
+  const origine = []; // position dans `caracteres` de chaque lettre normalisée
+  caracteres.forEach((c, i) => {
+    for (const x of normaliser(c)) {
+      normalise += x;
+      origine.push(i);
+    }
+  });
+  const forts = new Array(caracteres.length).fill(false);
+  for (const terme of termes) {
+    for (let k = normalise.indexOf(terme); k !== -1; k = normalise.indexOf(terme, k + terme.length)) {
+      for (let j = k; j < k + terme.length; j++) forts[origine[j]] = true;
+    }
+  }
+  const segments = [];
+  caracteres.forEach((c, i) => {
+    const dernier = segments[segments.length - 1];
+    if (dernier && dernier.fort === forts[i]) dernier.texte += c;
+    else segments.push({ texte: c, fort: forts[i] });
+  });
+  return segments;
+}
