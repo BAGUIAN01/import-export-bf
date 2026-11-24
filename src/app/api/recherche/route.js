@@ -83,6 +83,24 @@ function etatEnvoi(e) {
   return { texte: "Payé", ton: "vert" };
 }
 
+/**
+ * Totaux des envois de chaque client (comme /api/clients) : la caisse affiche
+ * le reste à payer sur la carte du client trouvé.
+ */
+async function avecTotaux(clients) {
+  const ids = [...new Set(clients.filter(Boolean).map((c) => c.id))];
+  if (!ids.length) return new Map();
+  const sommes = await prisma.shipment.groupBy({
+    by: ["clientId"],
+    where: { clientId: { in: ids } },
+    _sum: { totalAmount: true, paidAmount: true },
+    _count: { _all: true },
+  });
+  return new Map(
+    sommes.map((x) => [x.clientId, { totalShipmentsAmount: x._sum.totalAmount || 0, totalSpent: x._sum.paidAmount || 0, shipmentsCount: x._count._all }])
+  );
+}
+
 /* ── Recherches par type ──────────────────────────────────── */
 
 async function chercherClients(analyse, flou) {
@@ -91,6 +109,7 @@ async function chercherClients(analyse, flou) {
   const ids = await prisma.$queryRaw`SELECT c.id FROM clients c WHERE ${condition} ORDER BY c."updatedAt" DESC LIMIT ${CANDIDATS}`;
   if (!ids.length) return [];
   const clients = await prisma.client.findMany({ where: { id: { in: ids.map((r) => r.id) } } });
+  const totaux = await avecTotaux(clients);
   return clients.map((c) => ({
     type: "client",
     id: c.id,
@@ -99,7 +118,7 @@ async function chercherClients(analyse, flou) {
     sousTitre: [affichageTelephone(c.phone), c.clientCode, c.city].filter(Boolean).join(" · "),
     details: c.recipientName ? `→ ${c.recipientName}${c.recipientCity ? ` · ${c.recipientCity}` : ""}` : null,
     etat: c.isVip ? { texte: "VIP", ton: "violet" } : null,
-    client: c,
+    client: { ...c, ...totaux.get(c.id) },
     _texte: normaliser(`${nomClient(c)} ${c.company || ""} ${c.recipientName || ""} ${c.city} ${c.recipientCity || ""} ${c.clientCode} ${c.phone} ${c.recipientPhone || ""}`.replace(/\+/g, "")),
     _date: c.updatedAt,
   }));
@@ -120,6 +139,7 @@ async function chercherEnvois(analyse, flou) {
     where: { id: { in: ids.map((r) => r.id) } },
     include: { client: true, container: { select: { id: true, containerNumber: true, status: true } } },
   });
+  const totaux = await avecTotaux(envois.map((e) => e.client));
   return envois.map((e) => ({
     type: "envoi",
     id: e.id,
@@ -131,7 +151,7 @@ async function chercherEnvois(analyse, flou) {
     destinataire: e.client?.recipientName || "",
     deliveredAt: e.deliveredAt,
     conteneur: e.container ? { id: e.container.id, numero: e.container.containerNumber, status: e.container.status } : null,
-    client: e.client,
+    client: e.client ? { ...e.client, ...totaux.get(e.client.id) } : null,
     _texte: normaliser(
       `${e.shipmentNumber} ${nomClient(e.client)} ${e.client?.recipientName || ""} ${e.client?.city || ""} ${e.client?.recipientCity || ""} ${e.client?.phone || ""} ${e.client?.recipientPhone || ""} ${e.client?.clientCode || ""}`.replace(/\+/g, "")
     ),

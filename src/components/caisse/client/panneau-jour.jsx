@@ -37,11 +37,14 @@ export function BandeauJour({ stats }) {
     { libelle: "Colis", valeur: s ? String(s.totalItems) : "…" },
   ];
   return (
-    <div className="grid grid-cols-3 gap-2 lg:hidden">
+    <div aria-label="Aujourd'hui" className="grid grid-cols-[1.7fr_1fr_1fr] gap-2 lg:hidden">
       {cases.map((c) => (
-        <div key={c.libelle} className="rounded-2xl border border-line bg-white px-3 py-2.5">
-          <div className="text-xs text-ink-muted">{c.libelle} aujourd&apos;hui</div>
-          <div className="chiffres truncate text-lg font-semibold">{c.valeur}</div>
+        <div key={c.libelle} className="min-w-0 rounded-2xl border border-line bg-white px-3 py-2.5">
+          <div className="text-xs text-ink-muted">
+            {c.libelle}
+            <span className="hidden sm:inline"> aujourd&apos;hui</span>
+          </div>
+          <div className="chiffres whitespace-nowrap text-base font-semibold sm:text-lg">{c.valeur}</div>
         </div>
       ))}
     </div>

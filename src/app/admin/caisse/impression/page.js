@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { CheckCircle2, Download, Loader2, Printer, UserPlus } from "lucide-react";
+import { CheckCircle2, Copy, Download, Loader2, MessageCircle, MessageSquare, Printer, Send, Share2, UserPlus } from "lucide-react";
+import { FeuilleActions } from "@/components/gestion/barre-actions";
+import { lienSms, lienSuivi, lienWhatsApp, messageSuivi } from "@/lib/caisse/partage";
 import { useCaisse } from "@/contexts/caisse-context";
 import { formatMontant } from "@/lib/caisse/montants";
 import { libelleMode } from "@/lib/caisse/paiement";
@@ -25,12 +27,15 @@ async function versDataUrl(chemin) {
 /**
  * Caisse · fin de l'envoi
  * L'envoi est enregistré (POST /api/caisse/orders depuis l'étape Paiement) :
- * récapitulatif, bordereau à imprimer ou télécharger, client suivant.
+ * récapitulatif, n° de suivi en grand, bordereau envoyé au client (WhatsApp,
+ * SMS, partage du PDF) ou imprimé, client suivant.
  */
 export default function CaisseFinPage() {
   const router = useRouter();
   const { restaure, lastOrder, selectedClient, selectedContainer, orderItems, orderSubtotal, orderTotal, orderOptions, remise, paymentInfo, clearSession } = useCaisse();
   const [generation, setGeneration] = useState(null);
+  const [envoyer, setEnvoyer] = useState(false);
+  const pdf = useRef(null); // bordereau préparé dès l'ouverture de « Envoyer au client »
 
   if (!restaure) {
     return (
@@ -134,6 +139,75 @@ export default function CaisseFinPage() {
     }
   }
 
+  // ── Envoyer au client ─────────────────────────────────────
+  const lien = lienSuivi(typeof window === "undefined" ? "" : window.location.origin, numero);
+  const message = (pour) =>
+    messageSuivi({
+      pour,
+      prenom: pour === "destinataire" ? (selectedClient?.recipientName || "").split(" ")[0] : selectedClient?.firstName,
+      numero,
+      nbColis,
+      total: orderTotal,
+      reste,
+      lien,
+      ajout: !!lastOrder.isExistingShipment,
+    });
+
+  function ouvrirEnvoi() {
+    setEnvoyer(true);
+    // Le PDF est prêt quand on touche « Partager » (le partage doit suivre le toucher)
+    if (!pdf.current) fabriquerPdf().then((b) => (pdf.current = b)).catch(() => {});
+  }
+
+  async function copierLien() {
+    try {
+      await navigator.clipboard.writeText(lien);
+      toast.success("Lien de suivi copié.");
+    } catch {
+      toast.error("Le lien n'a pas pu être copié.");
+    }
+  }
+
+  async function partagerPdf() {
+    try {
+      const blob = pdf.current || (await fabriquerPdf());
+      const fichier = new File([blob], `bordereau-${numero}.pdf`, { type: "application/pdf" });
+      if (navigator.canShare?.({ files: [fichier] })) {
+        await navigator.share({ files: [fichier], title: `Bordereau ${numero}`, text: message("expediteur") });
+      } else if (navigator.share) {
+        await navigator.share({ title: `Envoi ${numero}`, text: message("expediteur"), url: lien });
+      } else {
+        toast.info("Le partage n'est pas disponible ici : le bordereau est téléchargé.");
+        await telecharger();
+      }
+    } catch (e) {
+      if (e?.name !== "AbortError") toast.error("Le partage n'a pas abouti.");
+    }
+  }
+
+  const ouvrir = (url) => window.open(url, "_blank", "noopener");
+  const actionsEnvoi = [
+    selectedClient?.phone && {
+      libelle: `WhatsApp · ${nomAffiche(selectedClient)}`,
+      icone: MessageCircle,
+      onClick: () => ouvrir(lienWhatsApp(selectedClient.phone, message("expediteur"), "FR")),
+    },
+    selectedClient?.recipientPhone && {
+      libelle: `WhatsApp · ${selectedClient.recipientName || "destinataire"} (destinataire)`,
+      icone: MessageCircle,
+      onClick: () => ouvrir(lienWhatsApp(selectedClient.recipientPhone, message("destinataire"), "BF")),
+    },
+    selectedClient?.phone && {
+      libelle: `SMS · ${nomAffiche(selectedClient)}`,
+      icone: MessageSquare,
+      onClick: () => {
+        window.location.href = lienSms(selectedClient.phone, message("expediteur"), "FR");
+      },
+    },
+    { libelle: "Partager le bordereau (PDF)", icone: Share2, onClick: partagerPdf },
+    { libelle: "Copier le lien de suivi", icone: Copy, onClick: copierLien },
+  ].filter(Boolean);
+
   function clientSuivant() {
     clearSession();
     router.push("/admin/caisse/client");
@@ -155,13 +229,16 @@ export default function CaisseFinPage() {
           </div>
 
           <dl className="mt-2 grid w-full grid-cols-2 gap-2 text-left">
-            <div className="rounded-2xl bg-surface-page p-3">
-              <dt className="text-xs text-ink-muted">N° de suivi</dt>
-              <dd className="chiffres truncate text-lg font-semibold">{numero}</dd>
-            </div>
-            <div className="rounded-2xl bg-surface-page p-3">
-              <dt className="text-xs text-ink-muted">Conteneur</dt>
-              <dd className="chiffres truncate text-lg font-semibold">{conteneur}</dd>
+            {/* Le n° que le client doit noter : en entier, copiable */}
+            <div className="col-span-2 flex items-center gap-3 rounded-2xl bg-surface-page p-3">
+              <div className="min-w-0 flex-1">
+                <dt className="text-xs text-ink-muted">N° de suivi</dt>
+                <dd className="chiffres break-all text-[24px] font-semibold leading-tight tracking-wide">{numero}</dd>
+                <dd className="chiffres text-[13px] text-ink-muted">Conteneur {conteneur}</dd>
+              </div>
+              <button type="button" onClick={copierLien} aria-label="Copier le lien de suivi" className="grid size-11 shrink-0 place-items-center rounded-xl border border-line-strong bg-white text-ink-muted">
+                <Copy className="size-5" aria-hidden="true" />
+              </button>
             </div>
             <div className="rounded-2xl bg-surface-page p-3">
               <dt className="text-xs text-ink-muted">{paymentInfo?.aLArrivee ? "Paiement" : `Payé · ${libelleMode(paymentInfo?.modePaiement)}`}</dt>
@@ -182,6 +259,14 @@ export default function CaisseFinPage() {
           )}
         </section>
 
+        <button
+          type="button"
+          onClick={ouvrirEnvoi}
+          className="flex h-16 items-center justify-center gap-2 rounded-2xl border-2 border-brand bg-brand-soft text-lg font-semibold text-brand-strong"
+        >
+          <Send className="size-5" aria-hidden="true" />
+          Envoyer au client
+        </button>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -211,6 +296,13 @@ export default function CaisseFinPage() {
           Client suivant
         </button>
       </div>
+      <FeuilleActions
+        ouvert={envoyer}
+        onFermer={() => setEnvoyer(false)}
+        titre="Envoyer au client"
+        sousTitre={`Le n° de suivi ${numero} et le lien pour suivre l'envoi.`}
+        actions={actionsEnvoi}
+      />
     </div>
   );
 }

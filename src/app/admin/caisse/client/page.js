@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, Plus, Search, UserX, X } from "lucide-react";
+import { ArrowRight, Loader2, Plus, ScanLine, Search, UserX, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCaisse } from "@/contexts/caisse-context";
 import { CarteClient } from "@/components/caisse/client/carte-client";
@@ -10,7 +10,9 @@ import { NouveauClient } from "@/components/caisse/client/nouveau-client";
 import { BandeauJour, PanneauJour, useJournee } from "@/components/caisse/client/panneau-jour";
 import { nomAffiche, resteDu, versClientCaisse } from "@/lib/caisse/clients";
 import { formatMontant } from "@/lib/caisse/montants";
-import { rechercheTelephone } from "@/lib/telephone";
+import { Feuille } from "@/components/caisse/feuille";
+import { Scanneur } from "@/components/recherche/scanneur";
+import { vibrer } from "@/lib/vibrer";
 import { cn } from "@/lib/utils";
 
 /**
@@ -30,6 +32,8 @@ export default function CaisseClientPage() {
   const [cherche, setCherche] = useState(false);
   const [vue, setVue] = useState("recents");
   const [nouveau, setNouveau] = useState(false);
+  const [scan, setScan] = useState(false);
+  const [auto, setAuto] = useState(false); // après un scan : un seul client trouvé = on le prend
 
   /* ── Clients récents (et ceux qui ont un reste à payer) ── */
   useEffect(() => {
@@ -53,36 +57,62 @@ export default function CaisseClientPage() {
       return;
     }
     setCherche(true);
-    const minuteur = setTimeout(() => {
-      // Un numéro est aussi cherché sans le 0 de tête : « 06 12 34 » retrouve « +33612345… »
-      const tel = rechercheTelephone(q);
-      const termes = tel && tel !== q ? [q, tel] : [q];
-      Promise.all(
-        termes.map((t) =>
-          fetch(`/api/clients?search=${encodeURIComponent(t)}&limit=30`).then((r) =>
-            r.ok ? r.json() : Promise.reject(new Error(`Erreur ${r.status}`))
-          )
-        )
-      )
-        .then((reponses) => {
-          const vus = new Map();
-          for (const d of reponses) for (const c of Array.isArray(d) ? d : d?.data || []) vus.set(c.id, c);
-          setResultats([...vus.values()]);
-        })
-        .catch(() => toast.error("La recherche n'a pas abouti."))
-        .finally(() => setCherche(false));
-    }, 250);
-    return () => clearTimeout(minuteur);
-  }, [recherche]);
+    const controle = new AbortController();
+    // Recherche intelligente (comme la barre de recherche) : noms sans accents ni
+    // fautes, destinataire, téléphone sous toutes les formes, code client, n° de
+    // suivi ou QR du bordereau (on prend le client de l'envoi).
+    const minuteur = setTimeout(
+      () => {
+        fetch(`/api/recherche?q=${encodeURIComponent(q)}`, { signal: controle.signal })
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Erreur ${r.status}`))))
+          .then((d) => {
+            const vus = new Map();
+            for (const g of d.groupes || []) {
+              if (g.type !== "client" && g.type !== "envoi") continue;
+              for (const r of g.resultats) if (r.client && !vus.has(r.client.id)) vus.set(r.client.id, r.client);
+            }
+            setResultats([...vus.values()]);
+          })
+          .catch((e) => e.name !== "AbortError" && toast.error("La recherche n'a pas abouti."))
+          .finally(() => !controle.signal.aborted && setCherche(false));
+      },
+      auto ? 0 : 250
+    );
+    return () => {
+      clearTimeout(minuteur);
+      controle.abort();
+    };
+  }, [recherche, auto]);
+
+  const choisir = useCallback(
+    (client) => {
+      setSelectedClient(versClientCaisse(client));
+      router.push("/admin/caisse/commande");
+    },
+    [setSelectedClient, router]
+  );
+
+  // Bordereau scanné : un seul client trouvé, on passe directement à ses colis
+  useEffect(() => {
+    if (!auto || cherche || resultats === null) return;
+    setAuto(false);
+    if (resultats.length === 1) {
+      vibrer();
+      toast.success(`${nomAffiche(resultats[0])} : client retrouvé.`);
+      choisir(resultats[0]);
+    }
+  }, [auto, cherche, resultats, choisir]);
+
+  const surScan = useCallback((texte) => {
+    setScan(false);
+    setRecherche(texte);
+    setAuto(true);
+  }, []);
 
   const aSolder = useMemo(() => recents.filter((c) => resteDu(c) > 0), [recents]);
   const enRecherche = recherche.trim().length >= 2;
   const liste = enRecherche ? resultats || [] : vue === "solder" ? aSolder : recents.slice(0, 30);
 
-  function choisir(client) {
-    setSelectedClient(versClientCaisse(client));
-    router.push("/admin/caisse/commande");
-  }
 
   return (
     <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(380px,440px)]">
@@ -103,12 +133,12 @@ export default function CaisseClientPage() {
                 type="search"
                 value={recherche}
                 onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Nom, téléphone, code client"
+                placeholder="Nom, téléphone, n° de suivi"
                 autoComplete="off"
                 className="h-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none [&::-webkit-search-cancel-button]:hidden"
               />
               {cherche && <Loader2 className="mr-2 size-5 animate-spin text-ink-muted" aria-label="Recherche en cours" />}
-              {recherche && (
+              {recherche ? (
                 <button
                   type="button"
                   onClick={() => setRecherche("")}
@@ -116,6 +146,17 @@ export default function CaisseClientPage() {
                   className="mr-1 grid size-11 place-items-center rounded-xl text-ink-muted"
                 >
                   <X className="size-5" aria-hidden="true" />
+                </button>
+              ) : (
+                // Client qui revient : on scanne son bordereau
+                <button
+                  type="button"
+                  onClick={() => setScan(true)}
+                  aria-label="Scanner un bordereau"
+                  title="Scanner le QR code du bordereau"
+                  className="mr-1 grid size-11 place-items-center rounded-xl text-brand-strong hover:bg-brand-soft"
+                >
+                  <ScanLine className="size-5" aria-hidden="true" />
                 </button>
               )}
             </label>
@@ -187,7 +228,8 @@ export default function CaisseClientPage() {
             </p>
           )}
 
-          {chargement && !enRecherche ? (
+          {/* Squelette pendant le chargement, et pendant une première recherche (pas « Aucun client » trop tôt) */}
+          {(chargement && !enRecherche) || (enRecherche && cherche && resultats === null) ? (
             <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2" aria-hidden="true">
               {Array.from({ length: 6 }).map((_, i) => (
                 <li key={i} className="h-[84px] animate-pulse rounded-2xl bg-white" />
@@ -219,6 +261,10 @@ export default function CaisseClientPage() {
       </div>
 
       <PanneauJour stats={stats} depart={depart} />
+
+      <Feuille ouvert={scan} onFermer={() => setScan(false)} titre="Scanner le bordereau" sousTitre="QR code du bordereau d'un client qui revient" largeur="max-w-md">
+        {scan && <Scanneur onLu={surScan} />}
+      </Feuille>
 
       {nouveau && (
         <NouveauClient

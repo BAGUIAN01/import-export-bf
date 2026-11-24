@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Printer, Search, X } from "lucide-react";
+import { Loader2, MessageCircle, Printer, Search, X } from "lucide-react";
 import { toast } from "sonner";
-import QRCodeLib from "qrcode";
-import { pdf } from "@react-pdf/renderer";
-import { ReceiptPDF } from "@/components/modules/admin/shipments/receipt-pdf";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
-import { cn } from "@/lib/utils";
+import { Etat, Tableau } from "@/components/epure";
+import { lienSuivi, lienWhatsApp, messageSuivi } from "@/lib/caisse/partage";
 
 const MODES = { CASH: "Espèces", CARD: "Carte", MOBILE_MONEY: "Mobile money", TRANSFER: "Virement", CHEQUE: "Chèque" };
 
@@ -24,6 +22,18 @@ async function versDataUrl(chemin) {
 }
 
 const aujourdhui = (d) => d && new Date(d).toDateString() === new Date().toDateString();
+const heure = (e) => new Date(e.updatedAt || e.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const resteDe = (e) => Math.max(0, (e.totalAmount || 0) - (e.paidAmount || 0));
+// Message de suivi envoyé à l'expéditeur (glisser « WhatsApp »)
+const messageDe = (e) =>
+  messageSuivi({
+    prenom: e.client?.firstName,
+    numero: e.shipmentNumber,
+    nbColis: e.packagesCount,
+    total: e.totalAmount,
+    reste: resteDe(e),
+    lien: lienSuivi(window.location.origin, e.shipmentNumber),
+  });
 
 /**
  * Caisse · Reçus du jour
@@ -59,7 +69,14 @@ export default function RecusPage() {
       if (!res.ok) throw new Error(data.error || "L'envoi n'a pas pu être chargé.");
       const envoi = data.shipment || data;
       const lien = `${window.location.origin}/tracking?q=${encodeURIComponent(envoi.shipmentNumber)}`;
-      const [qrCodeDataUrl, logoDataUrl] = await Promise.all([QRCodeLib.toDataURL(lien, { margin: 1, width: 200 }).catch(() => null), versDataUrl("/logo.jpeg").catch(() => null)]);
+      // Générateur de PDF et QR code chargés au moment d'imprimer
+      const [{ pdf }, { ReceiptPDF }, { default: QRCodeLib }, logoDataUrl] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/modules/admin/shipments/receipt-pdf"),
+        import("qrcode"),
+        versDataUrl("/logo.jpeg").catch(() => null),
+      ]);
+      const qrCodeDataUrl = await QRCodeLib.toDataURL(lien, { margin: 2, width: 512, errorCorrectionLevel: "M" }).catch(() => null);
       const blob = await pdf(<ReceiptPDF shipment={envoi} logoDataUrl={logoDataUrl} qrCodeDataUrl={qrCodeDataUrl} dateEdition={new Date().toLocaleDateString("fr-FR")} />).toBlob();
       const url = URL.createObjectURL(blob);
       const fenetre = window.open(url, "_blank");
@@ -103,48 +120,55 @@ export default function RecusPage() {
           )}
         </label>
 
-        {envois === null ? (
-          <ul className="flex flex-col gap-2" aria-hidden="true">
-            {[0, 1, 2].map((i) => (
-              <li key={i} className="h-[76px] animate-pulse rounded-2xl bg-white" />
-            ))}
-          </ul>
-        ) : liste.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-line-strong bg-white p-8 text-center text-ink-muted">Aucun reçu aujourd&apos;hui.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {liste.map((e) => {
-              const reste = Math.max(0, (e.totalAmount || 0) - (e.paidAmount || 0));
-              return (
-                <li key={e.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white p-3">
-                  <span className="chiffres w-14 shrink-0 text-sm text-ink-muted">
-                    {new Date(e.updatedAt || e.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold">{nomAffiche(e.client)}</div>
-                    <div className="chiffres truncate text-[13px] text-ink-muted">
-                      {e.shipmentNumber} · {e.packagesCount} colis
-                      {e.paymentMethod ? <span className="font-caisse"> · {MODES[e.paymentMethod] || e.paymentMethod}</span> : ""}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="chiffres font-semibold">{formatMontant(e.paidAmount)}</div>
-                    <div className={cn("chiffres text-xs", reste > 0 ? "text-alerte" : "text-brand-strong")}>{reste > 0 ? `reste ${formatMontant(reste)}` : "soldé"}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => reimprimer(e)}
-                    disabled={!!impression}
-                    className="flex h-12 items-center gap-2 rounded-xl border border-line-strong bg-white px-4 font-semibold disabled:opacity-60"
-                  >
-                    {impression === e.id ? <Loader2 className="size-5 animate-spin" aria-hidden="true" /> : <Printer className="size-5" aria-hidden="true" />}
-                    Réimprimer
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <Tableau
+          libelle="Reçus du jour"
+          chargement={envois === null}
+          lignes={liste}
+          vide="Aucun reçu aujourd'hui."
+          onLigne={(e) => !impression && reimprimer(e)}
+          glisser={(e) => [
+            e.client?.phone && {
+              libelle: "WhatsApp",
+              icone: MessageCircle,
+              ton: "vert",
+              onClick: () => window.open(lienWhatsApp(e.client.phone, messageDe(e), "FR"), "_blank", "noopener"),
+            },
+            { libelle: "Réimprimer", court: "Reçu", icone: Printer, ton: "gris", onClick: () => reimprimer(e) },
+          ]}
+          colonnes={[
+            { id: "client", titre: "Client", mobile: "titre", rendu: (e) => nomAffiche(e.client) },
+            { id: "heure", titre: "Heure", rendu: (e) => <span className="chiffres">{heure(e)}</span> },
+            {
+              id: "envoi",
+              titre: "Envoi",
+              rendu: (e) => (
+                <span className="chiffres">
+                  {e.shipmentNumber} · {e.packagesCount} colis
+                </span>
+              ),
+              mobileRendu: (e) => <span className="chiffres">{e.shipmentNumber}</span>,
+            },
+            { id: "mode", titre: "Mode", rendu: (e) => MODES[e.paymentMethod] || "—", mobileRendu: (e) => MODES[e.paymentMethod] || null },
+            { id: "paye", titre: "Encaissé", aDroite: true, mobile: "droite", rendu: (e) => <span className="chiffres">{formatMontant(e.paidAmount)}</span> },
+            {
+              id: "etat",
+              titre: "État",
+              mobile: "etat",
+              rendu: (e) => (resteDe(e) > 0 ? <Etat ton="ambre">reste {formatMontant(resteDe(e))}</Etat> : <Etat ton="vert">Soldé</Etat>),
+            },
+          ]}
+          actions={(e) => (
+            <button
+              type="button"
+              onClick={() => reimprimer(e)}
+              disabled={!!impression}
+              className="flex h-11 items-center gap-2 rounded-xl border border-line-strong bg-white px-4 font-semibold disabled:opacity-60"
+            >
+              {impression === e.id ? <Loader2 className="size-5 animate-spin" aria-hidden="true" /> : <Printer className="size-5" aria-hidden="true" />}
+              Réimprimer
+            </button>
+          )}
+        />
       </div>
     </div>
   );
