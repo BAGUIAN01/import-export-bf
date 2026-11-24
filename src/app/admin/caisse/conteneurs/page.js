@@ -8,6 +8,7 @@ import { useCaisse } from "@/contexts/caisse-context";
 import { useProfilCaisse } from "@/components/caisse/barre-caisse";
 import { Feuille } from "@/components/caisse/feuille";
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
+import { EtapesConteneur } from "@/components/gestion/conteneurs/etapes-conteneur";
 import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { FloatingLabelDatePicker } from "@/components/ui/floating-label-date-picker";
 import { STATUTS_CONTENEUR, joursAvant } from "@/lib/conteneurs";
@@ -19,7 +20,8 @@ const jourMois = (d) => (d ? new Date(d).toLocaleDateString("fr-FR", { day: "num
 /**
  * Caisse · Conteneurs (chef de caisse)
  * Le conteneur en chargement tient lieu de session : on le suit, on le
- * ferme avec le n° du plomb, on en ouvre un nouveau. Les autres conteneurs
+ * ferme avec le n° du plomb, on en ouvre un nouveau. Chaque conteneur a sa
+ * frise d'étapes (fermé, parti, douane, arrivé) qui alimente le suivi. Les autres conteneurs
  * avancent d'un toucher (parti, douane, arrivé).
  */
 export default function CaisseConteneursPage() {
@@ -52,7 +54,10 @@ export default function CaisseConteneursPage() {
   }
 
   const enCours = (conteneurs || []).filter((c) => c.status === "PREPARATION");
-  const autres = (conteneurs || []).filter((c) => ["LOADED", "IN_TRANSIT", "CUSTOMS"].includes(c.status)).slice(0, 8);
+  // En route, et arrivés dont des colis attendent encore : on renseigne leur suivi ici
+  const autres = (conteneurs || [])
+    .filter((c) => ["LOADED", "IN_TRANSIT", "CUSTOMS"].includes(c.status) || (c.status === "DELIVERED" && c.shipmentsCount > c.deliveredCount))
+    .slice(0, 8);
 
   return (
     <div className="h-full overflow-y-auto overscroll-contain p-4 sm:p-6">
@@ -120,6 +125,7 @@ export default function CaisseConteneursPage() {
                     <div className="h-full rounded-full bg-brand" style={{ width: `${remplissage}%` }} />
                   </div>
                 )}
+                <EtapesConteneur conteneur={c} onFait={charger} />
                 <div className="flex flex-wrap gap-3">
                   <BoutonActionConteneur conteneur={c} onFait={charger} className="h-14 flex-1 text-lg" />
                   <Link href={`/admin/containers/${c.id}`} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-line-strong bg-white text-lg font-semibold">
@@ -139,8 +145,8 @@ export default function CaisseConteneursPage() {
               {autres.map((c) => {
                 const statut = STATUTS_CONTENEUR[c.status];
                 return (
-                  <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white p-3">
-                    <div className="min-w-0 flex-1">
+                  <li key={c.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4">
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="chiffres font-semibold">{c.containerNumber}</span>
                         <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", statut.classe)}>{statut.libelle}</span>
@@ -150,7 +156,7 @@ export default function CaisseConteneursPage() {
                         {c.actualDeparture ? ` · parti le ${jourMois(c.actualDeparture)}` : ""}
                       </div>
                     </div>
-                    <BoutonActionConteneur conteneur={c} onFait={charger} variante="contour" />
+                    <EtapesConteneur conteneur={c} onFait={charger} />
                   </li>
                 );
               })}

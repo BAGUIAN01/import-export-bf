@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ClipboardList, FileText, Package, Pencil, Printer, Route } from "lucide-react";
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
 import { SuiviConteneur } from "@/components/gestion/conteneurs/suivi-conteneur";
+import { EtapesConteneur } from "@/components/gestion/conteneurs/etapes-conteneur";
 import { ContainerDialog } from "@/components/modules/admin/containers/container-dialog";
 import { useContainerMutations } from "@/hooks/use-containers";
 import { Bloc, EnTete, Etat, Onglets, Recherche, SECONDAIRE, StatCard, StatGrid, Tableau } from "@/components/epure";
@@ -96,7 +97,10 @@ export function FicheConteneur({ container: initial, currentUser }) {
                   <Pencil className="size-4" aria-hidden="true" />
                   Modifier
                 </button>
-                <BoutonActionConteneur conteneur={{ ...c, packagesCount: colis?.length ?? c.packagesCount }} onFait={(m) => m && setC((x) => ({ ...x, ...m }))} />
+                <BoutonActionConteneur conteneur={{ ...c, packagesCount: colis?.length ?? c.packagesCount }} onFait={(m) => {
+                    if (m) setC((x) => ({ ...x, ...m }));
+                    router.refresh();
+                  }} />
               </>
             )
           }
@@ -106,6 +110,12 @@ export function FicheConteneur({ container: initial, currentUser }) {
           </Etat>
         </EnTete>
       </div>
+
+      {peutAgir && (
+        <div className="print:hidden">
+          <EtapesConteneur conteneur={c} onFait={() => router.refresh()} />
+        </div>
+      )}
 
       <StatGrid className="print:hidden">
         <StatCard variant="noire" label="Envois" value={envois ? envois.length : "…"} detail={envois ? `${remis} remis` : null} />

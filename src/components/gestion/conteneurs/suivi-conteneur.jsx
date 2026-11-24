@@ -1,13 +1,9 @@
 "use client";
 
-import { useId, useState } from "react";
-import { Eye, EyeOff, Loader2, MapPin, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { EyeOff, MapPin, Plus } from "lucide-react";
 import { Bloc, SECONDAIRE } from "@/components/epure";
-import { Feuille } from "@/components/caisse/feuille";
-import { Interrupteur } from "@/components/caisse/interrupteur";
-import { FloatingLabelInput } from "@/components/ui/floating-label-input";
-import { FloatingLabelTextarea } from "@/components/ui/floating-label-textarea";
+import { FeuilleEtape } from "@/components/gestion/conteneurs/feuille-etape";
 
 const quand = (d) => new Date(d).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
@@ -25,7 +21,7 @@ export function SuiviConteneur({ conteneur, onAjoute }) {
       actions={
         <button type="button" onClick={() => setOuvert(true)} className={SECONDAIRE}>
           <Plus className="size-4" aria-hidden="true" />
-          Ajouter une étape
+          Point de suivi
         </button>
       }
     >
@@ -56,64 +52,17 @@ export function SuiviConteneur({ conteneur, onAjoute }) {
           ))}
         </ol>
       )}
-      {ouvert && <FeuilleEtape conteneur={conteneur} onFermer={() => setOuvert(false)} onAjoute={() => { setOuvert(false); onAjoute?.(); }} />}
+      {ouvert && (
+        <FeuilleEtape
+          conteneur={conteneur}
+          cible={null}
+          onFermer={() => setOuvert(false)}
+          onFait={() => {
+            setOuvert(false);
+            onAjoute?.();
+          }}
+        />
+      )}
     </Bloc>
-  );
-}
-
-function FeuilleEtape({ conteneur, onFermer, onAjoute }) {
-  const id = useId();
-  const [lieu, setLieu] = useState("");
-  const [message, setMessage] = useState("");
-  const [public_, setPublic] = useState(true);
-  const [prevenir, setPrevenir] = useState(false);
-  const [envoi, setEnvoi] = useState(false);
-
-  async function ajouter() {
-    setEnvoi(true);
-    try {
-      const res = await fetch(`/api/containers/${conteneur.id}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ location: lieu.trim(), description: message.trim(), isPublic: public_, notifyClients: prevenir }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "L'étape n'a pas pu être ajoutée.");
-      toast.success("Étape ajoutée.");
-      onAjoute();
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setEnvoi(false);
-    }
-  }
-
-  return (
-    <Feuille
-      ouvert
-      onFermer={onFermer}
-      titre="Ajouter une étape"
-      sousTitre={conteneur.containerNumber}
-      largeur="max-w-lg"
-      pied={
-        <button type="button" onClick={ajouter} disabled={envoi || !lieu.trim() || !message.trim()} className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand font-semibold text-white disabled:opacity-50">
-          {envoi && <Loader2 className="size-5 animate-spin" aria-hidden="true" />}
-          Ajouter l&apos;étape
-        </button>
-      }
-    >
-      <div className="flex flex-col gap-5 pt-2">
-        <FloatingLabelInput id={`${id}-lieu`} label="Lieu *" placeholder="Port d'Abidjan" className="text-base" value={lieu} onChange={(e) => setLieu(e.target.value)} />
-        <FloatingLabelTextarea id={`${id}-message`} label="Message *" rows={3} className="text-base" value={message} onChange={(e) => setMessage(e.target.value)} />
-        <div className="flex flex-col gap-4 rounded-2xl bg-surface-page p-4">
-          <Interrupteur libelle="Visible sur le suivi public" aide="Les clients le voient avec leur n° de suivi." actif={public_} onChange={setPublic} />
-          <Interrupteur libelle="Prévenir les clients" aide="SMS aux clients du conteneur." actif={prevenir} onChange={setPrevenir} />
-        </div>
-        <p className="flex items-center gap-2 text-[13px] text-ink-muted">
-          <Eye className="size-4" aria-hidden="true" />
-          Le lieu devient la position actuelle du conteneur.
-        </p>
-      </div>
-    </Feuille>
   );
 }

@@ -55,3 +55,29 @@ export function trierConteneurs(liste) {
   const rang = (c) => (c.status === "PREPARATION" || c.status === "LOADED" ? 0 : c.status === "DELIVERED" ? 2 : 1);
   return [...liste].sort((a, b) => rang(a) - rang(b) || new Date(b.departureDate || 0) - new Date(a.departureDate || 0));
 }
+
+/**
+ * Ce que demande chaque étape quand on y passe : date réelle (départ,
+ * arrivée), n° de plomb (fermeture), lieu et message proposés pour le suivi.
+ */
+export const ETAPES_DETAIL = {
+  PREPARATION: { court: "Chargement", verbe: "Rouvrir le chargement", message: "Le conteneur est en chargement." },
+  LOADED: { court: "Fermé", verbe: "Fermer le conteneur", plomb: true, lieu: "Agence de départ", message: "Le conteneur est fermé et plombé." },
+  IN_TRANSIT: { court: "Parti", verbe: "Marquer parti", date: "actualDeparture", lieu: "Port de départ", message: "Le conteneur est parti." },
+  CUSTOMS: { court: "Douane", verbe: "Marquer en douane", lieu: "Douane", message: "Le conteneur est en douane." },
+  DELIVERED: { court: "Arrivé", verbe: "Marquer arrivé", date: "actualArrival", lieu: "Agence d'arrivée", message: "Le conteneur est arrivé : les colis peuvent être retirés." },
+};
+
+/** Corps de PUT /api/containers/[id] pour passer à une étape. */
+export function corpsEtape(statut, { date, plomb } = {}) {
+  const e = ETAPES_DETAIL[statut];
+  const corps = { status: statut };
+  if (e?.date) corps[e.date] = (date ? new Date(date) : new Date()).toISOString();
+  if (e?.plomb && plomb !== undefined) corps.sealNumber = String(plomb).trim() || null;
+  return corps;
+}
+
+/** Vrai si l'étape `cible` vient avant l'étape actuelle (correction). */
+export function estRecul(actuel, cible) {
+  return ETAPES_CONTENEUR.indexOf(cible) < ETAPES_CONTENEUR.indexOf(actuel);
+}
