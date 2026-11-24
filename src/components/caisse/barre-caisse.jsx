@@ -70,7 +70,7 @@ export function BarreCaisse() {
               >
                 {fait ? <Check className="size-4" /> : <Icone className="size-4" />}
               </span>
-              <span className={cn("flex min-w-0 flex-col leading-tight", !actif && "hidden sm:flex")}>
+              <span className={cn("flex min-w-0 flex-col leading-tight", !actif && "hidden min-[960px]:flex")}>
                 <span className="truncate">{e.libelle}</span>
                 {e.cle === "client" && selectedClient && (
                   <span className={cn("hidden max-w-[140px] truncate text-[11px] font-normal min-[1180px]:block", actif ? "text-white/80" : "text-ink-muted")}>
