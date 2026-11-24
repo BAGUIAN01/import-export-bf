@@ -1,6 +1,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { sendSMS } from '@/lib/twilio'
+import { SMS_CLIENTS_ACTIFS } from '@/lib/sms'
 import { smartNormalizePhone } from '@/lib/utils/phone-normalizer'
 
 export class TrackingService {
@@ -225,6 +226,10 @@ export class TrackingService {
   }
 
   static async notifyClientsOfContainerUpdate(containerId, update) {
+    // SMS clients désactivés (compte Twilio d'essai) : rien n'est envoyé
+    if (!SMS_CLIENTS_ACTIFS) {
+      return { total: 0, success: 0, errors: 0, invalidPhones: 0, desactive: true }
+    }
     // Récupérer tous les shipments dans ce conteneur avec leurs clients
     const shipments = await prisma.shipment.findMany({
       where: { containerId },

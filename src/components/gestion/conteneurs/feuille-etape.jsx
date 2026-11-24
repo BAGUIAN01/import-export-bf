@@ -10,6 +10,7 @@ import { FloatingLabelTextarea } from "@/components/ui/floating-label-textarea";
 import { FloatingLabelDatePicker } from "@/components/ui/floating-label-date-picker";
 import { ETAPES_DETAIL, STATUTS_CONTENEUR, corpsEtape, estRecul } from "@/lib/conteneurs";
 import { cn } from "@/lib/utils";
+import { SMS_CLIENTS_ACTIFS } from "@/lib/sms";
 
 /** Lieux proposés en un toucher pour le suivi. */
 const LIEUX = ["Agence de Paris", "Port du Havre", "En mer", "Port d'Abidjan", "Port de Lomé", "Port de Tema", "Frontière", "Ouagadougou"];
@@ -123,7 +124,10 @@ export function FeuilleEtape({ conteneur, cible, onFermer, onFait }) {
 
           <div className="flex flex-col gap-4 rounded-2xl bg-surface-page p-4">
             <Interrupteur libelle="Visible sur le suivi public" aide="Les clients le voient avec leur n° de suivi." actif={visible} onChange={setVisible} />
-            <Interrupteur libelle="Prévenir les clients par SMS" aide="Tous les clients du conteneur." actif={prevenir} onChange={setPrevenir} />
+            {/* SMS clients désactivés tant que le compte Twilio est en essai (lib/sms.js) */}
+            {SMS_CLIENTS_ACTIFS && (
+              <Interrupteur libelle="Prévenir les clients par SMS" aide="Tous les clients du conteneur." actif={prevenir} onChange={setPrevenir} />
+            )}
           </div>
         </div>
       )}

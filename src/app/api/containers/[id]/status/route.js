@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TrackingService } from "@/lib/services/tracking";
+import { SMS_CLIENTS_ACTIFS } from "@/lib/sms";
 
 // GET - Récupérer l'historique de suivi
 export async function GET(request, { params }) {
@@ -118,9 +119,11 @@ export async function POST(request, { params }) {
       },
     });
 
-    // Notifier les clients si demandé
+    // Notifier les clients si demandé (et si les SMS clients sont activés : compte Twilio d'essai)
     let notificationResult = null;
-    if (notifyClients) {
+    if (notifyClients && !SMS_CLIENTS_ACTIFS) {
+      notificationResult = { total: 0, success: 0, errors: 0, invalidPhones: 0, desactive: true };
+    } else if (notifyClients) {
       try {
         notificationResult = await TrackingService.notifyClientsOfContainerUpdate(id, trackingUpdate);
         console.log("📊 Résultat des notifications:", notificationResult);
