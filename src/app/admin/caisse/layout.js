@@ -1,52 +1,48 @@
 "use client";
 
-import { useEffect } from 'react';
-import { Inter } from 'next/font/google';
+import { useEffect } from "react";
+import { Geist, Geist_Mono } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 import { CaisseProvider } from "@/contexts/caisse-context";
-import { CaisseSidebar } from "@/components/layout/caisse-sidebar";
-import { CaisseHeader } from "@/components/layout/caisse-header";
+import { BarreCaisse } from "@/components/caisse/barre-caisse";
 import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-  preload: true,
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-});
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
 
 /**
- * Layout du module Caisse.
- * Routes couvertes : /admin/caisse/**
+ * Coquille de la caisse (routes /admin/caisse/**), pensée tablette d'abord :
+ * une barre de 72 px en haut (accueil, étapes Client · Colis · Paiement,
+ * conteneur en chargement, profil), le reste pour l'écran de l'étape.
  */
 export default function CaisseLayout({ children }) {
-  // Verrouille le scroll global : la coquille caisse gère son propre scroll
+  // La coquille gère son propre défilement : pas de double barre de défilement.
   useEffect(() => {
     const html = document.documentElement;
     const prevHtml = html.style.overflow;
     const prevBody = document.body.style.overflow;
-    html.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    html.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    // Les feuilles s'ouvrent dans <body> (portail) : elles ont besoin des polices.
+    document.body.classList.add(geist.variable, geistMono.variable);
     return () => {
       html.style.overflow = prevHtml;
       document.body.style.overflow = prevBody;
+      document.body.classList.remove(geist.variable, geistMono.variable);
     };
   }, []);
 
   return (
-    <CaisseProvider>
-      <div className={`flex h-[100dvh] overflow-hidden bg-[#fafaf9] font-sans antialiased ${inter.className}`}>
-        <CaisseSidebar />
-        {/* Contenu principal — décalé selon la largeur du sidebar */}
-        <main className="flex-1 flex flex-col min-w-0 md:ml-28 transition-all duration-300">
-          <CaisseHeader />
-          {/* Zone de contenu (hauteur = viewport - header) ; chaque page gère son scroll */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            {children}
-          </div>
-        </main>
-      </div>
-      <Toaster richColors position="top-right" />
-    </CaisseProvider>
+    <SessionProvider>
+      <CaisseProvider>
+        <div
+          className={`caisse ${geist.variable} ${geistMono.variable} flex h-[100dvh] flex-col overflow-hidden bg-surface-page font-caisse text-[15px] text-ink antialiased`}
+        >
+          <BarreCaisse />
+          <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+        </div>
+        <Toaster richColors position="top-center" />
+      </CaisseProvider>
+    </SessionProvider>
   );
 }

@@ -1,315 +1,350 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { mutate } from "swr";
+import { toast } from "sonner";
+import { ArrowLeft, Banknote, CreditCard, Landmark, Loader2, Percent, Printer, Smartphone, Truck } from "lucide-react";
 import { useCaisse } from "@/contexts/caisse-context";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  CreditCard,
-  Wallet,
-  Banknote,
-  CheckCircle2,
-  Calculator,
-  ArrowLeft,
-  ShoppingCart,
-  Smartphone,
-} from "lucide-react";
+import { GardeClient } from "@/components/caisse/sans-client";
+import { useProfilCaisse } from "@/components/caisse/barre-caisse";
+import { Clavier, Afficheur } from "@/components/caisse/clavier";
+import { Champ } from "@/components/caisse/champ";
+import { VignetteArticle } from "@/components/caisse/vignette-article";
+import { FeuilleRemise } from "@/components/caisse/paiement/feuille-remise";
+import { formatMontant, formatNombre, montantsRapides, repartirPaiement, saisieVersNombre, toucheClavier, DEVISE } from "@/lib/caisse/montants";
+import { MODES_PAIEMENT, noteEnvoi } from "@/lib/caisse/paiement";
+import { nomAffiche } from "@/lib/caisse/clients";
+import { cn } from "@/lib/utils";
 
-/* ── Utilitaires ─────────────────────────────────────────────── */
-function cleanAmount(value) {
-  if (!value) return "0";
-  return String(value).replace(/[^\d]/g, "");
+const ICONES = { ESPECES: Banknote, CARTE: CreditCard, MOBILE: Smartphone, VIREMENT: Landmark, ARRIVEE: Truck };
+
+/**
+ * Caisse · 3. Paiement
+ * Modes en grandes tuiles, montant au clavier à l'écran, remise en un
+ * toucher (chef de caisse), puis « Enregistrer et imprimer ».
+ */
+export default function CaissePaiementPage() {
+  return (
+    <GardeClient exigeArticles>
+      <Paiement />
+    </GardeClient>
+  );
 }
 
-function formatPrice(amount) {
-  if (typeof amount === "string") {
-    amount = parseFloat(cleanAmount(amount)) || 0;
-  }
-  if (!amount || isNaN(amount)) return "0";
-  return Math.round(amount)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F");
-}
-
-const MODES_PAIEMENT = [
-  { value: "ESPECES",  label: "Espèces",       icon: Banknote    },
-  { value: "CARTE",    label: "Carte bancaire", icon: CreditCard  },
-  { value: "MOBILE",   label: "Mobile Money",   icon: Smartphone  },
-  { value: "VIREMENT", label: "Virement",       icon: Wallet      },
-];
-
-/* ── Page ────────────────────────────────────────────────────── */
-export default function EncaissementPage() {
+function Paiement() {
   const router = useRouter();
   const {
     selectedClient,
+    selectedContainer,
     orderItems,
+    orderSubtotal,
     orderTotal,
+    orderOptions,
+    remise,
+    setRemise,
+    remiseMontant,
     setPaymentInfo,
+    setLastOrder,
+    setSelectedContainer,
   } = useCaisse();
+  const { estChef } = useProfilCaisse();
 
-  const [modePaiement, setModePaiement] = useState("ESPECES");
-  const [montantRecu,  setMontantRecu]  = useState("");
-  const [monnaieRendue, setMonnaieRendue] = useState(0);
-  const [observations, setObservations] = useState("");
-  const [loading,      setLoading]      = useState(false);
-  const montantInputRef = useRef(null);
+  const [mode, setMode] = useState("ESPECES");
+  const [saisie, setSaisie] = useState("");
+  const [reference, setReference] = useState("");
+  const [note, setNote] = useState(orderOptions.notes || "");
+  const [feuilleRemise, setFeuilleRemise] = useState(false);
+  const [envoi, setEnvoi] = useState(false);
 
-  /* ── Monnaie rendue ── */
-  useEffect(() => {
-    if (modePaiement === "ESPECES" && montantRecu) {
-      const recu = parseFloat(cleanAmount(montantRecu)) || 0;
-      setMonnaieRendue(Math.max(0, recu - orderTotal));
-    } else {
-      setMonnaieRendue(0);
-    }
-  }, [montantRecu, orderTotal, modePaiement]);
+  const modeInfo = MODES_PAIEMENT.find((m) => m.valeur === mode);
+  const recu = saisieVersNombre(saisie);
+  const { paye, monnaie, reste } = repartirPaiement(orderTotal, recu, mode);
+  const nbArticles = orderItems.reduce((s, i) => s + i.quantity, 0);
+  const peutEnregistrer = !envoi && (mode === "ARRIVEE" || paye > 0) && !!selectedContainer;
 
-  /* ── Focus auto sur le champ montant ── */
-  useEffect(() => {
-    if (modePaiement === "ESPECES") {
-      setTimeout(() => montantInputRef.current?.focus(), 100);
-    }
-  }, [modePaiement]);
+  function choisirMode(valeur) {
+    setMode(valeur);
+    // Carte, mobile money, virement : le plus souvent le montant exact
+    if (valeur === "ESPECES") setSaisie("");
+    else if (valeur !== "ARRIVEE") setSaisie(formatNombre(orderTotal).replace(/ /g, ""));
+  }
 
-  const handleMontantChange = (e) => {
-    const cleaned = cleanAmount(e.target.value);
-    setMontantRecu(cleaned ? formatPrice(parseFloat(cleaned)) : "");
-  };
+  async function enregistrer() {
+    if (!peutEnregistrer) return;
+    setEnvoi(true);
+    const paymentInfo = {
+      modePaiement: mode === "ARRIVEE" ? null : mode,
+      montantRecu: paye,
+      monnaieRendue: monnaie,
+      resteAPayer: reste,
+      reference: reference.trim() || null,
+      aLArrivee: mode === "ARRIVEE",
+      paidAt: paye > 0 ? new Date().toISOString() : null,
+    };
+    const options = { ...orderOptions, notes: noteEnvoi({ note, reference: modeInfo?.reference ? reference : "", mode, remise }) };
+    try {
+      const res = await fetch("/api/caisse/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: selectedClient.id,
+          orderItems: orderItems.map((i) => ({
+            type: i.type || "OTHER",
+            productId: i.productId,
+            name: i.name,
+            description: i.description,
+            quantity: i.quantity,
+            price: i.price,
+            total: i.total,
+          })),
+          orderTotal,
+          orderSubtotal,
+          orderOptions: options,
+          paymentInfo,
+          containerId: selectedContainer?.id,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "L'envoi n'a pas pu être enregistré.");
 
-  const handleQuickAmount = (amount) => {
-    setMontantRecu(formatPrice(amount));
-    setTimeout(() => montantInputRef.current?.focus(), 50);
-  };
-
-  const canValidate = () => {
-    if (!selectedClient || orderItems.length === 0) return false;
-    if (modePaiement === "ESPECES") {
-      const recu = parseFloat(cleanAmount(montantRecu)) || 0;
-      return recu >= orderTotal;
-    }
-    return true;
-  };
-
-  const handleValidate = async () => {
-    if (!canValidate()) return;
-    setLoading(true);
-
-    const montantRecuNum =
-      modePaiement === "ESPECES"
-        ? parseFloat(cleanAmount(montantRecu)) || orderTotal
-        : orderTotal;
-
-    // Stocker les infos de paiement dans le contexte pour l'impression
-    setPaymentInfo({
-      modePaiement,
-      montantRecu:   montantRecuNum,
-      monnaieRendue,
-      observations:  observations.trim() || null,
-      paidAt:        new Date().toISOString(),
-    });
-
-    // Petit délai visuel puis redirection vers impression
-    setTimeout(() => {
-      setLoading(false);
+      setPaymentInfo(paymentInfo);
+      setLastOrder({ ...data, enregistreLe: new Date().toISOString() });
+      // La pastille du conteneur compte les colis ajoutés
+      setSelectedContainer((c) => (c ? { ...c, packagesCount: (c.packagesCount || 0) + (data.packages?.length || 0) } : c));
+      // Les listes de la gestion se rafraîchissent à leur prochain affichage
+      mutate(
+        (k) => typeof k === "string" && ["/api/shipments", "/api/containers", "/api/packages", "/api/dashboard"].some((p) => k.startsWith(p)),
+        undefined,
+        { revalidate: true }
+      );
       router.push("/admin/caisse/impression");
-    }, 800);
-  };
-
-  /* ── États vides ── */
-  if (!selectedClient) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <Card className="shadow-none w-full max-w-sm">
-          <CardContent className="p-8 text-center space-y-4">
-            <CreditCard className="h-12 w-12 mx-auto text-zinc-300" />
-            <div>
-              <h3 className="font-semibold text-zinc-900">Aucun client sélectionné</h3>
-              <p className="text-sm text-zinc-500 mt-1">
-                Sélectionnez un client avant de procéder au paiement.
-              </p>
-            </div>
-            <Button
-              onClick={() => router.push("/admin/caisse/client")}
-              className="bg-amber-500 hover:bg-amber-600 text-white w-full"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Sélectionner un client
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    } catch (e) {
+      toast.error(e.message);
+      setEnvoi(false);
+    }
   }
 
-  if (orderItems.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <Card className="shadow-none w-full max-w-sm">
-          <CardContent className="p-8 text-center space-y-4">
-            <ShoppingCart className="h-12 w-12 mx-auto text-zinc-300" />
-            <div>
-              <h3 className="font-semibold text-zinc-900">Commande vide</h3>
-              <p className="text-sm text-zinc-500 mt-1">
-                Ajoutez des produits à la commande.
-              </p>
-            </div>
-            <Button
-              onClick={() => router.push("/admin/caisse/commande")}
-              className="bg-amber-500 hover:bg-amber-600 text-white w-full"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour à la commande
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const montantRecuNum = parseFloat(cleanAmount(montantRecu)) || 0;
-  const insuffisant    = modePaiement === "ESPECES" && montantRecuNum > 0 && montantRecuNum < orderTotal;
+  const libelleBouton =
+    mode === "ARRIVEE"
+      ? `Enregistrer · ${formatMontant(orderTotal)} à l'arrivée`
+      : paye > 0
+        ? `Enregistrer et imprimer · ${formatMontant(paye)}`
+        : "Tapez le montant reçu";
 
   return (
-    <div className="h-full overflow-y-auto pb-24 md:pb-8 p-3 sm:p-6">
-      <div className="max-w-xl mx-auto space-y-3 sm:space-y-4">
-
-        {/* En-tête : client + total */}
-        <div className="bg-white rounded-xl border border-zinc-200 p-4 flex items-center justify-between gap-3">
+    <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(440px,500px)]">
+      {/* Récapitulatif (paysage) */}
+      <section aria-label="Récapitulatif" className="hidden min-h-0 flex-col lg:flex">
+        <div className="flex items-center gap-3 border-b border-line px-5 py-4">
+          <Link href="/admin/caisse/commande" aria-label="Retour aux colis" className="grid size-12 place-items-center rounded-xl border border-line-strong bg-white">
+            <ArrowLeft className="size-5" aria-hidden="true" />
+          </Link>
           <div className="min-w-0">
-            <p className="text-xs text-zinc-400">Client</p>
-            <p className="font-semibold text-zinc-900 truncate">{selectedClient.name}</p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs text-zinc-400">Total à payer</p>
-            <p className="text-2xl font-bold text-amber-600">{formatPrice(orderTotal)} €</p>
+            <h1 className="text-xl font-semibold">Récapitulatif</h1>
+            <p className="truncate text-ink-muted">
+              {nomAffiche(selectedClient)} · {nbArticles} article{nbArticles > 1 ? "s" : ""}
+            </p>
           </div>
         </div>
-
-        {/* Récapitulatif des articles */}
-        <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-zinc-100">
-            <p className="text-sm font-semibold text-zinc-900">Articles ({orderItems.length})</p>
-          </div>
-          <div className="divide-y divide-zinc-100 max-h-44 overflow-y-auto">
-            {orderItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-2 px-4 py-2">
-                <span className="text-sm text-zinc-700 truncate">
-                  {item.name} <span className="text-zinc-400">× {item.quantity}</span>
-                </span>
-                <span className="text-sm font-semibold text-amber-600 shrink-0">{formatPrice(item.total)} €</span>
+        <ul className="min-h-0 flex-1 divide-y divide-line overflow-y-auto px-5">
+          {orderItems.map((l) => (
+            <li key={l.id} className="flex items-center gap-3 py-3">
+              <VignetteArticle code={l.type} taille="size-11" icone="size-5" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium">{l.name}</div>
+                <div className="chiffres text-[13px] text-ink-muted">
+                  {l.quantity} × {formatMontant(l.price)}
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="chiffres font-semibold">{formatMontant(l.total)}</div>
+            </li>
+          ))}
+        </ul>
+        <div className="flex flex-col gap-3 border-t border-line bg-white px-5 py-4">
+          <Champ libelle="Note sur l'envoi (facultatif)" placeholder="Ex. fragile, à livrer à Koudougou" value={note} onChange={(e) => setNote(e.target.value)} />
+          <Totaux sousTotal={orderSubtotal} remiseMontant={remiseMontant} remise={remise} net={orderTotal} />
+          {estChef && <BoutonRemise remise={remise} onClick={() => setFeuilleRemise(true)} />}
         </div>
+      </section>
 
-        {/* Mode de paiement */}
-        <div className="bg-white rounded-xl border border-zinc-200 p-4">
-          <p className="text-sm font-semibold text-zinc-900 mb-3">Mode de paiement</p>
-          <RadioGroup value={modePaiement} onValueChange={setModePaiement} className="grid grid-cols-2 gap-2">
-            {MODES_PAIEMENT.map(({ value, label, icon: Icon }) => (
-              <div
-                key={value}
-                className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                  modePaiement === value
-                    ? "border-amber-500 bg-amber-50"
-                    : "border-zinc-200 hover:border-zinc-300"
-                }`}
-                onClick={() => setModePaiement(value)}
+      {/* Payer */}
+      <section aria-label="Paiement" className="flex min-h-0 flex-col border-line bg-white lg:border-l">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
+          {/* Résumé compact (portrait) */}
+          <div className="mb-4 flex items-center gap-3 lg:hidden">
+            <Link href="/admin/caisse/commande" aria-label="Retour aux colis" className="grid size-12 shrink-0 place-items-center rounded-xl border border-line-strong bg-white">
+              <ArrowLeft className="size-5" aria-hidden="true" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-semibold">{nomAffiche(selectedClient)}</div>
+              <div className="text-sm text-ink-muted">
+                {nbArticles} article{nbArticles > 1 ? "s" : ""}
+                {remiseMontant > 0 ? ` · remise − ${formatMontant(remiseMontant)}` : ""}
+              </div>
+            </div>
+            {estChef && (
+              <button
+                type="button"
+                onClick={() => setFeuilleRemise(true)}
+                className={cn(
+                  "flex h-12 items-center gap-2 rounded-xl px-3 font-semibold",
+                  remise ? "border-2 border-brand bg-brand-soft text-brand-strong" : "border border-line-strong"
+                )}
               >
-                <RadioGroupItem value={value} id={value} />
-                <Label htmlFor={value} className="flex items-center gap-2 cursor-pointer flex-1 text-sm">
-                  <Icon className="h-4 w-4 text-zinc-500" />
-                  {label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-
-        {/* Montant reçu (espèces uniquement) */}
-        {modePaiement === "ESPECES" && (
-          <div className="bg-white rounded-xl border-2 border-amber-300 p-4 sm:p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Calculator className="h-5 w-5 text-amber-600" />
-              <p className="font-semibold text-zinc-900">Montant reçu</p>
-            </div>
-
-            <div className="relative mb-4">
-              <input
-                ref={montantInputRef}
-                type="text"
-                inputMode="numeric"
-                placeholder="0"
-                value={montantRecu}
-                onChange={handleMontantChange}
-                className="w-full h-16 text-3xl font-bold text-center rounded-xl border-2 border-zinc-200 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-colors pr-20 bg-zinc-50"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-400 font-medium">€</span>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleQuickAmount(orderTotal)}
-              className="w-full h-10 sm:h-11 text-xs sm:text-sm font-semibold border-amber-200 hover:border-amber-500 hover:bg-amber-50 mb-4"
-            >
-              Exact — {formatPrice(orderTotal)} €
-            </Button>
-
-            {monnaieRendue > 0 && (
-              <div className="p-4 bg-green-50 border-2 border-green-300 rounded-xl">
-                <p className="text-xs text-green-700 font-medium mb-1">Monnaie à rendre</p>
-                <p className="text-3xl font-bold text-green-700">{formatPrice(monnaieRendue)} €</p>
-              </div>
-            )}
-
-            {insuffisant && (
-              <div className="p-4 bg-red-50 border-2 border-red-300 rounded-xl">
-                <p className="text-xs text-red-700 font-medium mb-1">Montant insuffisant</p>
-                <p className="text-lg font-semibold text-red-600">
-                  Il manque {formatPrice(orderTotal - montantRecuNum)} €
-                </p>
-              </div>
+                <Percent className="size-4" aria-hidden="true" />
+                Remise
+              </button>
             )}
           </div>
-        )}
 
-        {/* Observations */}
-        <div className="bg-white rounded-xl border border-zinc-200 p-4">
-          <p className="text-sm font-semibold text-zinc-900 mb-2">Observations</p>
-          <textarea
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-            placeholder="Notes optionnelles sur cette vente…"
-            rows={2}
-            className="w-full p-3 text-sm border border-zinc-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-colors"
-          />
+          <div className="mb-4 flex items-baseline justify-between gap-3 rounded-2xl bg-ink px-5 py-4 text-white lg:hidden">
+            <span className="text-white/75">Net à payer</span>
+            <span className="chiffres text-[32px] font-semibold leading-none tracking-tight">{formatMontant(orderTotal)}</span>
+          </div>
+
+          <div role="radiogroup" aria-label="Mode de paiement" className="grid grid-cols-3 gap-2">
+            {MODES_PAIEMENT.map((m) => {
+              const Icone = ICONES[m.valeur];
+              const actif = mode === m.valeur;
+              return (
+                <button
+                  key={m.valeur}
+                  type="button"
+                  role="radio"
+                  aria-checked={actif}
+                  onClick={() => choisirMode(m.valeur)}
+                  className={cn(
+                    "flex h-[72px] flex-col items-center justify-center gap-1 rounded-2xl text-[15px] lg:h-14 lg:flex-row lg:gap-2 min-[1180px]:h-[60px]",
+                    m.valeur === "ARRIVEE" && "col-span-2 flex-row gap-3",
+                    actif ? "border-2 border-brand bg-brand-soft font-semibold text-brand-strong" : "border border-line-strong bg-white font-medium"
+                  )}
+                >
+                  <Icone className="size-6" aria-hidden="true" />
+                  {m.libelle}
+                </button>
+              );
+            })}
+          </div>
+
+          {mode === "ARRIVEE" ? (
+            <p className="mt-4 rounded-2xl bg-info-soft p-4 text-info">
+              Rien n&apos;est encaissé maintenant. Le destinataire paiera{" "}
+              <span className="chiffres font-semibold">{formatMontant(orderTotal)}</span> au retrait des colis.
+            </p>
+          ) : (
+            <div className="mt-4 flex flex-col gap-3">
+              <Afficheur libelle={mode === "ESPECES" ? "Montant reçu" : "Montant payé"} valeur={saisie} unite={DEVISE.symbole} vide="0,00" />
+              <div aria-live="polite" className="chiffres flex min-h-6 justify-between px-1 text-[15px]">
+                {recu <= 0 ? (
+                  <span className="font-caisse text-ink-muted">Tapez le montant ou touchez une proposition.</span>
+                ) : monnaie > 0 ? (
+                  <>
+                    <span className="font-caisse font-medium text-brand-strong">Monnaie à rendre</span>
+                    <span className="font-semibold text-brand-strong">{formatMontant(monnaie)}</span>
+                  </>
+                ) : reste > 0 ? (
+                  <>
+                    <span className="font-caisse font-medium text-alerte">Acompte : reste à payer</span>
+                    <span className="font-semibold text-alerte">{formatMontant(reste)}</span>
+                  </>
+                ) : (
+                  <span className="font-caisse font-medium text-brand-strong">Compte juste</span>
+                )}
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {montantsRapides(orderTotal).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setSaisie(formatNombre(v).replace(/ /g, ""))}
+                    className="chiffres h-12 rounded-xl border border-line-strong bg-surface-page text-[15px] font-semibold"
+                  >
+                    {formatNombre(v, v % 1 === 0 ? 0 : DEVISE.decimales)}
+                  </button>
+                ))}
+              </div>
+              <Clavier onTouche={(t) => setSaisie((s) => toucheClavier(s, t))} hauteur="h-[68px] lg:h-[52px] min-[1180px]:h-14" />
+              {modeInfo?.reference && (
+                <Champ
+                  libelle="Référence de la transaction (facultatif)"
+                  placeholder={mode === "CARTE" ? "N° du ticket carte" : mode === "MOBILE" ? "ID de la transaction" : "Référence du virement"}
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                />
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Bouton valider */}
-        <Button
-          onClick={handleValidate}
-          disabled={!canValidate() || loading}
-          className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700 text-white rounded-xl disabled:opacity-50"
-        >
-          {loading ? (
-            <>
-              <CheckCircle2 className="h-6 w-6 mr-2 animate-spin" />
-              Traitement…
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-6 w-6 mr-2" />
-              Valider — {formatPrice(orderTotal)} €
-            </>
+        <div className="border-t border-line p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
+          {!selectedContainer && (
+            <p className="mb-2 rounded-xl bg-alerte-soft px-3 py-2 text-sm text-alerte">Choisissez le conteneur (pastille en haut à droite) avant d&apos;enregistrer.</p>
           )}
-        </Button>
+          <button
+            type="button"
+            disabled={!peutEnregistrer}
+            onClick={enregistrer}
+            className="chiffres flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-brand text-lg font-semibold text-white shadow-[0_2px_8px_rgba(14,122,85,.3)] disabled:bg-line-strong disabled:shadow-none"
+          >
+            {envoi ? <Loader2 className="size-6 animate-spin" aria-hidden="true" /> : <Printer className="size-6" aria-hidden="true" />}
+            <span className="font-caisse">{envoi ? "Enregistrement…" : libelleBouton}</span>
+          </button>
+        </div>
+      </section>
 
-      </div>
+      {feuilleRemise && (
+        <FeuilleRemise
+          sousTotal={orderSubtotal}
+          remise={remise}
+          onFermer={() => setFeuilleRemise(false)}
+          onAppliquer={(r) => {
+            setRemise(r);
+            setFeuilleRemise(false);
+            if (mode !== "ESPECES" && mode !== "ARRIVEE") setSaisie("");
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function Totaux({ sousTotal, remiseMontant, remise, net }) {
+  return (
+    <dl className="chiffres flex flex-col gap-1">
+      {remiseMontant > 0 && (
+        <>
+          <div className="flex justify-between text-ink-muted">
+            <dt className="font-caisse">Sous-total</dt>
+            <dd>{formatMontant(sousTotal)}</dd>
+          </div>
+          <div className="flex justify-between text-brand-strong">
+            <dt className="font-caisse">Remise{remise?.motif ? ` · ${remise.motif}` : ""}</dt>
+            <dd>− {formatMontant(remiseMontant)}</dd>
+          </div>
+        </>
+      )}
+      <div className="flex items-baseline justify-between">
+        <dt className="font-caisse text-lg font-semibold">Net à payer</dt>
+        <dd className="text-2xl font-semibold">{formatMontant(net)}</dd>
+      </div>
+    </dl>
+  );
+}
+
+function BoutonRemise({ remise, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex h-12 items-center justify-center gap-2 rounded-xl font-semibold",
+        remise ? "border-2 border-brand bg-brand-soft text-brand-strong" : "border border-line-strong bg-white"
+      )}
+    >
+      <Percent className="size-4" aria-hidden="true" />
+      {remise ? "Modifier la remise" : "Accorder une remise"}
+    </button>
   );
 }

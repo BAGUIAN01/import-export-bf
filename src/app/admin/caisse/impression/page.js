@@ -1,508 +1,212 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { mutate } from "swr";
-import { useCaisse } from "@/contexts/caisse-context";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart, ArrowLeft, Download, Printer, CheckCircle2, FileText } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
-import QRCode from "react-qr-code";
 import QRCodeLib from "qrcode";
 import { pdf } from "@react-pdf/renderer";
+import { CheckCircle2, Download, Loader2, Printer, UserPlus } from "lucide-react";
+import { useCaisse } from "@/contexts/caisse-context";
 import { BordereauPDF } from "@/components/modules/caisse/bordereau-pdf";
+import { formatMontant } from "@/lib/caisse/montants";
+import { libelleMode } from "@/lib/caisse/paiement";
+import { nomAffiche } from "@/lib/caisse/clients";
 
-/* ── Utils ─────────────────────────────────────────────────────── */
-const formatPhone = (tel) => {
-  if (!tel) return "";
-  if (tel.startsWith("+")) {
-    return tel.replace(/[^+\d]/g, "").replace(
-      /^(\+\d{1,3})(\d{1,3})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?$/,
-      (_m, a, b, c, d, e, f) => [a, b, c, d, e, f].filter(Boolean).join(" ")
-    );
-  }
-  return tel.replace(/\D/g, "").replace(/(\d{2})(?=\d)/g, "$1 ").trim();
-};
-
-function formatPrice(amount) {
-  return Math.round(amount || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F");
-}
-
-/* \u2500\u2500 Charge une image publique et la convertit en data URL (pour react-pdf) \u2500\u2500 */
-async function toDataUrl(path) {
-  const res = await fetch(path);
+/** Image publique → data URL (react-pdf n'accepte pas toutes les URL relatives). */
+async function versDataUrl(chemin) {
+  const res = await fetch(chemin);
   const blob = await res.blob();
   return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
+    const lecteur = new FileReader();
+    lecteur.onloadend = () => resolve(lecteur.result);
+    lecteur.onerror = reject;
+    lecteur.readAsDataURL(blob);
   });
 }
 
-/* ── Page ───────────────────────────────────────────────────────── */
-export default function ImpressionPage() {
+/**
+ * Caisse · fin de l'envoi
+ * L'envoi est enregistré (POST /api/caisse/orders depuis l'étape Paiement) :
+ * récapitulatif, bordereau à imprimer ou télécharger, client suivant.
+ */
+export default function CaisseFinPage() {
   const router = useRouter();
-  const { selectedClient, selectedContainer, orderItems, orderTotal, orderSubtotal, orderOptions, paymentInfo, clearSession } = useCaisse();
+  const { restaure, lastOrder, selectedClient, selectedContainer, orderItems, orderSubtotal, orderTotal, orderOptions, paymentInfo, clearSession } = useCaisse();
+  const [generation, setGeneration] = useState(null);
 
-  const printRef = useRef(null);
-  const [lastContainer, setLastContainer] = useState(null);
-  const [shipmentInfo, setShipmentInfo]   = useState(null);
-  const [isGenerating, setIsGenerating]   = useState(false);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const [bordereauNum, setBordereauNum]   = useState("");
-  const [orderCreated, setOrderCreated] = useState(false);
-  const dateEdition = new Date().toLocaleDateString("fr-FR");
+  if (!restaure) {
+    return (
+      <div className="grid h-full place-items-center">
+        <Loader2 className="size-8 animate-spin text-ink-muted" aria-label="Chargement" />
+      </div>
+    );
+  }
 
-  /* ── Numéro bordereau auto ── */
-  useEffect(() => {
-    const now = new Date();
-    const r = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
-    setBordereauNum(`BRD-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}${r}`);
-  }, []);
+  if (!lastOrder) {
+    return (
+      <div className="grid h-full place-items-center p-6">
+        <div className="flex max-w-sm flex-col items-center gap-4 rounded-[22px] border border-line bg-white p-8 text-center">
+          <CheckCircle2 className="size-12 text-line-strong" aria-hidden="true" />
+          <div>
+            <h1 className="text-lg font-semibold">Aucun envoi en cours</h1>
+            <p className="mt-1 text-ink-muted">Le dernier envoi est terminé. Passez au client suivant.</p>
+          </div>
+          <Link href="/admin/caisse/client" className="flex h-12 items-center rounded-xl bg-brand px-5 font-semibold text-white">
+            Client suivant
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  /* ── Créer la commande et l'expédition automatiquement ── */
-  useEffect(() => {
-    if (!selectedClient || orderItems.length === 0 || orderCreated) return;
-    
-    const createOrder = async () => {
-      setIsCreatingOrder(true);
-      try {
-        const response = await fetch("/api/caisse/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            clientId: selectedClient.id,
-            orderItems: orderItems.map(item => ({
-              type: item.productId || "CARTON", // productId correspond au value dans PACKAGE_TYPES
-              productId: item.productId,
-              name: item.name,
-              description: item.description,
-              quantity: item.quantity,
-              price: item.price,
-              total: item.total,
-              weight: item.weight,
-              dimensions: item.dimensions,
-              value: item.value,
-              isFragile: item.isFragile,
-              isInsured: item.isInsured,
-            })),
-            orderTotal,
-            orderSubtotal,
-            orderOptions,
-            paymentInfo,
-            // Conteneur choisi dans le header de la caisse (sinon dernier conteneur)
-            containerId: selectedContainer?.id ?? lastContainer?.id,
-          }),
-        });
+  const paye = paymentInfo?.montantRecu || 0;
+  const reste = Math.max(0, orderTotal - paye);
+  const nbColis = orderItems.reduce((s, i) => s + i.quantity, 0);
+  const numero = lastOrder.shipment?.shipmentNumber || "—";
+  const conteneur = lastOrder.container?.containerNumber || "—";
 
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || "Erreur lors de la création de la commande");
-        }
-
-        const data = await response.json();
-        setOrderCreated(true);
-
-        // Invalider le cache SWR pour que les pages admin voient les nouvelles données
-        mutate(
-          (key) =>
-            typeof key === "string" &&
-            (key.startsWith("/api/shipments") ||
-              key.startsWith("/api/containers") ||
-              key.startsWith("/api/packages") ||
-              key.startsWith("/api/dashboard")),
-          undefined,
-          { revalidate: true }
-        );
-
-        // Mettre à jour le conteneur et le shipment
-        if (data.container) {
-          setLastContainer(data.container);
-        }
-
-        // Le shipment est déjà dans la réponse du POST
-        if (data.shipment) {
-          setShipmentInfo(data.shipment);
-        }
-
-        toast.success(
-          data.isExistingShipment 
-            ? "Colis ajoutés à l'expédition existante" 
-            : "Expédition créée avec succès",
-          {
-            description: `N° ${data.shipment?.shipmentNumber || ""}`,
-          }
-        );
-      } catch (error) {
-        console.error("Erreur création commande:", error);
-        toast.error(error.message || "Erreur lors de la création de la commande");
-      } finally {
-        setIsCreatingOrder(false);
-      }
-    };
-
-    createOrder();
-  }, [selectedClient, selectedContainer, orderItems, orderTotal, orderSubtotal, orderOptions, paymentInfo, lastContainer, orderCreated]);
-
-  /* ── Dernier conteneur (bandeau seulement) ── */
-  useEffect(() => {
-    if (orderCreated) return; // Ne pas récupérer si on vient de créer
-    fetch("/api/containers?limit=1&sort=createdAt&order=desc")
-      .then((r) => r.json())
-      .then((d) => setLastContainer((d.containers || [])[0] ?? null))
-      .catch(() => {});
-  }, [orderCreated]);
-
-  /* ── Shipment du conteneur (SHP = tracking de tout le conteneur) ── */
-  useEffect(() => {
-    if (!lastContainer?.id || orderCreated) return;
-    fetch(`/api/shipments?containerId=${lastContainer.id}&limit=1`)
-      .then((r) => r.json())
-      .then((d) => setShipmentInfo(d.data?.[0] ?? null))
-      .catch(() => {});
-  }, [lastContainer, orderCreated]);
-
-  /* ── Totaux ── */
-  const montantPaye  = paymentInfo?.montantRecu ?? 0;
-  const resteAPayer  = Math.max(0, orderTotal - montantPaye);
-
-  /* ── Génération PDF vectoriel (react-pdf) — retourne un Blob ── */
-  const buildPdfBlob = async () => {
-    const trackingUrl = shipmentInfo?.shipmentNumber
-      ? `${typeof window !== "undefined" ? window.location.origin : "https://naange-envoi.com"}/tracking?q=${shipmentInfo.shipmentNumber}`
-      : "https://naange-envoi.com";
-
+  async function fabriquerPdf() {
+    const lien = `${window.location.origin}/tracking?q=${encodeURIComponent(numero)}`;
     const [qrCodeDataUrl, logoDataUrl] = await Promise.all([
-      QRCodeLib.toDataURL(trackingUrl, { margin: 1, width: 200 }).catch(() => null),
-      toDataUrl("/logo.jpeg").catch(() => null),
+      QRCodeLib.toDataURL(lien, { margin: 1, width: 200 }).catch(() => null),
+      versDataUrl("/logo.jpeg").catch(() => null),
     ]);
-
-    return await pdf(
+    const date = new Date(lastOrder.enregistreLe || Date.now());
+    return pdf(
       <BordereauPDF
         selectedClient={selectedClient}
         orderItems={orderItems}
         orderSubtotal={orderSubtotal}
         orderTotal={orderTotal}
         orderOptions={orderOptions}
-        paymentInfo={paymentInfo}
-        bordereauNum={bordereauNum}
-        shipmentInfo={shipmentInfo}
-        lastContainer={lastContainer}
-        dateEdition={dateEdition}
+        paymentInfo={paymentInfo ? { ...paymentInfo, modePaiement: libelleMode(paymentInfo.aLArrivee ? "ARRIVEE" : paymentInfo.modePaiement) } : null}
+        bordereauNum={`BRD-${numero}`}
+        shipmentInfo={lastOrder.shipment}
+        // La réponse de l'API n'a que le numéro : on complète avec le conteneur choisi (date de départ)
+        lastContainer={selectedContainer?.id === lastOrder.container?.id ? { ...selectedContainer, ...lastOrder.container } : lastOrder.container}
+        dateEdition={date.toLocaleDateString("fr-FR")}
         qrCodeDataUrl={qrCodeDataUrl}
         logoDataUrl={logoDataUrl}
       />
     ).toBlob();
-  };
+  }
 
-  /* ── Actions ── */
-  const handlePrint = async () => {
+  async function imprimer() {
+    setGeneration("impression");
     try {
-      setIsGenerating(true);
-      toast.loading("Préparation de l'impression…", { id: "print" });
-      const blob = await buildPdfBlob();
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, "_blank");
-      if (win) {
-        win.addEventListener("load", () => {
-          win.print();
-          win.addEventListener("afterprint", () => URL.revokeObjectURL(url));
+      const url = URL.createObjectURL(await fabriquerPdf());
+      const fenetre = window.open(url, "_blank");
+      if (fenetre) {
+        fenetre.addEventListener("load", () => {
+          fenetre.print();
+          fenetre.addEventListener("afterprint", () => URL.revokeObjectURL(url));
         });
+      } else {
+        toast.error("Le navigateur a bloqué la fenêtre d'impression. Utilisez « Télécharger ».");
       }
-      toast.success("PDF ouvert pour impression", { id: "print" });
     } catch {
-      toast.error("Erreur lors de l'impression", { id: "print" });
+      toast.error("Le bordereau n'a pas pu être préparé.");
     } finally {
-      setIsGenerating(false);
+      setGeneration(null);
     }
-  };
+  }
 
-  const handleDownload = async () => {
+  async function telecharger() {
+    setGeneration("telechargement");
     try {
-      setIsGenerating(true);
-      toast.loading("Génération du PDF…", { id: "pdf" });
-      const blob = await buildPdfBlob();
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(await fabriquerPdf());
       const a = document.createElement("a");
       a.href = url;
-      a.download = `bordereau-${selectedClient?.clientCode || "client"}-${new Date().toISOString().split("T")[0]}.pdf`;
+      a.download = `bordereau-${numero}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success("PDF téléchargé", { id: "pdf" });
     } catch {
-      toast.error("Erreur lors de la génération du PDF", { id: "pdf" });
+      toast.error("Le bordereau n'a pas pu être préparé.");
     } finally {
-      setIsGenerating(false);
+      setGeneration(null);
     }
-  };
-
-  /* ── Guards ── */
-  if (!selectedClient) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
-          <ShoppingCart className="h-12 w-12 mx-auto text-zinc-300" />
-          <p className="font-semibold text-zinc-900">Aucun client sélectionné</p>
-          <Button onClick={() => router.push("/admin/caisse/client")} className="bg-amber-500 hover:bg-amber-600 text-white w-full">
-            <ArrowLeft className="h-4 w-4 mr-2" />Sélectionner un client
-          </Button>
-        </div>
-      </div>
-    );
   }
 
-  if (orderItems.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
-          <ShoppingCart className="h-12 w-12 mx-auto text-zinc-300" />
-          <p className="font-semibold text-zinc-900">Commande vide</p>
-          <Button onClick={() => router.push("/admin/caisse/commande")} className="bg-amber-500 hover:bg-amber-600 text-white w-full">
-            <ArrowLeft className="h-4 w-4 mr-2" />Retour à la commande
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isCreatingOrder) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <div className="bg-white rounded-xl border border-zinc-200 p-8 text-center space-y-4 w-full max-w-sm">
-          <div className="h-12 w-12 mx-auto border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          <p className="font-semibold text-zinc-900">Création de l&apos;expédition...</p>
-          <p className="text-sm text-zinc-600">Veuillez patienter</p>
-        </div>
-      </div>
-    );
+  function clientSuivant() {
+    clearSession();
+    router.push("/admin/caisse/client");
   }
 
   return (
-    <div className="flex flex-col h-full gap-2 sm:gap-3 p-2 sm:p-4 pb-[5.5rem] md:pb-4 overflow-hidden">
-
-      {/* ══ Bordereau ══════════════════════════════════════════════════════ */}
-      <div className="flex-1 bg-white rounded-xl border border-zinc-200 flex flex-col overflow-hidden min-w-0">
-        <div className="px-3 sm:px-4 py-2.5 border-b border-zinc-100 shrink-0 flex items-center gap-2 flex-wrap">
-          <FileText className="h-4 w-4 text-[#0E7A34] shrink-0" />
-          <p className="font-semibold text-zinc-900 text-sm sm:text-base">Bordereau</p>
-          <span className="text-xs text-zinc-400 hidden md:inline">{bordereauNum}</span>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 ml-auto">
-            <Button
-              onClick={handleDownload}
-              disabled={isGenerating}
-              size="sm"
-              className="bg-[#0E7A34] hover:bg-[#0B5C28] text-white"
-            >
-              <Download className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">{isGenerating ? "Génération…" : "Télécharger PDF"}</span>
-            </Button>
-            <Button onClick={handlePrint} disabled={isGenerating} size="sm" variant="outline">
-              <Printer className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Imprimer</span>
-            </Button>
-            <Button
-              onClick={() => { clearSession(); router.push("/admin/caisse/client"); }}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <CheckCircle2 className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Terminer</span>
-            </Button>
+    <div className="h-full overflow-y-auto p-4 sm:p-6">
+      <div className="mx-auto flex max-w-xl flex-col gap-4 lg:mt-6">
+        <section className="flex flex-col items-center gap-3 rounded-[22px] border border-line bg-white p-6 text-center sm:p-8">
+          <span className="grid size-16 place-items-center rounded-full bg-brand-soft text-brand" aria-hidden="true">
+            <CheckCircle2 className="size-9" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Colis enregistrés</h1>
+            <p className="mt-1 text-ink-muted">
+              {nomAffiche(selectedClient)} · {nbColis} colis
+              {lastOrder.isExistingShipment ? " · ajoutés à son envoi en cours" : ""}
+            </p>
           </div>
-        </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          {/* Zone PDF */}
-          <div
-            ref={printRef}
-            className="bg-white shadow-lg overflow-hidden print:shadow-none"
-            style={{ fontFamily: "Arial, sans-serif", width: "100%", maxWidth: "210mm", margin: "0 auto" }}
+          <dl className="mt-2 grid w-full grid-cols-2 gap-2 text-left">
+            <div className="rounded-2xl bg-surface-page p-3">
+              <dt className="text-xs text-ink-muted">N° de suivi</dt>
+              <dd className="chiffres truncate text-lg font-semibold">{numero}</dd>
+            </div>
+            <div className="rounded-2xl bg-surface-page p-3">
+              <dt className="text-xs text-ink-muted">Conteneur</dt>
+              <dd className="chiffres truncate text-lg font-semibold">{conteneur}</dd>
+            </div>
+            <div className="rounded-2xl bg-surface-page p-3">
+              <dt className="text-xs text-ink-muted">{paymentInfo?.aLArrivee ? "Paiement" : `Payé · ${libelleMode(paymentInfo?.modePaiement)}`}</dt>
+              <dd className="chiffres text-lg font-semibold">{paymentInfo?.aLArrivee ? "À l'arrivée" : formatMontant(paye)}</dd>
+            </div>
+            <div className={reste > 0 ? "rounded-2xl bg-alerte-soft p-3" : "rounded-2xl bg-brand-soft p-3"}>
+              <dt className={reste > 0 ? "text-xs text-alerte" : "text-xs text-brand-strong"}>{reste > 0 ? "Reste à payer" : "Soldé"}</dt>
+              <dd className={reste > 0 ? "chiffres text-lg font-semibold text-alerte" : "chiffres text-lg font-semibold text-brand-strong"}>
+                {formatMontant(reste)}
+              </dd>
+            </div>
+          </dl>
+          {paymentInfo?.monnaieRendue > 0 && (
+            <p className="chiffres w-full rounded-2xl bg-brand-soft px-4 py-3 text-left text-brand-strong">
+              <span className="font-caisse">Monnaie rendue : </span>
+              <span className="font-semibold">{formatMontant(paymentInfo.monnaieRendue)}</span>
+            </p>
+          )}
+        </section>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={imprimer}
+            disabled={!!generation}
+            className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-ink text-lg font-semibold text-white disabled:opacity-60"
           >
-            {/* En-tête bleu */}
-            <div className="bg-[#0E7A34] text-white px-4 sm:px-6 py-3 sm:py-4">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center p-1.5">
-                    <Image src="/logo.jpeg" alt="Logo" width={48} height={48} className="w-full h-full object-contain" unoptimized />
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-300">NAANGE ENVOI</div>
-                    <h1 className="text-lg sm:text-2xl font-bold">NAANGE ENVOI</h1>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="text-xs text-gray-300 space-y-0.5">
-                    <p>+33 6 70 69 98 23</p>
-                    <p>+226 76 60 19 81</p>
-                    <p>contact@naange-envoi.fr</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-xs text-gray-300">N° de suivi</p>
-                      <p className="text-base sm:text-lg font-bold">{shipmentInfo?.shipmentNumber || "—"}</p>
-                      <p className="text-xs text-gray-300">Date: {dateEdition}</p>
-                    </div>
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded flex items-center justify-center">
-                      <QRCode
-                        value={shipmentInfo?.shipmentNumber ? `${typeof window !== "undefined" ? window.location.origin : "https://naange-envoi.com"}/tracking?q=${shipmentInfo.shipmentNumber}` : "https://naange-envoi.com"}
-                        size={44}
-                        level="M"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bandeau conteneur + N° suivi */}
-            <div className="bg-white border-b border-gray-300 px-4 sm:px-6 py-2 sm:py-3">
-              <div className="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                <div className="flex items-center gap-4">
-                  {lastContainer && (
-                    <>
-                      <span>Conteneur: <span className="font-bold">{lastContainer.containerNumber}</span></span>
-                      <span>Départ: <span className="font-bold">
-                        {lastContainer.departureDate
-                          ? new Date(lastContainer.departureDate).toLocaleDateString("fr-FR")
-                          : "À déterminer"}
-                      </span></span>
-                    </>
-                  )}
-                  <span className="font-bold">{orderItems.reduce((s, i) => s + i.quantity, 0)} colis</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-gray-500 font-normal">N° de suivi : </span>
-                  <span className="font-bold text-[#0E7A34]">{shipmentInfo?.shipmentNumber || "—"}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-4 sm:px-6 py-3 sm:py-4 space-y-4">
-              {/* Expéditeur / Destinataire */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="border border-gray-300 p-3 sm:p-4 bg-gray-50">
-                  <h3 className="text-xs sm:text-sm font-bold text-black mb-2 uppercase">Expéditeur</h3>
-                  <div className="space-y-1 text-xs sm:text-sm">
-                    <div className="flex gap-2"><span className="text-gray-600 w-14 shrink-0">Code:</span><span className="font-bold">{selectedClient.clientCode || "—"}</span></div>
-                    <div className="flex gap-2"><span className="text-gray-600 w-14 shrink-0">Nom:</span><span className="font-bold">{selectedClient.firstName || ""} {selectedClient.lastName || ""}</span></div>
-                    <div className="flex gap-2"><span className="text-gray-600 w-14 shrink-0">Tél:</span><span className="font-bold">{formatPhone(selectedClient.phone)}</span></div>
-                    <div className="flex gap-2"><span className="text-gray-600 w-14 shrink-0">Adresse:</span><span className="font-bold">{selectedClient.address || ""}{selectedClient.city ? `, ${selectedClient.city}` : ""}</span></div>
-                  </div>
-                </div>
-                <div className="border border-gray-300 p-3 sm:p-4 bg-gray-50">
-                  <h3 className="text-xs sm:text-sm font-bold text-black mb-2 uppercase">Destinataire</h3>
-                  <div className="space-y-1 text-xs sm:text-sm">
-                    <div className="flex gap-2"><span className="text-gray-600 w-14 shrink-0">Nom:</span><span className="font-bold">{selectedClient.recipientName || "Non renseigné"}</span></div>
-                    <div className="flex gap-2"><span className="text-gray-600 w-14 shrink-0">Tél:</span><span className="font-bold">{formatPhone(selectedClient.recipientPhone)}</span></div>
-                    <div className="flex gap-2"><span className="text-gray-600 w-14 shrink-0">Adresse:</span><span className="font-bold">{selectedClient.recipientAddress || "Non renseignée"}{selectedClient.recipientCity ? `, ${selectedClient.recipientCity}` : ""}</span></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tableau commande */}
-              <div>
-                <h3 className="text-xs sm:text-sm font-bold text-black mb-2">
-                  Détail de la commande ({orderItems.reduce((s, i) => s + i.quantity, 0)} colis)
-                </h3>
-                <div className="border border-gray-300">
-                  <div className="bg-[#0E7A34] text-white text-xs font-bold">
-                    <div className="grid grid-cols-12 gap-2 px-3 py-2">
-                      <div className="col-span-6">Désignation</div>
-                      <div className="col-span-2 text-center">Qté</div>
-                      <div className="col-span-2 text-right">P.U.</div>
-                      <div className="col-span-2 text-right">Total</div>
-                    </div>
-                  </div>
-                  <div className="divide-y divide-gray-200">
-                    {orderItems.map((item, idx) => (
-                      <div key={item.id} className={`grid grid-cols-12 gap-2 px-3 py-2 text-xs sm:text-sm ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-                        <div className="col-span-6 font-semibold">{item.name}</div>
-                        <div className="col-span-2 text-center">{item.quantity}</div>
-                        <div className="col-span-2 text-right">{formatPrice(item.price)} €</div>
-                        <div className="col-span-2 text-right font-bold">{formatPrice(item.total)} €</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Totaux */}
-              <div className="flex justify-end">
-                <div className="space-y-1 text-sm min-w-[200px]">
-                  <div className="flex justify-between gap-8">
-                    <span className="text-gray-600 uppercase text-xs">Sous-total</span>
-                    <span className="font-bold">{formatPrice(orderSubtotal)} €</span>
-                  </div>
-                  {(orderOptions?.discount ?? 0) > 0 && (
-                    <div className="flex justify-between gap-8 text-green-700">
-                      <span className="uppercase text-xs">Remise</span>
-                      <span className="font-bold">−{formatPrice(orderOptions.discount)} €</span>
-                    </div>
-                  )}
-                  {(orderOptions?.additionalFees ?? 0) > 0 && (
-                    <div className="flex justify-between gap-8">
-                      <span className="text-gray-600 uppercase text-xs">Frais supplémentaires</span>
-                      <span className="font-bold">+{formatPrice(orderOptions.additionalFees)} €</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between gap-8 pt-1 border-t border-gray-300">
-                    <span className="font-bold uppercase text-xs">Total général</span>
-                    <span className="text-lg font-bold">{formatPrice(orderTotal)} €</span>
-                  </div>
-                  {montantPaye > 0 && (
-                    <div className="flex justify-between gap-8 text-green-700">
-                      <span className="uppercase text-xs">Montant payé</span>
-                      <span className="font-bold">{formatPrice(montantPaye)} €</span>
-                    </div>
-                  )}
-                  {resteAPayer > 0 && (
-                    <div className="flex justify-between gap-8 text-blue-700">
-                      <span className="uppercase text-xs">Reste à payer</span>
-                      <span className="font-bold">{formatPrice(resteAPayer)} €</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Mode de paiement */}
-              {paymentInfo?.modePaiement && (
-                <div className="bg-gray-50 border border-gray-300 p-3 text-xs">
-                  <span className="font-bold uppercase">Mode de paiement : </span>
-                  <span>{paymentInfo.modePaiement}</span>
-                </div>
-              )}
-
-              {/* Conditions */}
-              <div className="bg-gray-50 border border-gray-300 p-3">
-                <h4 className="text-xs font-bold text-black mb-1 uppercase">Conditions</h4>
-                <div className="text-xs text-black space-y-1">
-                  <p>• Marchandises non précisées ne pourront être réclamées • Valeurs justifiées par facture</p>
-                  <p>• Livraison optionnelle déterminée avant départ • Sous réserve procédures douanières</p>
-                </div>
-              </div>
-
-              {/* Signature */}
-              <div className="flex items-end justify-between pt-3 border-t border-gray-300">
-                <div className="text-xs text-gray-500 space-y-1">
-                  <p>Document généré le {dateEdition} — Réf. bordereau : {bordereauNum}</p>
-                  <p>NAANGE ENVOI - Service d&apos;envoi de colis France-Burkina Faso</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-gray-600 mb-2">Signature</p>
-                  <div className="w-32 h-8 border-b border-gray-400" />
-                </div>
-              </div>
-            </div>
-          </div>
+            {generation === "impression" ? <Loader2 className="size-5 animate-spin" aria-hidden="true" /> : <Printer className="size-5" aria-hidden="true" />}
+            Imprimer
+          </button>
+          <button
+            type="button"
+            onClick={telecharger}
+            disabled={!!generation}
+            className="flex h-16 items-center justify-center gap-2 rounded-2xl border border-line-strong bg-white text-lg font-semibold disabled:opacity-60"
+          >
+            {generation === "telechargement" ? <Loader2 className="size-5 animate-spin" aria-hidden="true" /> : <Download className="size-5" aria-hidden="true" />}
+            Télécharger
+          </button>
         </div>
+        <button
+          type="button"
+          onClick={clientSuivant}
+          className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-brand text-lg font-semibold text-white shadow-[0_2px_8px_rgba(14,122,85,.3)]"
+        >
+          <UserPlus className="size-5" aria-hidden="true" />
+          Client suivant
+        </button>
       </div>
-
     </div>
   );
 }
