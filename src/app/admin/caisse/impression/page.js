@@ -4,11 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import QRCodeLib from "qrcode";
-import { pdf } from "@react-pdf/renderer";
 import { CheckCircle2, Download, Loader2, Printer, UserPlus } from "lucide-react";
 import { useCaisse } from "@/contexts/caisse-context";
-import { BordereauPDF } from "@/components/modules/caisse/bordereau-pdf";
 import { formatMontant } from "@/lib/caisse/montants";
 import { libelleMode } from "@/lib/caisse/paiement";
 import { nomAffiche } from "@/lib/caisse/clients";
@@ -32,7 +29,7 @@ async function versDataUrl(chemin) {
  */
 export default function CaisseFinPage() {
   const router = useRouter();
-  const { restaure, lastOrder, selectedClient, selectedContainer, orderItems, orderSubtotal, orderTotal, orderOptions, paymentInfo, clearSession } = useCaisse();
+  const { restaure, lastOrder, selectedClient, selectedContainer, orderItems, orderSubtotal, orderTotal, orderOptions, remise, paymentInfo, clearSession } = useCaisse();
   const [generation, setGeneration] = useState(null);
 
   if (!restaure) {
@@ -68,10 +65,15 @@ export default function CaisseFinPage() {
 
   async function fabriquerPdf() {
     const lien = `${window.location.origin}/tracking?q=${encodeURIComponent(numero)}`;
-    const [qrCodeDataUrl, logoDataUrl] = await Promise.all([
-      QRCodeLib.toDataURL(lien, { margin: 1, width: 200 }).catch(() => null),
+    // react-pdf et le QR code ne sont chargés qu'au moment d'imprimer
+    const [{ pdf }, { BordereauPDF }, { default: QRCodeLib }, logoDataUrl] = await Promise.all([
+      import("@react-pdf/renderer"),
+      import("@/components/modules/caisse/bordereau-pdf"),
+      import("qrcode"),
       versDataUrl("/logo.jpeg").catch(() => null),
     ]);
+    // Grande image nette, marge blanche de 2 modules : se scanne même imprimé petit
+    const qrCodeDataUrl = await QRCodeLib.toDataURL(lien, { margin: 2, width: 512, errorCorrectionLevel: "M" }).catch(() => null);
     const date = new Date(lastOrder.enregistreLe || Date.now());
     return pdf(
       <BordereauPDF
@@ -80,6 +82,7 @@ export default function CaisseFinPage() {
         orderSubtotal={orderSubtotal}
         orderTotal={orderTotal}
         orderOptions={orderOptions}
+        remise={remise}
         paymentInfo={paymentInfo ? { ...paymentInfo, modePaiement: libelleMode(paymentInfo.aLArrivee ? "ARRIVEE" : paymentInfo.modePaiement) } : null}
         bordereauNum={`BRD-${numero}`}
         shipmentInfo={lastOrder.shipment}
@@ -87,6 +90,7 @@ export default function CaisseFinPage() {
         lastContainer={selectedContainer?.id === lastOrder.container?.id ? { ...selectedContainer, ...lastOrder.container } : lastOrder.container}
         dateEdition={date.toLocaleDateString("fr-FR")}
         qrCodeDataUrl={qrCodeDataUrl}
+        lienSuivi={lien}
         logoDataUrl={logoDataUrl}
       />
     ).toBlob();
