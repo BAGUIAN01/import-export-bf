@@ -1,140 +1,191 @@
 "use client"
 
 import * as React from "react"
+import { Check, ChevronDown, CircleCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { FloatingLabelInput } from "@/components/ui/floating-label-input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import { INDICATIFS } from "@/lib/data/indicatifs"
+import {
+  chiffres,
+  formaterNational,
+  lireTelephone,
+  paysTelephone,
+  telephoneValide,
+  versInternational,
+} from "@/lib/telephone"
 
-// Fonction pour formater le numéro de téléphone burkinabé
-const formatPhoneNumber = (value) => {
-  if (!value) return "";
-  
-  // Retirer tous les caractères non numériques sauf le +
-  let cleaned = value.replace(/[^\d+]/g, "");
-  
-  // Si ça commence par +226, on garde tel quel et on formate le reste
-  if (cleaned.startsWith("+226")) {
-    cleaned = cleaned.substring(4); // Enlever +226
-    cleaned = cleaned.replace(/\D/g, ""); // Garder seulement les chiffres
-    // Limiter strictement à 8 chiffres (format standard burkinabé)
-    cleaned = cleaned.substring(0, 8);
-    // Format: XX XX XX XX (8 chiffres avec espaces)
-    if (cleaned.length > 0) {
-      const match = cleaned.match(/.{1,2}/g);
-      return match ? "+226 " + match.join(" ") : "+226 " + cleaned;
-    }
-    return "+226 ";
-  } else if (cleaned.startsWith("226")) {
-    // Si ça commence par 226 sans le +
-    cleaned = cleaned.substring(3);
-    cleaned = cleaned.replace(/\D/g, "");
-    cleaned = cleaned.substring(0, 8); // Limiter à 8 chiffres
-    if (cleaned.length > 0) {
-      const match = cleaned.match(/.{1,2}/g);
-      return match ? "+226 " + match.join(" ") : "+226 " + cleaned;
-    }
-    return "+226 ";
-  } else {
-    // Si ça ne commence pas par +226 ou 226, on ajoute +226
-    cleaned = cleaned.replace(/\D/g, "");
-    if (cleaned.length === 0) return "";
-    
-    // Limiter strictement à 8 chiffres (format standard burkinabé)
-    cleaned = cleaned.substring(0, 8);
-    
-    if (cleaned.length > 0) {
-      const match = cleaned.match(/.{1,2}/g);
-      return match ? "+226 " + match.join(" ") : "+226 " + cleaned;
-    }
-    return "+226 ";
-  }
-};
-
-// Fonction pour nettoyer le numéro (enlever les espaces et garder seulement +226XXXXXXXX)
-const cleanPhoneNumber = (value) => {
-  if (!value) return null;
-  // Garder +226 et les chiffres suivants, enlever les espaces
-  const cleaned = value.replace(/\s/g, "");
-  return cleaned || null;
-};
-
+/**
+ * Téléphone avec choix du pays (France, Burkina Faso, Côte d'Ivoire…),
+ * même allure que FloatingLabelInput.
+ *
+ * - `value` : numéro au format international (« +22670123456 ») ou vide.
+ * - `onChange(e)` : `e.target.value` est le numéro international sans espaces.
+ * - `defaultCountry` : pays proposé quand le champ est vide (« FR », « BF »…).
+ *   Il suit la prop tant que rien n'est tapé (ex. pays de l'adresse).
+ * - `onCountryChange(iso2)` : appelé quand on change de pays.
+ */
 const FloatingLabelPhoneInput = React.forwardRef(
-  ({ className, label, id, value, error, onChange, onBlur, disabled, placeholder = "+226 XX XX XX XX", ...props }, ref) => {
-    const [displayValue, setDisplayValue] = React.useState(() => {
-      return value ? formatPhoneNumber(value) : "";
-    });
+  (
+    { className, label, id, value, error, onChange, onBlur, onCountryChange, disabled, defaultCountry = "BF", ...props },
+    ref
+  ) => {
+    const [etat, setEtat] = React.useState(() => lireTelephone(value, defaultCountry))
+    const [ouvert, setOuvert] = React.useState(false)
+    const [focus, setFocus] = React.useState(false)
+    const inputRef = React.useRef(null)
+    const dernierEmis = React.useRef(value ?? "")
+    React.useImperativeHandle(ref, () => inputRef.current)
 
+    // Valeur changée par le parent (préremplissage, remise à zéro…)
     React.useEffect(() => {
-      if (value) {
-        const formatted = formatPhoneNumber(value);
-        setDisplayValue(formatted);
-      } else {
-        setDisplayValue("");
+      const v = value ?? ""
+      if (v !== dernierEmis.current) {
+        dernierEmis.current = v
+        setEtat((e) => lireTelephone(v, e.iso2))
       }
-    }, [value]);
+    }, [value])
 
-    const handleChange = (e) => {
-      const inputValue = e.target.value;
-      const formatted = formatPhoneNumber(inputValue);
-      setDisplayValue(formatted);
-      
-      // Appeler onChange avec la valeur formatée (pour l'affichage)
-      if (onChange) {
-        const syntheticEvent = {
-          ...e,
-          target: {
-            ...e.target,
-            value: formatted,
-          },
-        };
-        onChange(syntheticEvent);
-      }
-    };
+    // Pays par défaut qui change (ex. pays de l'expéditeur) : suivi tant que le champ est vide
+    React.useEffect(() => {
+      setEtat((e) => (chiffres(e.national) || e.iso2 === defaultCountry ? e : { ...e, iso2: defaultCountry }))
+    }, [defaultCountry])
 
-    const handleBlur = (e) => {
-      // Garder le formatage visible même après le blur
-      // La validation utilisera cleanPhoneNumber pour vérifier
-      if (onBlur) {
-        onBlur(e);
-      }
-    };
+    const pays = paysTelephone(etat.iso2)
+    const international = versInternational(etat.national, etat.iso2)
+    const valide = international !== "" && telephoneValide(international)
 
-    const handleKeyDown = (e) => {
-      // Empêcher la saisie de caractères non numériques (sauf +, backspace, delete, etc.)
-      const allowedKeys = [
-        "Backspace", "Delete", "Tab", "Escape", "Enter",
-        "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
-        "Home", "End"
-      ];
-      const isAllowedKey = allowedKeys.includes(e.key);
-      const isNumber = /[0-9]/.test(e.key);
-      const isPlus = e.key === "+";
-      
-      if (!isAllowedKey && !isNumber && !isPlus) {
-        e.preventDefault();
+    function emettre(national, iso2, evenement) {
+      const v = versInternational(national, iso2)
+      dernierEmis.current = v
+      onChange?.({ ...(evenement || {}), target: { ...(evenement?.target || {}), id, value: v } })
+    }
+
+    function saisir(e) {
+      const brut = e.target.value
+      // « +33… » tapé ou collé : le pays suit l'indicatif
+      if (brut.trim().startsWith("+") || brut.trim().startsWith("00")) {
+        const lu = lireTelephone(brut, etat.iso2)
+        setEtat(lu)
+        if (lu.iso2 !== etat.iso2) onCountryChange?.(lu.iso2)
+        emettre(lu.national, lu.iso2, e)
+        return
       }
-    };
+      let d = chiffres(brut)
+      // Effacement d'une espace : on efface le chiffre qui la précède
+      if (d === chiffres(etat.national) && brut.length < etat.national.length) d = d.slice(0, -1)
+      const national = formaterNational(d, etat.iso2)
+      setEtat((s) => ({ ...s, national }))
+      emettre(national, etat.iso2, e)
+    }
+
+    function choisirPays(iso2) {
+      const national = formaterNational(etat.national, iso2)
+      setEtat({ iso2, national })
+      setOuvert(false)
+      onCountryChange?.(iso2)
+      emettre(national, iso2)
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+
+    const actif = focus || ouvert
 
     return (
-      <FloatingLabelInput
-        ref={ref}
-        id={id}
-        label={label}
-        type="tel"
-        value={displayValue}
-        error={error}
-        placeholder={placeholder}
-        disabled={disabled}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className={className}
-        {...props}
-      />
-    );
+      <div className="relative group">
+        <div
+          className={cn(
+            "flex h-14 w-full rounded-md border-2 bg-transparent transition-all duration-300 ease-out",
+            disabled && "cursor-not-allowed opacity-50",
+            error
+              ? "border-red-500"
+              : actif
+                ? "border-zinc-900 shadow-[0_0_0_3px_rgba(0,0,0,0.05)]"
+                : "border-zinc-300"
+          )}
+        >
+          <Popover open={ouvert} onOpenChange={setOuvert}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                disabled={disabled}
+                aria-label={`Pays du numéro : ${pays.name}. Changer`}
+                className="flex shrink-0 items-center gap-1.5 rounded-l-md border-r border-zinc-200 pt-4 pb-1.5 pl-3 pr-2 text-zinc-700 focus-visible:outline-none focus-visible:bg-zinc-50"
+              >
+                <span className="text-lg leading-none" aria-hidden="true">{pays.flag}</span>
+                <span className="text-sm font-medium tabular-nums">{pays.dial}</span>
+                <ChevronDown className={cn("h-4 w-4 text-zinc-500 transition-transform", ouvert && "rotate-180")} aria-hidden="true" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Rechercher un pays" />
+                <CommandList>
+                  <CommandEmpty>Aucun pays</CommandEmpty>
+                  <CommandGroup>
+                    {INDICATIFS.map((c) => (
+                      <CommandItem key={c.iso2} value={`${c.name} ${c.dial}`} onSelect={() => choisirPays(c.iso2)} className="min-h-11">
+                        <Check className={cn("mr-2 h-4 w-4", c.iso2 === etat.iso2 ? "opacity-100" : "opacity-0")} />
+                        <span className="mr-2 text-lg" aria-hidden="true">{c.flag}</span>
+                        <span className="flex-1">{c.name}</span>
+                        <span className="text-sm text-zinc-500 tabular-nums">{c.dial}</span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          <input
+            id={id}
+            ref={inputRef}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            value={etat.national}
+            onChange={saisir}
+            onFocus={() => setFocus(true)}
+            onBlur={(e) => {
+              setFocus(false)
+              onBlur?.(e)
+            }}
+            disabled={disabled}
+            placeholder={pays.sample}
+            aria-invalid={error ? true : undefined}
+            className={cn(
+              "min-w-0 flex-1 bg-transparent pt-5 pb-2 pl-3 pr-10 text-sm text-zinc-900 outline-none",
+              "placeholder:text-zinc-400 disabled:cursor-not-allowed",
+              className
+            )}
+            {...props}
+          />
+          {valide && (
+            <CircleCheck className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-green-600" aria-label="Numéro valide" />
+          )}
+        </div>
+
+        {/* Libellé toujours au-dessus : le pays occupe la gauche du champ */}
+        <label
+          htmlFor={id}
+          className={cn(
+            "absolute left-4 top-0 -translate-y-1/2 z-10 pointer-events-none bg-white px-1.5 text-xs font-semibold transition-colors",
+            error ? "text-red-500" : actif ? "text-zinc-900" : "text-zinc-600"
+          )}
+        >
+          {label}
+        </label>
+      </div>
+    )
   }
-);
+)
 
-FloatingLabelPhoneInput.displayName = "FloatingLabelPhoneInput";
+FloatingLabelPhoneInput.displayName = "FloatingLabelPhoneInput"
 
-export { FloatingLabelPhoneInput, formatPhoneNumber, cleanPhoneNumber };
-
+export { FloatingLabelPhoneInput }

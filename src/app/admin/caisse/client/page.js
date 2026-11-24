@@ -10,6 +10,7 @@ import { NouveauClient } from "@/components/caisse/client/nouveau-client";
 import { BandeauJour, PanneauJour, useJournee } from "@/components/caisse/client/panneau-jour";
 import { nomAffiche, resteDu, versClientCaisse } from "@/lib/caisse/clients";
 import { formatMontant } from "@/lib/caisse/montants";
+import { rechercheTelephone } from "@/lib/telephone";
 import { cn } from "@/lib/utils";
 
 /**
@@ -53,9 +54,21 @@ export default function CaisseClientPage() {
     }
     setCherche(true);
     const minuteur = setTimeout(() => {
-      fetch(`/api/clients?search=${encodeURIComponent(q)}&limit=30`)
-        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Erreur ${r.status}`))))
-        .then((d) => setResultats(Array.isArray(d) ? d : d?.data || []))
+      // Un numéro est aussi cherché sans le 0 de tête : « 06 12 34 » retrouve « +33612345… »
+      const tel = rechercheTelephone(q);
+      const termes = tel && tel !== q ? [q, tel] : [q];
+      Promise.all(
+        termes.map((t) =>
+          fetch(`/api/clients?search=${encodeURIComponent(t)}&limit=30`).then((r) =>
+            r.ok ? r.json() : Promise.reject(new Error(`Erreur ${r.status}`))
+          )
+        )
+      )
+        .then((reponses) => {
+          const vus = new Map();
+          for (const d of reponses) for (const c of Array.isArray(d) ? d : d?.data || []) vus.set(c.id, c);
+          setResultats([...vus.values()]);
+        })
         .catch(() => toast.error("La recherche n'a pas abouti."))
         .finally(() => setCherche(false));
     }, 250);

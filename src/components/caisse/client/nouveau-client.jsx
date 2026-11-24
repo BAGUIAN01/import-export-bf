@@ -8,6 +8,7 @@ import { FloatingLabelPhoneInput } from "@/components/ui/floating-label-phone-in
 import { FloatingLabelTextarea } from "@/components/ui/floating-label-textarea";
 import { FloatingCombobox } from "@/components/ui/floating-combobox";
 import { PAYS, VILLES_BURKINA, villesDuPays } from "@/lib/data/villes";
+import { normaliserTelephone, telephoneValide } from "@/lib/telephone";
 import { cn } from "@/lib/utils";
 
 const VIDE = {
@@ -47,7 +48,7 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
   const [f, setF] = useState(() => {
     const r = rechercheInitiale.trim();
     if (!r) return VIDE;
-    return /^[+\d\s]+$/.test(r) ? { ...VIDE, phone: r } : { ...VIDE, lastName: r };
+    return /^[+\d\s]+$/.test(r) ? { ...VIDE, phone: normaliserTelephone(r, "FR") } : { ...VIDE, lastName: r };
   });
   const [erreurs, setErreurs] = useState({});
   const [envoi, setEnvoi] = useState(false);
@@ -61,14 +62,22 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
 
   async function enregistrer(e) {
     e.preventDefault();
+    // Numéros vérifiés selon le pays choisi avant l'envoi
+    const erreursTel = {};
+    if (f.phone && !telephoneValide(f.phone)) erreursTel.phone = "Numéro incomplet ou invalide pour ce pays";
+    if (f.recipientPhone && !telephoneValide(f.recipientPhone)) erreursTel.recipientPhone = "Numéro incomplet ou invalide pour ce pays";
+    if (Object.keys(erreursTel).length) {
+      setErreurs((x) => ({ ...x, ...erreursTel }));
+      setMessageErreur("Vérifiez les numéros de téléphone.");
+      return;
+    }
     setEnvoi(true);
     setMessageErreur("");
     try {
       const res = await fetch("/api/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // "+226 " seul (indicatif sans numéro) ne compte pas comme un téléphone
-        body: JSON.stringify({ ...f, recipientPhone: f.recipientPhone.replace(/\s/g, "").length > 4 ? f.recipientPhone.replace(/\s/g, "") : "" }),
+        body: JSON.stringify(f),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -130,7 +139,16 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
             <MessageErreur>{erreurs.firstName}</MessageErreur>
           </div>
           <div>
-            <FloatingLabelInput id={`${id}-tel`} label="Téléphone *" type="tel" inputMode="tel" autoComplete="tel" className={TACTILE} value={f.phone} onChange={maj("phone")} error={erreurs.phone} disabled={envoi} />
+            <FloatingLabelPhoneInput
+              id={`${id}-tel`}
+              label="Téléphone *"
+              defaultCountry={f.country === "Burkina Faso" ? "BF" : "FR"}
+              className={TACTILE}
+              value={f.phone}
+              onChange={maj("phone")}
+              error={erreurs.phone}
+              disabled={envoi}
+            />
             <MessageErreur>{erreurs.phone}</MessageErreur>
           </div>
           <div>
@@ -178,7 +196,19 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
         <fieldset className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2">
           <legend className="mb-4 text-sm font-semibold uppercase tracking-wide text-ink-muted">Destinataire habituel</legend>
           <FloatingLabelInput id={`${id}-dest-nom`} label="Nom du destinataire" className={TACTILE} value={f.recipientName} onChange={maj("recipientName")} disabled={envoi} />
-          <FloatingLabelPhoneInput id={`${id}-dest-tel`} label="Téléphone du destinataire" inputMode="tel" className={TACTILE} value={f.recipientPhone} onChange={maj("recipientPhone")} disabled={envoi} />
+          <div>
+            <FloatingLabelPhoneInput
+              id={`${id}-dest-tel`}
+              label="Téléphone du destinataire"
+              defaultCountry="BF"
+              className={TACTILE}
+              value={f.recipientPhone}
+              onChange={maj("recipientPhone")}
+              error={erreurs.recipientPhone}
+              disabled={envoi}
+            />
+            <MessageErreur>{erreurs.recipientPhone}</MessageErreur>
+          </div>
           <FloatingCombobox
             id={`${id}-dest-ville`}
             label="Ville au Burkina Faso"

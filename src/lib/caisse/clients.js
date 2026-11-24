@@ -19,12 +19,5 @@ export function resteDu(c) {
   return reste > 0.009 ? reste : 0;
 }
 
-/** « 06 12 34 56 78 » ou « +226 70 12 34 56 ». */
-export function telephoneAffiche(tel) {
-  if (!tel) return "";
-  const t = String(tel).replace(/[^\d+]/g, "");
-  if (t.startsWith("+33") && t.length === 12) return `+33 ${t.slice(3, 4)} ${t.slice(4).replace(/(\d{2})(?=\d)/g, "$1 ")}`;
-  if (t.startsWith("+226") && t.length === 12) return `+226 ${t.slice(4).replace(/(\d{2})(?=\d)/g, "$1 ")}`;
-  if (/^0\d{9}$/.test(t)) return t.replace(/(\d{2})(?=\d)/g, "$1 ");
-  return tel;
-}
+/** « +226 70 12 34 56 », « +33 6 12 34 56 78 » ; une valeur non reconnue reste telle quelle. */
+export { affichageTelephone as telephoneAffiche } from "@/lib/telephone";
