@@ -8,6 +8,7 @@ import { Check, CreditCard, LayoutGrid, LogOut, Package, User } from "lucide-rea
 import { useCaisse } from "@/contexts/caisse-context";
 import { PastilleConteneur } from "@/components/caisse/pastille-conteneur";
 import { initiales } from "@/lib/caisse/montants";
+import { libelleRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 const ETAPES = [
@@ -22,13 +23,6 @@ const ETAPES = [
   },
 ];
 
-export const ROLES_LIBELLES = {
-  ADMIN: "Administrateur",
-  STAFF: "Caissier",
-  AGENT: "Agent",
-  TRACKER: "Suivi",
-  CLIENT: "Client",
-};
 
 /** Profil courant : le chef de caisse (ADMIN) gère conteneurs et remises. */
 export function useProfilCaisse() {
@@ -156,7 +150,7 @@ function MenuProfil({ nom, role }) {
         <div role="menu" className="absolute right-0 top-14 z-40 w-64 rounded-2xl border border-line bg-white p-2 shadow-xl">
           <div className="px-3 py-2">
             <div className="font-semibold">{nom || "Utilisateur"}</div>
-            <div className="text-sm text-ink-muted">{ROLES_LIBELLES[role] || role}</div>
+            <div className="text-sm text-ink-muted">{libelleRole(role)}</div>
           </div>
           <Link role="menuitem" href="/admin" className="flex h-12 items-center gap-3 rounded-xl px-3 hover:bg-surface-muted">
             <LayoutGrid className="size-5 text-ink-muted" aria-hidden="true" />

@@ -37,6 +37,11 @@ export const accessMap = {
   // Caisse (Admin seulement)
   "/admin/caisse": ["ADMIN"],
 
+  // Retraits à l'arrivée, tarifs, paramétrage
+  "/admin/retraits": ["ADMIN"],
+  "/admin/tarifs": ["ADMIN"],
+  "/admin/parametrage": ["ADMIN"],
+
   // Conteneurs (Admin seulement)
   "/admin/containers": ["ADMIN"],
   "/admin/containers/new": ["ADMIN"],

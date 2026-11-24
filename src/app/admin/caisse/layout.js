@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { CaisseProvider } from "@/contexts/caisse-context";
 import { BarreCaisse } from "@/components/caisse/barre-caisse";
 import { Toaster } from "@/components/ui/sonner";
+import { geist, geistMono } from "@/lib/polices";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
 
 /**
  * Coquille de la caisse (routes /admin/caisse/**), pensée tablette d'abord :
