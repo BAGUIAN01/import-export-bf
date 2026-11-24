@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { VIBRATIONS, vibrer } from "@/lib/vibrer";
 import { Loader2, MoreHorizontal } from "lucide-react";
 import { Feuille } from "@/components/caisse/feuille";
 import { cn } from "@/lib/utils";
@@ -11,9 +12,13 @@ import { cn } from "@/lib/utils";
  * pression dans la même feuille avant d'agir.
  * `actions` : [{ libelle, icone?, onClick, danger?, confirmation?: { titre, texte, bouton } }].
  */
-export function FeuilleActions({ ouvert, onFermer, titre = "Actions", sousTitre, actions = [] }) {
+export function FeuilleActions({ ouvert, onFermer, titre = "Actions", sousTitre, actions = [], confirmer = null }) {
   const [aConfirmer, setAConfirmer] = useState(null);
   const [enCours, setEnCours] = useState(false);
+  // `confirmer` : action dont on demande tout de suite la confirmation (glissée sur une ligne)
+  useEffect(() => {
+    if (ouvert) setAConfirmer(confirmer);
+  }, [ouvert, confirmer]);
 
   function fermer() {
     setAConfirmer(null);
@@ -25,6 +30,7 @@ export function FeuilleActions({ ouvert, onFermer, titre = "Actions", sousTitre,
     setEnCours(true);
     try {
       await a.onClick?.();
+      if (a.danger) vibrer(VIBRATIONS.succes);
     } finally {
       setEnCours(false);
       fermer();

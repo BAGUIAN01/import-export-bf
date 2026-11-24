@@ -12,6 +12,7 @@ import { STATUTS_CONTENEUR, trierConteneurs } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
 import { sansAccents } from "@/lib/caisse/familles";
 import { useActualisation } from "@/components/gestion/actualisation";
+import { useEtatSession } from "@/hooks/use-etat-session";
 
 const TON = { PREPARATION: "ambre", LOADED: "bleu", IN_TRANSIT: "bleu", CUSTOMS: "violet", DELIVERED: "vert", CANCELLED: "rouge" };
 const FILTRES = [
@@ -31,8 +32,8 @@ export default function ConteneursPage() {
   const peutCreer = ["ADMIN", "TRACKER", "CHEF_CAISSE"].includes(role);
 
   const [conteneurs, setConteneurs] = useState(null);
-  const [filtre, setFiltre] = useState("tous");
-  const [recherche, setRecherche] = useState("");
+  const [filtre, setFiltre] = useEtatSession("conteneurs:filtre", "tous");
+  const [recherche, setRecherche] = useEtatSession("conteneurs:recherche", "");
   const [nouveau, setNouveau] = useState(false);
 
   const charger = useCallback(() => {

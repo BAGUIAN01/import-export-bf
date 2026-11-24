@@ -1,10 +1,12 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ficheCourante } from "@/components/gestion/barre-gestion";
 import { useSWRConfig } from "swr";
 import { ArrowDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { vibrer } from "@/lib/vibrer";
 
 const SEUIL = 64; // px à tirer pour actualiser
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -22,7 +24,7 @@ export const useActualisation = () => useContext(ContexteActualisation);
  * (comme une application). `onActualiser` peut renvoyer une promesse : la
  * roue tourne jusqu'à sa fin.
  */
-export function ZoneActualisable({ as: Balise = "div", onActualiser, className, children, ...props }) {
+export function ZoneActualisable({ as: Balise = "div", onActualiser, zoneRef, className, children, ...props }) {
   const zone = useRef(null);
   const rappel = useRef(onActualiser);
   const [tirage, setTirage] = useState(0);
@@ -70,7 +72,7 @@ export function ZoneActualisable({ as: Balise = "div", onActualiser, className, 
       geste.current.enCours = true;
       setEnCours(true);
       setTirage(SEUIL);
-      navigator.vibrate?.(10);
+      vibrer();
       try {
         await Promise.all([Promise.resolve(rappel.current()).catch(() => {}), pause(650)]);
       } finally {
@@ -95,7 +97,14 @@ export function ZoneActualisable({ as: Balise = "div", onActualiser, className, 
   const pret = tirage >= SEUIL;
 
   return (
-    <Balise ref={zone} className={cn("relative", className)} {...props}>
+    <Balise
+      ref={(el) => {
+        zone.current = el;
+        if (zoneRef) zoneRef.current = el;
+      }}
+      className={cn("relative", className)}
+      {...props}
+    >
       <div className="pointer-events-none sticky top-0 z-30 flex h-0 justify-center">
         <span
           role="status"
@@ -123,8 +132,107 @@ export function ZoneActualisable({ as: Balise = "div", onActualiser, className, 
  * données fraîches au retour dans l'application après plus d'une minute.
  * Actualiser = pages serveur (router.refresh), cache SWR, pages à effet (version).
  */
+const CLE_POSITIONS = "positions:gestion";
+function lirePositions() {
+  try {
+    return JSON.parse(window.sessionStorage.getItem(CLE_POSITIONS) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Position de défilement de chaque liste, gardée pendant la session et
+ * restaurée au retour (depuis une fiche ou un autre onglet), comme dans une
+ * application. Les données arrivent après l'affichage : on réessaie jusqu'à
+ * 2,5 s, sauf si l'utilisateur touche l'écran entre-temps.
+ */
+function usePositionListes(zone) {
+  const chemin = usePathname() || "";
+
+  // Position notée au moment du toucher (avant la navigation) : pendant le
+  // changement de page, le navigateur rabote le défilement et fausserait la mesure.
+  useEffect(() => {
+    const el = zone.current;
+    if (!el) return;
+    const noter = () => {
+      const positions = lirePositions();
+      positions[chemin] = Math.round(el.scrollTop);
+      try {
+        window.sessionStorage.setItem(CLE_POSITIONS, JSON.stringify(positions));
+      } catch {
+        /* stockage indisponible */
+      }
+    };
+    document.addEventListener("click", noter, true);
+    return () => document.removeEventListener("click", noter, true);
+  }, [zone, chemin]);
+
+  useEffect(() => {
+    const el = zone.current;
+    if (!el) return;
+    const cible = ficheCourante(chemin) ? 0 : lirePositions()[chemin] || 0;
+    el.scrollTop = 0;
+    if (!cible) return;
+    let fini = false;
+    const debut = performance.now();
+    const arreter = () => {
+      fini = true;
+    };
+    el.addEventListener("touchstart", arreter, { passive: true });
+    el.addEventListener("wheel", arreter, { passive: true });
+    const essayer = () => {
+      if (fini) return;
+      el.scrollTop = cible;
+      if (Math.abs(el.scrollTop - cible) < 2 || performance.now() - debut > 2500) return;
+      requestAnimationFrame(essayer);
+    };
+    essayer();
+    return () => {
+      fini = true;
+      el.removeEventListener("touchstart", arreter);
+      el.removeEventListener("wheel", arreter);
+    };
+  }, [zone, chemin]);
+}
+
+/**
+ * Animation d'arrivée d'une page, comme une application : une fiche glisse
+ * depuis la droite, le retour depuis la gauche, un changement d'onglet en
+ * fondu. Rien si le téléphone demande moins d'animations (CSS).
+ */
+function useAnimationPage() {
+  const chemin = usePathname() || "";
+  const precedent = useRef(chemin);
+  const parHistorique = useRef(false);
+  useEffect(() => {
+    const surRetour = () => {
+      parHistorique.current = true;
+    };
+    window.addEventListener("popstate", surRetour);
+    return () => window.removeEventListener("popstate", surRetour);
+  }, []);
+  const animation = useMemo(() => {
+    const avant = precedent.current;
+    if (avant === chemin) return "";
+    const ficheAvant = !!ficheCourante(avant);
+    const fiche = !!ficheCourante(chemin);
+    if (fiche && !ficheAvant && !parHistorique.current) return "page-pousser";
+    if ((ficheAvant && !fiche) || parHistorique.current) return "page-retour";
+    return "page-fondu";
+  }, [chemin]);
+  useEffect(() => {
+    precedent.current = chemin;
+    parHistorique.current = false;
+  }, [chemin]);
+  return { chemin, animation };
+}
+
 export function ContenuActualisable({ className, children }) {
   const router = useRouter();
+  const zone = useRef(null);
+  usePositionListes(zone);
+  const { chemin, animation } = useAnimationPage();
   const { mutate } = useSWRConfig();
   const [version, setVersion] = useState(0);
 
@@ -141,13 +249,20 @@ export function ContenuActualisable({ className, children }) {
       else if (cache && Date.now() - cache > 60_000) actualiser();
     };
     document.addEventListener("visibilitychange", surVisibilite);
-    return () => document.removeEventListener("visibilitychange", surVisibilite);
+    // Retour du réseau : données fraîches
+    window.addEventListener("online", actualiser);
+    return () => {
+      document.removeEventListener("visibilitychange", surVisibilite);
+      window.removeEventListener("online", actualiser);
+    };
   }, [actualiser]);
 
   return (
     <ContexteActualisation.Provider value={{ version, actualiser }}>
-      <ZoneActualisable as="main" className={className} onActualiser={actualiser}>
-        {children}
+      <ZoneActualisable as="main" zoneRef={zone} className={className} onActualiser={actualiser}>
+        <div key={chemin} className={animation}>
+          {children}
+        </div>
       </ZoneActualisable>
     </ContexteActualisation.Provider>
   );

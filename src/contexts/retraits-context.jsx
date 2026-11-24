@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DEPOT_RETRAITS } from "@/lib/recherche";
+import { VIBRATIONS, vibrer } from "@/lib/vibrer";
 
 const RetraitsContext = createContext(null);
 
@@ -113,7 +114,11 @@ export function RetraitsProvider({ children }) {
       else if (cache && Date.now() - cache > 30_000) charger();
     };
     document.addEventListener("visibilitychange", surVisibilite);
-    return () => document.removeEventListener("visibilitychange", surVisibilite);
+    window.addEventListener("online", charger);
+    return () => {
+      document.removeEventListener("visibilitychange", surVisibilite);
+      window.removeEventListener("online", charger);
+    };
   }, [restaure, charger]);
 
   const envoi = useMemo(() => donnees?.envois?.find((e) => e.id === envoiId) || null, [donnees, envoiId]);
@@ -159,6 +164,7 @@ export function RetraitsProvider({ children }) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "La remise n'a pas pu être enregistrée.");
+        vibrer(VIBRATIONS.succes);
         terminer({
           envoi: { ...envoi, deliveredAt: data.deliveredAt, paidAmount: data.paidAmount, receivedBy: nom, receivedIdNumber: piece || null },
           montantDevise: paiement?.montantDevise || 0,

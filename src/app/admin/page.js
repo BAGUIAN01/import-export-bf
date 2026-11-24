@@ -141,15 +141,15 @@ export default async function AccueilModules() {
               <span className="chiffres rounded-full bg-surface-muted px-2 py-0.5 text-xs text-ink-muted">{f.modules.length}</span>
               <span aria-hidden="true" className="h-px flex-1 bg-line" />
             </div>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(184px,1fr))] gap-3.5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(184px,1fr))] sm:gap-3.5">
               {f.modules.map((m) => (
                 <Link
                   key={m.href}
                   href={m.href}
-                  className="group relative block h-[226px] overflow-hidden rounded-[26px] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,.7),0_1px_2px_rgba(15,23,20,.05)] transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[inset_0_1px_0_rgba(255,255,255,.7),0_14px_28px_-10px_rgba(15,23,20,.25)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-brand active:scale-[.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                  className="group relative block h-[168px] overflow-hidden rounded-[22px] sm:h-[226px] sm:rounded-[26px] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,.7),0_1px_2px_rgba(15,23,20,.05)] transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[inset_0_1px_0_rgba(255,255,255,.7),0_14px_28px_-10px_rgba(15,23,20,.25)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-brand active:scale-[.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   style={{ backgroundImage: `linear-gradient(150deg, ${m.de} 0%, ${m.a} 100%)` }}
                 >
-                  <span className="absolute top-[18px] right-[60px] left-[19px] text-xl font-semibold leading-tight tracking-[-.015em]">{m.titre}</span>
+                  <span className="absolute top-4 right-4 left-4 text-[17px] font-semibold leading-tight tracking-[-.015em] sm:top-[18px] sm:right-[60px] sm:left-[19px] sm:text-xl">{m.titre}</span>
                   <span
                     aria-hidden="true"
                     className="absolute top-4 right-4 grid size-[34px] scale-90 place-items-center rounded-full bg-ink text-white opacity-0 transition-[opacity,transform] duration-200 group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100"
@@ -162,7 +162,7 @@ export default async function AccueilModules() {
                     width={158}
                     height={158}
                     draggable={false}
-                    className="pointer-events-none absolute -right-3.5 -bottom-[17px] size-[158px] select-none transition-[scale] duration-200 group-hover:scale-105"
+                    className="pointer-events-none absolute -right-2.5 -bottom-3 size-[112px] select-none transition-[scale] duration-200 group-hover:scale-105 sm:-right-3.5 sm:-bottom-[17px] sm:size-[158px]"
                     style={{ rotate: `${m.angle}deg` }}
                   />
                 </Link>

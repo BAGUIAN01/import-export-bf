@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Star, UserPlus } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { PackagePlus, Phone, Star, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { BoutonFlottant, EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
 import { NouveauClient } from "@/components/caisse/client/nouveau-client";
@@ -11,6 +12,9 @@ import { nomAffiche, resteDu } from "@/lib/caisse/clients";
 import { affichageTelephone } from "@/lib/telephone";
 import { sansAccents } from "@/lib/caisse/familles";
 import { useActualisation } from "@/components/gestion/actualisation";
+import { useEtatSession } from "@/hooks/use-etat-session";
+import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
+import { canAccess } from "@/lib/rbac";
 
 const FILTRES = [
   { id: "tous", label: "Tous", test: () => true },
@@ -22,10 +26,12 @@ const FILTRES = [
 /** Gestion · Clients : expéditeurs, leur destinataire habituel, leurs envois. */
 export default function ClientsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const caisse = canAccess(session?.user?.role, "/admin/caisse");
   const [clients, setClients] = useState(null);
   const [stats, setStats] = useState(null);
-  const [filtre, setFiltre] = useState("tous");
-  const [recherche, setRecherche] = useState("");
+  const [filtre, setFiltre] = useEtatSession("clients:filtre", "tous");
+  const [recherche, setRecherche] = useEtatSession("clients:recherche", "");
   const [nouveau, setNouveau] = useState(false);
 
   const charger = useCallback(() => {
@@ -85,6 +91,10 @@ export default function ClientsPage() {
         lignes={lignes}
         vide="Aucun client dans cette liste."
         onLigne={(c) => router.push(`/admin/clients/${c.id}`)}
+        glisser={(c) => [
+          c.phone && { libelle: "Appeler", icone: Phone, ton: "bleu", onClick: () => (window.location.href = `tel:${c.phone}`) },
+          caisse && { libelle: "Nouvel envoi", court: "Envoi", icone: PackagePlus, ton: "vert", onClick: () => ouvrirCaisse(router, c) },
+        ]}
         colonnes={[
           {
             id: "nom",

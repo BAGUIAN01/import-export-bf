@@ -13,6 +13,7 @@ import { BarreActions, FeuilleActions } from "@/components/gestion/barre-actions
 import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
 import { DEPOT_RETRAITS } from "@/lib/recherche";
 import { canAccess } from "@/lib/rbac";
+import { VIBRATIONS, vibrer } from "@/lib/vibrer";
 import { ShipmentRemitDialog } from "@/components/modules/admin/shipments/shipment-remit-dialog";
 import { useShipmentDetails, useShipmentMutations } from "@/hooks/use-shipments";
 import { ETATS_COLIS } from "@/components/gestion/colis/liste-colis";
@@ -62,6 +63,7 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
   async function enregistrer(donnees, fermer) {
     const r = await updateShipment(e.id, donnees);
     if (r?.success) {
+      vibrer(VIBRATIONS.succes);
       fermer();
       refresh();
     }
@@ -255,6 +257,16 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
           { id: "qte", titre: "Qté", rendu: (p) => <span className="chiffres">{p.totalQuantity}</span>, mobileRendu: (p) => <span className="chiffres">× {p.totalQuantity}</span> },
           { id: "etat", titre: "État", mobile: "etat", rendu: (p) => <Etat ton={(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[1]}>{(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[0]}</Etat> },
           { id: "montant", titre: "Montant", aDroite: true, mobile: "droite", rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
+        ]}
+        glisser={(p) => [
+          { libelle: "Modifier", icone: Pencil, ton: "gris", onClick: () => setColisOuvert(p) },
+          {
+            libelle: "Supprimer",
+            icone: Trash2,
+            danger: true,
+            onClick: () => supprimerColis(p, true),
+            confirmation: { titre: "Supprimer ce colis ?", texte: `${p.description} (${p.packageNumber})`, bouton: "Supprimer le colis" },
+          },
         ]}
         actions={(p) => (
           <span className="flex justify-end gap-1">

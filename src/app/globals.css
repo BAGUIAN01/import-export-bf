@@ -334,3 +334,24 @@
 html:has(.caisse) {
   overscroll-behavior: none;
 }
+
+/* Arrivée d'une page (gestion) : fiche depuis la droite, retour depuis la
+   gauche, onglet en fondu ; rien si l'appareil demande moins d'animations. */
+@keyframes page-pousser {
+  from { opacity: 0.35; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes page-retour {
+  from { opacity: 0.35; transform: translateX(-28px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes page-fondu {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-pousser { animation: page-pousser 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.page-retour { animation: page-retour 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.page-fondu { animation: page-fondu 0.18s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .page-pousser, .page-retour, .page-fondu { animation: none; }
+}

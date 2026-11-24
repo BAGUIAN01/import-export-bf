@@ -4,12 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EnTete, Etat, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
-import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
+import { Phone, Wallet } from "lucide-react";
+import { FeuilleEncaissement } from "@/components/gestion/fiches/feuille-encaissement";
+import { VIBRATIONS, vibrer } from "@/lib/vibrer";
 import { useShipmentMutations } from "@/hooks/use-shipments";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
 import { useActualisation } from "@/components/gestion/actualisation";
+import { useEtatSession } from "@/hooks/use-etat-session";
 
 const ETATS_PAIEMENT = {
   PAID: ["Soldé", "vert"],
@@ -31,11 +34,11 @@ const reste = (e) => Math.max(0, (e.totalAmount || 0) - (e.paidAmount || 0));
 /** Gestion · Encaissements : chaque envoi, ce qui est payé et ce qui reste. */
 export default function EncaissementsPage() {
   const router = useRouter();
-  const { updateShipment, isLoading: enregistrement } = useShipmentMutations();
+  const { updateShipment } = useShipmentMutations();
   const [envois, setEnvois] = useState(null);
-  const [filtre, setFiltre] = useState("tous");
-  const [conteneur, setConteneur] = useState("tous");
-  const [recherche, setRecherche] = useState("");
+  const [filtre, setFiltre] = useEtatSession("encaissements:filtre", "tous");
+  const [conteneur, setConteneur] = useEtatSession("encaissements:conteneur", "tous");
+  const [recherche, setRecherche] = useEtatSession("encaissements:recherche", "");
   const [encaisser, setEncaisser] = useState(null);
 
   const charger = useCallback(() => {
@@ -125,6 +128,10 @@ export default function EncaissementsPage() {
             rendu: (e) => (e.deliveredAt ? <Etat ton="vert">Remis</Etat> : <Etat ton={(ETATS_PAIEMENT[e.paymentStatus] || ETATS_PAIEMENT.PENDING)[1]}>{(ETATS_PAIEMENT[e.paymentStatus] || ETATS_PAIEMENT.PENDING)[0]}</Etat>),
           },
         ]}
+        glisser={(e) => [
+          e.client?.phone && { libelle: "Appeler", icone: Phone, ton: "bleu", onClick: () => (window.location.href = `tel:${e.client.phone}`) },
+          reste(e) > 0 && { libelle: "Encaisser", icone: Wallet, ton: "vert", onClick: () => setEncaisser(e) },
+        ]}
         actions={(e) =>
           reste(e) > 0 ? (
             <button type="button" onClick={() => setEncaisser(e)} className="h-10 rounded-xl border border-line-strong bg-white px-3 text-sm font-semibold hover:bg-surface-muted">
@@ -134,19 +141,20 @@ export default function EncaissementsPage() {
         }
       />
 
-      <ShipmentEditDialog
-        shipment={encaisser}
-        isOpen={!!encaisser}
-        loading={enregistrement}
-        onClose={() => setEncaisser(null)}
-        onSave={async (donnees) => {
-          const r = await updateShipment(encaisser.id, donnees);
-          if (r?.success) {
-            setEncaisser(null);
-            charger();
-          }
-        }}
-      />
+      {encaisser && (
+        <FeuilleEncaissement
+          envoi={encaisser}
+          onFermer={() => setEncaisser(null)}
+          onEncaisser={async (donnees) => {
+            const r = await updateShipment(encaisser.id, donnees);
+            if (r?.success) {
+              vibrer(VIBRATIONS.succes);
+              setEncaisser(null);
+              charger();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

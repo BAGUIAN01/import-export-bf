@@ -135,13 +135,8 @@ export function NavigationBasGestion() {
   // En bas, les quatre écrans du quotidien d'abord ; Retraits a son propre écran
   const ordre = ["/admin/containers", "/admin/packages", "/admin/clients", "/admin/shipments"];
   const onglets = ONGLETS.filter((o) => canAccess(role, o.href)).sort((a, b) => (ordre.indexOf(a.href) + 1 || 99) - (ordre.indexOf(b.href) + 1 || 99));
-  const liens = [
-    { href: "/admin/dashboard", libelle: "Tableau de bord", icone: LayoutDashboard },
-    { href: "/admin/parametrage", libelle: "Paramétrage", icone: Settings },
-    { href: "/admin/profile", libelle: "Mon profil", icone: UserCog },
-    { href: "/admin", libelle: "Accueil des modules", icone: LayoutGrid },
-  ].filter((l) => canAccess(role, l.href));
-  return <OngletsBas onglets={onglets} liens={liens} />;
+  // Le compte (tableau de bord, profil, paramétrage, accueil) est dans l'avatar : pas de doublon ici
+  return <OngletsBas onglets={onglets} />;
 }
 
 /** Conteneur qui reçoit les colis (le plus proche du départ). */

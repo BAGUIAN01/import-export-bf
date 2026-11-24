@@ -13,6 +13,7 @@ import { canAccess } from "@/lib/rbac";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
+import { useEtatSession } from "@/hooks/use-etat-session";
 
 export const ETATS_COLIS = {
   REGISTERED: ["Enregistré", "gris"],
@@ -36,8 +37,8 @@ const FILTRES = [
 export function ListeColis({ clients, containers }) {
   const router = useRouter();
   const { packages, isLoading, mutate } = usePackages({ limit: 500 });
-  const [filtre, setFiltre] = useState("tous");
-  const [recherche, setRecherche] = useState("");
+  const [filtre, setFiltre] = useEtatSession("colis:filtre", "tous");
+  const [recherche, setRecherche] = useEtatSession("colis:recherche", "");
   const [nouveau, setNouveau] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   // Nouvel envoi : à la caisse (sans accès à la caisse, l'ancien formulaire)

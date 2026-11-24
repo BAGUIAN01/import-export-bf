@@ -17,6 +17,7 @@ import { formatMontant, formatNombre, montantsRapides, repartirPaiement, saisieV
 import { MODES_PAIEMENT, noteEnvoi } from "@/lib/caisse/paiement";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { cn } from "@/lib/utils";
+import { VIBRATIONS, vibrer } from "@/lib/vibrer";
 
 const ICONES = { ESPECES: Banknote, CARTE: CreditCard, MOBILE: Smartphone, VIREMENT: Landmark, ARRIVEE: Truck };
 
@@ -120,6 +121,7 @@ function Paiement() {
         undefined,
         { revalidate: true }
       );
+      vibrer(VIBRATIONS.succes);
       router.push("/admin/caisse/impression");
     } catch (e) {
       toast.error(e.message);

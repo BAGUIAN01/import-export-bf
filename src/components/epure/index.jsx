@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { LigneGlissable } from "@/components/epure/ligne-glissable";
 import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -176,8 +178,10 @@ export function Etat({ ton = "gris", children, className }) {
  *   bureau?: false (colonne du téléphone seulement) }]
  * `actions` : (ligne) => node, à droite ; sur téléphone seulement si la ligne ne
  * s'ouvre pas (sinon dans sa fiche), ou avec `actionsMobile`.
+ * `glisser` : (ligne) => [actions] révélées en glissant la ligne (téléphone),
+ * ou par un appui long (voir LigneGlissable).
  */
-export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vide = "Aucun résultat.", actions, actionsMobile, libelle, parPage = 40 }) {
+export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vide = "Aucun résultat.", actions, actionsMobile, glisser, libelle, parPage = 40 }) {
   // Longues listes : 40 lignes, puis la suite quand on arrive en bas (ou « Voir plus »)
   const [nombre, setNombre] = useState(parPage);
   const fin = useRef(null);
@@ -261,6 +265,7 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
           const morceaux = details.map((c) => ({ id: c.id, v: rendu(c, l) })).filter((m) => m.v != null && m.v !== false && m.v !== "" && m.v !== "—");
           return (
             <li key={l[cle]}>
+              <LigneGlissable actions={glisser ? glisser(l).filter(Boolean) : []} titre={rendu(titre, l)}>
               <div
                 role={onLigne ? "button" : undefined}
                 tabIndex={onLigne ? 0 : undefined}
@@ -298,6 +303,7 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
                 )}
                 {onLigne && !avecActions && <ChevronRight className="-mr-1 size-5 shrink-0 text-ink-subtle" aria-hidden="true" />}
               </div>
+              </LigneGlissable>
             </li>
           );
         })}
@@ -318,18 +324,25 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
  * onglets du bas (sur tablette et PC, elle reste dans l'en-tête).
  */
 export function BoutonFlottant({ libelle, icone: Icone = Plus, onClick }) {
+  // Dans <body> : la page qui s'anime à l'arrivée ne l'emporte pas avec elle
+  const [monte, setMonte] = useState(false);
+  useEffect(() => setMonte(true), []);
   return (
     <>
       <div aria-hidden="true" className="h-16 md:hidden" />
+      {monte &&
+        createPortal(
       <button
         type="button"
         onClick={onClick}
-        className="fixed right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand pr-5 pl-4 font-semibold text-white shadow-[0_8px_24px_rgba(14,122,85,.35)] active:scale-[.97] md:hidden"
+        className="caisse fixed right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand pr-5 pl-4 font-caisse text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(14,122,85,.35)] active:scale-[.97] md:hidden"
         style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 16px)" }}
       >
         <Icone className="size-5" aria-hidden="true" />
         {libelle}
-      </button>
+      </button>,
+          document.body
+        )}
     </>
   );
 }
