@@ -44,17 +44,33 @@ export function BarreCaisse() {
   };
 
   return (
-    <header className="flex h-[72px] shrink-0 items-center gap-2 border-b border-line bg-white px-3 sm:gap-3 lg:px-5">
+    <header className="relative flex h-16 shrink-0 items-center gap-2 border-b border-line bg-white px-3 sm:h-[72px] sm:gap-3 lg:px-5">
       <Link
         href="/admin"
         aria-label="Accueil des modules"
-        className="grid size-12 shrink-0 place-items-center rounded-xl bg-ink text-white"
+        className="hidden size-12 shrink-0 place-items-center rounded-xl bg-ink text-white sm:grid"
       >
         <LayoutGrid className="size-5" aria-hidden="true" />
       </Link>
       <span className="hidden text-lg font-semibold tracking-tight min-[1180px]:block">Caisse</span>
 
-      <nav aria-label="Étapes de la caisse" className="flex min-w-0 items-center gap-1 rounded-2xl bg-surface-muted p-1 lg:ml-2">
+      {/* Téléphone : l'étape en titre, la progression sous la barre */}
+      <div className="min-w-0 flex-1 leading-tight sm:hidden">
+        <div className="text-[11px] font-medium text-ink-muted">{indexActif >= 0 ? `Caisse · étape ${indexActif + 1} sur ${ETAPES.length}` : "Caisse"}</div>
+        <div className="truncate text-[17px] font-semibold">
+          {indexActif >= 0 ? ETAPES[indexActif].libelle : chemin === "/admin/caisse/recus" ? "Reçus du jour" : "Conteneurs"}
+          {indexActif > 0 && selectedClient && <span className="font-normal text-ink-muted"> · {selectedClient.name || selectedClient.lastName}</span>}
+        </div>
+      </div>
+      {indexActif >= 0 && (
+        <div aria-hidden="true" className="absolute inset-x-3 bottom-0 flex gap-1 sm:hidden">
+          {ETAPES.map((e, i) => (
+            <span key={e.cle} className={cn("h-[3px] flex-1 rounded-full", i <= indexActif ? "bg-brand" : "bg-line")} />
+          ))}
+        </div>
+      )}
+
+      <nav aria-label="Étapes de la caisse" className="hidden min-w-0 items-center gap-1 rounded-2xl bg-surface-muted p-1 sm:flex lg:ml-2">
         {ETAPES.map((e, i) => {
           const actif = i === indexActif;
           const fait = indexActif > 0 && i < indexActif;
@@ -105,7 +121,7 @@ export function BarreCaisse() {
         })}
       </nav>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <RechercheGlobale prefere="client" />
         <Link
           href="/admin/caisse/recus"

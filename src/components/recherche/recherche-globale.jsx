@@ -185,13 +185,13 @@ export function RechercheGlobale({ apparence = "barre", prefere = null }) {
         </div>
       ) : (
         // Barres des modules : chercher | scanner, en une pièce (un toucher pour scanner sur tablette)
-        <div className="flex h-12 shrink-0 items-stretch rounded-2xl border border-line-strong bg-white">
+        <div className="flex h-11 shrink-0 items-stretch rounded-2xl border border-line-strong bg-white sm:h-12">
           <button
             ref={declencheur}
             type="button"
             onClick={() => ouvrir()}
             aria-label="Rechercher"
-            className="flex items-center gap-2 rounded-l-[15px] pr-2.5 pl-3 text-ink-muted transition-colors hover:bg-surface-page hover:text-ink min-[1400px]:w-[200px]"
+            className="flex items-center gap-2 rounded-l-[15px] pr-2 pl-2.5 text-ink-muted sm:pr-2.5 sm:pl-3 transition-colors hover:bg-surface-page hover:text-ink min-[1400px]:w-[200px]"
           >
             <Search className="size-5 shrink-0" aria-hidden="true" />
             <span className="hidden flex-1 text-left text-[15px] min-[1400px]:block">Rechercher…</span>
@@ -203,7 +203,7 @@ export function RechercheGlobale({ apparence = "barre", prefere = null }) {
             onClick={() => ouvrir({ scanner: true })}
             aria-label="Scanner un code"
             title="Scanner un QR code"
-            className="grid w-12 place-items-center rounded-r-[15px] text-ink-muted transition-colors hover:bg-surface-page hover:text-brand-strong"
+            className="grid w-10 place-items-center rounded-r-[15px] text-ink-muted sm:w-12 transition-colors hover:bg-surface-page hover:text-brand-strong"
           >
             <ScanLine className="size-5" aria-hidden="true" />
           </button>

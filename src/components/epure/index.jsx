@@ -20,8 +20,8 @@ export function EnTete({ chemin, titre, sousTitre, actions, children }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div className="flex min-w-0 flex-col gap-0.5">
-        {chemin && <p className="text-[13px] text-ink-muted">{chemin}</p>}
-        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
+        {chemin && <p className="hidden text-[13px] text-ink-muted sm:block">{chemin}</p>}
+        <h1 className="flex flex-wrap items-center gap-2 text-[28px] leading-tight font-semibold tracking-tight sm:text-2xl">
           {titre}
           {children}
         </h1>
@@ -47,24 +47,24 @@ export function StatCard({ label, value, detail, variant = "default", couleur = 
   return (
     <div
       className={cn(
-        "flex flex-col gap-1.5 rounded-2xl border-2 p-[18px]",
+        "flex min-w-0 flex-col gap-1 rounded-2xl border-2 p-3.5 sm:gap-1.5 sm:p-[18px]",
         noire ? "border-ink bg-ink text-white shadow-[0_8px_20px_rgba(15,23,20,.16)]" : cn("bg-white text-ink shadow-[0_1px_2px_rgba(15,23,20,.04)]", BORDURES[couleur] ?? BORDURES.vert),
         className
       )}
     >
       <span className={cn("text-[13px]", noire ? "text-white/70" : "text-ink-muted")}>{label}</span>
-      <span className="chiffres text-[28px] font-medium leading-tight tracking-tight">{value}</span>
+      <span className="chiffres text-[21px] font-medium leading-tight tracking-tight sm:text-[28px]">{value}</span>
       {detail != null && <span className={cn("text-xs", noire ? "text-white/70" : "text-ink-muted")}>{detail}</span>}
     </div>
   );
 }
 
-/** Rangée de chiffres : défile au doigt sur tablette, grille sur PC. */
+/** Rangée de chiffres : deux colonnes sur téléphone, grille sur tablette et PC. */
 export function StatGrid({ children, className }) {
   return (
     <section
       className={cn(
-        "flex shrink-0 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-contain pb-1 [scrollbar-width:none] [&>*]:w-[46%] [&>*]:shrink-0 [&>*]:snap-start md:grid md:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] md:gap-4 md:overflow-visible md:pb-0 md:[&>*]:w-auto",
+        "grid shrink-0 grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] md:gap-4",
         className
       )}
     >
@@ -76,7 +76,7 @@ export function StatGrid({ children, className }) {
 /** Onglets soulignés (parties d'un même écran). `options` : [{ id, label, icon?, compte? }]. */
 export function Onglets({ options, valeur, onChange, libelle = "Parties de la page", className }) {
   return (
-    <div role="tablist" aria-label={libelle} className={cn("flex shrink-0 gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]", className)}>
+    <div role="tablist" aria-label={libelle} className={cn("-mx-3 flex shrink-0 gap-1 overflow-x-auto border-b border-line px-3 [scrollbar-width:none] sm:mx-0 sm:px-0", className)}>
       {options.map(({ id, label, icon: Icone, compte }) => {
         const actif = valeur === id;
         return (
@@ -106,7 +106,7 @@ export function Onglets({ options, valeur, onChange, libelle = "Parties de la pa
 /** Filtres d'une liste en pastilles grises. `options` : [{ id, label, compte? }]. */
 export function Pastilles({ options, valeur, onChange, libelle = "Filtrer" }) {
   return (
-    <div role="radiogroup" aria-label={libelle} className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+    <div role="radiogroup" aria-label={libelle} className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:px-0">
       {options.map(({ id, label, compte }) => {
         const actif = valeur === id;
         return (

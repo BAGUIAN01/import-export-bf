@@ -64,12 +64,13 @@ export function PastilleConteneur({ peutGerer }) {
         type="button"
         onClick={() => setOuvert(true)}
         className={cn(
-          "flex h-12 items-center gap-2.5 rounded-2xl border-2 px-3 text-left",
+          "flex h-11 items-center gap-1.5 rounded-2xl border-2 px-2.5 text-left sm:h-12 sm:gap-2.5 sm:px-3",
           c ? "border-brand bg-brand-soft/60" : "border-alerte/40 bg-alerte-soft"
         )}
       >
         <span aria-hidden="true" className={cn("size-2.5 shrink-0 rounded-full", c ? "bg-brand" : "bg-alerte")} />
-        <span className="flex min-w-0 flex-col leading-tight">
+        <IconeConteneur className="size-5 text-ink sm:hidden" aria-label={c ? `Conteneur ${c.containerNumber}` : "Choisir un conteneur"} />
+        <span className="hidden min-w-0 flex-col leading-tight sm:flex">
           <span className="hidden text-[11px] font-medium text-brand-strong min-[1180px]:block">
             {c ? STATUTS_CONTENEUR[c.status]?.libelle || "Conteneur" : "Aucun conteneur"}
           </span>
@@ -78,7 +79,7 @@ export function PastilleConteneur({ peutGerer }) {
             {c && <span className="hidden font-normal text-ink-muted sm:inline"> · {c.packagesCount ?? 0}</span>}
           </span>
         </span>
-        <ChevronDown className="size-4 shrink-0 text-ink-muted" aria-hidden="true" />
+        <ChevronDown className="hidden size-4 shrink-0 text-ink-muted sm:block" aria-hidden="true" />
       </button>
 
       <Feuille

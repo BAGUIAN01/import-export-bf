@@ -3,6 +3,7 @@
 import { Building2, ShieldCheck, Users } from "lucide-react";
 import { FournisseursModule } from "@/components/gestion/layout-module";
 import { BarreModule, CoquilleModule } from "@/components/gestion/barre-module";
+import { OngletsBas } from "@/components/gestion/onglets-bas";
 
 const ONGLETS = [
   { href: "/admin/parametrage/utilisateurs", libelle: "Utilisateurs", icone: Users },
@@ -14,7 +15,9 @@ const ONGLETS = [
 export default function ParametrageLayout({ children }) {
   return (
     <FournisseursModule>
-      <CoquilleModule barre={<BarreModule titre="Paramétrage" onglets={ONGLETS} />}>{children}</CoquilleModule>
+      <CoquilleModule barre={<BarreModule titre="Paramétrage" onglets={ONGLETS} />} bas={<OngletsBas onglets={ONGLETS} />}>
+        {children}
+      </CoquilleModule>
     </FournisseursModule>
   );
 }

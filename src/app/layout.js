@@ -163,6 +163,11 @@ export const metadata = {
   },
 }
 
+// Couleur de la barre du navigateur pour le site public ; /admin la remplace (blanc).
+export const viewport = {
+  themeColor: "#0E7A34",
+}
+
 export default function RootLayout({
   children,
 }) {
@@ -173,8 +178,6 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/logo_short-32x32.png" />
         <link rel="icon" type="image/png" sizes="96x96" href="/logo_short-96x96.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/logo_short.png" />
-        <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#0E7A34" />
         <meta name="msapplication-TileColor" content="#0E7A34" />
         <meta name="msapplication-TileImage" content="/logo_short-144x144.png" />
       </head>

@@ -315,3 +315,22 @@
     }
   }
 }
+/* ── Application sur téléphone (modules du personnel) ─────────────────── */
+
+/* iOS zoome sur un champ dont le texte fait moins de 16 px : on l'évite. */
+@media (max-width: 639px) {
+  .caisse :is(input, select, textarea) {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Comme une application : pas de sélection de texte ni d'aperçu de lien au
+   doigt appuyé sur les boutons et la navigation, pas de rebond de la page. */
+.caisse :is(button, [role="button"], [role="tab"], nav a) {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+html:has(.caisse) {
+  overscroll-behavior: none;
+}

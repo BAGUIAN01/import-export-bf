@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Container as IconeConteneur, LayoutDashboard, LayoutGrid, Package, PackageCheck, Receipt, Settings, Tag, UserCog, Users } from "lucide-react";
 import { MenuProfil } from "@/components/gestion/menu-profil";
+import { OngletsBas } from "@/components/gestion/onglets-bas";
 import { RechercheGlobale } from "@/components/recherche/recherche-globale";
 import { canAccess } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ const ONGLETS = [
   { href: "/admin/packages", libelle: "Colis", icone: Package },
   { href: "/admin/clients", libelle: "Clients", icone: Users },
   { href: "/admin/retraits", libelle: "Retraits", icone: PackageCheck },
-  { href: "/admin/shipments", libelle: "Encaissements", icone: Receipt },
+  { href: "/admin/shipments", libelle: "Encaissements", court: "Paiements", icone: Receipt },
   { href: "/admin/tarifs", libelle: "Tarifs", icone: Tag },
 ];
 
@@ -33,13 +34,13 @@ export function BarreGestion() {
   const conteneur = useConteneurEnCours();
 
   return (
-    <header className="caisse flex h-[72px] shrink-0 items-center gap-2 border-b border-line bg-white px-3 font-caisse text-[15px] text-ink sm:gap-3 lg:px-5">
-      <Link href="/admin" aria-label="Accueil des modules" className="grid size-12 shrink-0 place-items-center rounded-xl bg-ink text-white">
+    <header className="caisse flex h-16 shrink-0 items-center gap-2 border-b border-line bg-white px-3 font-caisse text-[15px] text-ink sm:h-[72px] sm:gap-3 lg:px-5">
+      <Link href="/admin" aria-label="Accueil des modules" className="hidden size-12 shrink-0 place-items-center rounded-xl bg-ink text-white sm:grid">
         <LayoutGrid className="size-5" aria-hidden="true" />
       </Link>
-      <span className="hidden text-lg font-semibold tracking-tight min-[1180px]:block">Gestion</span>
+      <span className="hidden text-lg font-semibold tracking-tight max-md:block min-[1180px]:block">Gestion</span>
 
-      <nav aria-label="Onglets de la gestion" className="min-w-0 lg:ml-2">
+      <nav aria-label="Onglets de la gestion" className="hidden min-w-0 md:block lg:ml-2">
         <ul className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-surface-muted p-1 [scrollbar-width:none]">
           {onglets.map((o) => {
             const actif = chemin === o.href || chemin.startsWith(`${o.href}/`);
@@ -93,6 +94,23 @@ export function BarreGestion() {
       </div>
     </header>
   );
+}
+
+/** Téléphone : les onglets de la gestion en bas, le reste dans « Plus ». */
+export function NavigationBasGestion() {
+  const { data } = useSession();
+  const role = data?.user?.role;
+  if (!role) return null;
+  // En bas, les quatre écrans du quotidien d'abord ; Retraits a son propre écran
+  const ordre = ["/admin/containers", "/admin/packages", "/admin/clients", "/admin/shipments"];
+  const onglets = ONGLETS.filter((o) => canAccess(role, o.href)).sort((a, b) => (ordre.indexOf(a.href) + 1 || 99) - (ordre.indexOf(b.href) + 1 || 99));
+  const liens = [
+    { href: "/admin/dashboard", libelle: "Tableau de bord", icone: LayoutDashboard },
+    { href: "/admin/parametrage", libelle: "Paramétrage", icone: Settings },
+    { href: "/admin/profile", libelle: "Mon profil", icone: UserCog },
+    { href: "/admin", libelle: "Accueil des modules", icone: LayoutGrid },
+  ].filter((l) => canAccess(role, l.href));
+  return <OngletsBas onglets={onglets} liens={liens} />;
 }
 
 /** Conteneur qui reçoit les colis (le plus proche du départ). */

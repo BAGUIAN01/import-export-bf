@@ -1,0 +1,25 @@
+{
+  "name": "Naange Envoi · Pro",
+  "short_name": "Naange Pro",
+  "description": "Caisse, retraits et gestion des envois Naange Envoi",
+  "id": "/admin",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F6F7F6",
+  "theme_color": "#FFFFFF",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["business", "logistics", "productivity"],
+  "icons": [
+    { "src": "/logo_short-96x96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/logo_short-144x144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "/logo_short.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Caisse", "short_name": "Caisse", "url": "/admin/caisse/client", "icons": [{ "src": "/logo_short-96x96.png", "sizes": "96x96" }] },
+    { "name": "Retraits", "short_name": "Retraits", "url": "/admin/retraits", "icons": [{ "src": "/logo_short-96x96.png", "sizes": "96x96" }] },
+    { "name": "Conteneurs", "short_name": "Conteneurs", "url": "/admin/containers", "icons": [{ "src": "/logo_short-96x96.png", "sizes": "96x96" }] }
+  ]
+}

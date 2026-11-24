@@ -19,17 +19,17 @@ export function BarreModule({ titre, sousTitre, onglets = [], droite = null }) {
   const nom = data?.user?.name || data?.user?.email || "";
 
   return (
-    <header className="caisse flex h-[72px] shrink-0 items-center gap-2 border-b border-line bg-white px-3 font-caisse text-[15px] text-ink sm:gap-3 lg:px-5">
-      <Link href="/admin" aria-label="Accueil des modules" className="grid size-12 shrink-0 place-items-center rounded-xl bg-ink text-white">
+    <header className="caisse flex h-16 shrink-0 items-center gap-2 border-b border-line bg-white px-3 font-caisse text-[15px] text-ink sm:h-[72px] sm:gap-3 lg:px-5">
+      <Link href="/admin" aria-label="Accueil des modules" className="hidden size-12 shrink-0 place-items-center rounded-xl bg-ink text-white sm:grid">
         <LayoutGrid className="size-5" aria-hidden="true" />
       </Link>
-      <span className={cn("flex min-w-0 flex-col leading-tight", onglets.length > 0 && "hidden min-[1180px]:flex")}>
+      <span className={cn("flex min-w-0 flex-col leading-tight", onglets.length > 0 && "hidden max-md:flex min-[1180px]:flex")}>
         <span className="truncate text-lg font-semibold tracking-tight">{titre}</span>
         {sousTitre && <span className="truncate text-xs text-ink-muted">{sousTitre}</span>}
       </span>
 
       {onglets.length > 0 && (
-        <nav aria-label={`Onglets : ${titre}`} className="min-w-0 lg:ml-2">
+        <nav aria-label={`Onglets : ${titre}`} className="hidden min-w-0 md:block lg:ml-2">
           <ul className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-surface-muted p-1 [scrollbar-width:none]">
             {onglets.map((o) => {
               const actif = chemin === o.href || chemin.startsWith(`${o.href}/`);
@@ -65,13 +65,14 @@ export function BarreModule({ titre, sousTitre, onglets = [], droite = null }) {
 }
 
 /** Coquille plein écran d'un module : barre + contenu défilant. */
-export function CoquilleModule({ barre, children, defilement = true }) {
+export function CoquilleModule({ barre, bas = null, children, defilement = true }) {
   return (
     <div className="flex h-[100dvh] flex-col bg-surface-page font-caisse" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {barre}
       <main className={cn("caisse min-h-0 flex-1 text-[15px] text-ink", defilement ? "overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6" : "overflow-hidden")}>
         {children}
       </main>
+      {bas}
     </div>
   );
 }

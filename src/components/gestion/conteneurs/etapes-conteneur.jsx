@@ -36,8 +36,8 @@ export function EtapesConteneur({ conteneur, onFait, peutModifier = true, compac
                   enCours ? "bg-brand text-white shadow-[0_2px_6px_rgba(14,122,85,.25)]" : fait ? "bg-white text-brand-strong" : "text-ink-muted hover:bg-white"
                 )}
               >
-                <span className="flex items-center gap-1 text-[13px] font-semibold leading-tight">
-                  {fait && <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />}
+                <span className="flex items-center gap-1 text-[11px] font-semibold leading-tight tracking-tight sm:text-[13px] sm:tracking-normal">
+                  {fait && <Check className="hidden size-3.5 sm:block" strokeWidth={3} aria-hidden="true" />}
                   {ETAPES_DETAIL[s].court}
                 </span>
                 {dates[s] && <span className={cn("chiffres text-[11px]", enCours ? "text-white/80" : "text-ink-subtle")}>{jourMois(dates[s])}</span>}
