@@ -77,7 +77,7 @@ export default function RecusPage() {
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-[13px] text-ink-muted">Caisse / Reçus du jour</p>
+            <p className="hidden text-[13px] text-ink-muted sm:block">Caisse / Reçus du jour</p>
             <h1 className="text-2xl font-semibold tracking-tight">Reçus du jour</h1>
             <p className="text-ink-muted">
               {envois ? `${envois.length} envoi${envois.length > 1 ? "s" : ""} · ` : ""}

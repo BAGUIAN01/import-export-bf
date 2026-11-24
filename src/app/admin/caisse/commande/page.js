@@ -5,7 +5,7 @@ import { Plus, Search, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCaisse } from "@/contexts/caisse-context";
 import { GardeClient } from "@/components/caisse/sans-client";
-import { Ticket } from "@/components/caisse/colis/ticket";
+import { PanierMobile, Ticket } from "@/components/caisse/colis/ticket";
 import { FeuilleDevis, FeuilleQuantite } from "@/components/caisse/colis/feuilles-saisie";
 import { VignetteArticle } from "@/components/caisse/vignette-article";
 import { articlesDe, chercherArticles } from "@/lib/caisse/familles";
@@ -13,6 +13,7 @@ import { useCatalogue } from "@/hooks/use-catalogue";
 import { iconeDe } from "@/lib/caisse/icones";
 import { formatMontant } from "@/lib/caisse/montants";
 import { cn } from "@/lib/utils";
+import { vibrer } from "@/lib/vibrer";
 
 /**
  * Caisse · 2. Colis
@@ -60,6 +61,7 @@ function Colis() {
       return;
     }
     addItem({ id: article.id, type: article.code, name: article.nom, price: article.prix, categoryId: article.famille, vignette: vignetteDe(article) });
+    vibrer();
   }
 
   const nbParFamille = useMemo(() => {
@@ -75,7 +77,7 @@ function Colis() {
     // Comme la caisse dogtorso : en paysage (PC, tablette couchée), la commande
     // à gauche, la colonne des familles au milieu, les articles à droite ;
     // en portrait, le catalogue en haut et la commande en bas.
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 sm:p-4 lg:flex-row-reverse lg:gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-2.5 p-2.5 pb-[max(.625rem,env(safe-area-inset-bottom))] sm:gap-3 sm:p-4 lg:flex-row-reverse lg:gap-4">
       {/* Catalogue : familles + articles */}
       <section
         aria-label="Catalogue des tarifs"
@@ -83,7 +85,7 @@ function Colis() {
       >
         <nav
           aria-label="Familles d'articles"
-          className="flex shrink-0 gap-1.5 overflow-x-auto overscroll-contain border-b border-line bg-surface-page p-2 [scrollbar-width:none] sm:w-[116px] sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:border-b-0 sm:border-r sm:p-2.5"
+          className="flex shrink-0 gap-1.5 overflow-x-auto overscroll-contain border-b border-line bg-surface-page px-2 py-2.5 [scrollbar-width:none] sm:w-[116px] sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:border-b-0 sm:border-r sm:p-2.5"
         >
           {familles.map((f) => {
             const actif = !recherche.trim() && familleAffichee === f.cle;
@@ -99,17 +101,21 @@ function Colis() {
                   setRecherche("");
                 }}
                 className={cn(
-                  "relative flex min-h-[64px] min-w-[84px] shrink-0 flex-col items-center justify-center gap-1 rounded-[14px] px-1 py-2 text-center sm:min-h-[82px] sm:min-w-0",
+                  // Téléphone : pastilles compactes (icône + nom) ; tablette et PC : colonne de tuiles
+                  "relative flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 text-center sm:h-auto sm:min-h-[82px] sm:min-w-0 sm:flex-col sm:gap-1 sm:rounded-[14px] sm:px-1 sm:py-2",
                   actif ? "bg-brand text-white shadow-[0_4px_12px_rgba(14,122,85,.25)]" : "text-ink hover:bg-white"
                 )}
               >
-                <Icone className="size-6" strokeWidth={1.8} aria-hidden="true" style={actif ? undefined : { color: f.teinte.trait }} />
-                <span lang="fr" className="text-[13px] font-semibold leading-4 [hyphens:auto] [overflow-wrap:break-word]">{f.nom}</span>
-                <span className={cn("chiffres text-[11px]", actif ? "text-white/80" : "text-ink-subtle")}>{nbParFamille[f.cle] ?? 0}</span>
+                <Icone className="size-5 sm:size-6" strokeWidth={1.8} aria-hidden="true" style={actif ? undefined : { color: f.teinte.trait }} />
+                <span lang="fr" className="whitespace-nowrap text-[13px] font-semibold leading-4 sm:whitespace-normal sm:[hyphens:auto] sm:[overflow-wrap:break-word]">{f.nom}</span>
+                <span className={cn("chiffres hidden text-[11px] sm:block", actif ? "text-white/80" : "text-ink-subtle")}>{nbParFamille[f.cle] ?? 0}</span>
                 {dansTicket > 0 && (
                   <span
                     aria-label={`${dansTicket} dans le ticket`}
-                    className={cn("chiffres absolute top-1.5 right-1.5 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-semibold", actif ? "bg-white text-brand-strong" : "bg-brand text-white")}
+                    className={cn(
+                      "chiffres absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-semibold sm:top-1.5 sm:right-1.5",
+                      actif ? "bg-white text-brand-strong ring-2 ring-brand sm:ring-0" : "bg-brand text-white"
+                    )}
                   >
                     {dansTicket}
                   </span>
@@ -120,15 +126,15 @@ function Colis() {
         </nav>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="border-b border-line px-4 pt-3.5 pb-2.5">
-            <label className="relative flex h-[52px] items-center rounded-[14px] border border-line-strong bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20">
+          <div className="border-b border-line px-3 pt-3 pb-2.5 sm:px-4 sm:pt-3.5">
+            <label className="relative flex h-12 items-center sm:h-[52px] rounded-[14px] border border-line-strong bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20">
               <span className="sr-only">Rechercher un article</span>
               <Search className="ml-4 size-5 shrink-0 text-ink-muted" aria-hidden="true" />
               <input
                 type="search"
                 value={recherche}
                 onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Chercher dans tout le catalogue : carton, valise, TV…"
+                placeholder="Chercher : carton, valise, TV…"
                 autoComplete="off"
                 className="h-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none [&::-webkit-search-cancel-button]:hidden"
               />
@@ -139,14 +145,14 @@ function Colis() {
               )}
             </label>
           </div>
-          <div className="flex items-baseline justify-between gap-3 px-4 pt-2.5">
+          <div className="flex items-baseline justify-between gap-3 px-3 pt-2.5 sm:px-4">
             <span className="truncate text-[15px] font-semibold">{titre}</span>
             <span className="shrink-0 text-xs text-ink-subtle">Prix en euros</span>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-2.5 pb-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-2.5 pb-4 sm:px-4">
             {chargement ? (
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(168px,1fr))] gap-2.5" aria-hidden="true">
+              <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-[repeat(auto-fill,minmax(168px,1fr))]" aria-hidden="true">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <li key={i} className="h-[196px] animate-pulse rounded-[14px] bg-surface-muted" />
                 ))}
@@ -158,7 +164,7 @@ function Colis() {
                 {recherche.trim() ? "Aucun article trouvé." : "Aucun article dans cette famille."}
               </p>
             ) : (
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(168px,1fr))] gap-2.5">
+              <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-[repeat(auto-fill,minmax(168px,1fr))]">
                 {articles.map((a) => {
                   const q = quantiteDe(a);
                   return (
@@ -172,10 +178,10 @@ function Colis() {
                         )}
                       >
                         {a.image ? (
-                          <VignetteArticle article={a} taille="h-24 w-full" className="rounded-none" />
+                          <VignetteArticle article={a} taille="h-20 w-full sm:h-24" className="rounded-none" />
                         ) : (
-                          <span className="grid h-24 place-items-center" style={{ background: a.teinte.fond }}>
-                            <VignetteArticle article={a} taille="size-16" icone="size-10" />
+                          <span className="grid h-20 place-items-center sm:h-24" style={{ background: a.teinte.fond }}>
+                            <VignetteArticle article={a} taille="size-14 sm:size-16" icone="size-9 sm:size-10" />
                           </span>
                         )}
                         <span
@@ -187,7 +193,7 @@ function Colis() {
                         >
                           {q || <Plus className="size-4" aria-hidden="true" />}
                         </span>
-                        <span className="flex flex-1 flex-col gap-0.5 p-3">
+                        <span className="flex flex-1 flex-col gap-0.5 p-2.5 sm:p-3">
                           <span className="line-clamp-2 text-[15px] font-medium leading-5">{a.nom}</span>
                           {a.detail && <span className="line-clamp-1 text-xs text-ink-subtle">{a.detail}</span>}
                           <span className={cn("chiffres mt-auto pt-1 text-lg font-semibold", a.surDevis && "font-caisse text-sm font-medium text-alerte")}>
@@ -204,10 +210,11 @@ function Colis() {
         </div>
       </section>
 
-      {/* Commande : à gauche en paysage, en bas en portrait */}
+      {/* Commande : à gauche en paysage, en bas en portrait ; téléphone : panier replié */}
+      <PanierMobile onQuantite={setLigneQuantite} className="shrink-0 sm:hidden" />
       <Ticket
         onQuantite={setLigneQuantite}
-        className="max-h-[44dvh] shrink-0 overflow-hidden rounded-[18px] border border-line shadow-[0_1px_2px_rgba(15,23,20,.04)] lg:h-full lg:max-h-none lg:w-[420px] xl:w-[460px] min-[1680px]:w-[560px]"
+        className="hidden max-h-[44dvh] shrink-0 sm:flex overflow-hidden rounded-[18px] border border-line shadow-[0_1px_2px_rgba(15,23,20,.04)] lg:h-full lg:max-h-none lg:w-[420px] xl:w-[460px] min-[1680px]:w-[560px]"
       />
 
       {devis && (

@@ -355,3 +355,14 @@ html:has(.caisse) {
 @media (prefers-reduced-motion: reduce) {
   .page-pousser, .page-retour, .page-fondu { animation: none; }
 }
+
+/* Caisse (téléphone) : le panier « saute » quand un article y entre. */
+@keyframes panier-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+.panier-bump { animation: panier-bump 0.28s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .panier-bump { animation: none; }
+}

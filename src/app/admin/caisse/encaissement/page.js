@@ -174,10 +174,10 @@ function Paiement() {
 
       {/* Payer */}
       <section aria-label="Paiement" className="flex min-h-0 flex-col border-line bg-white lg:border-l">
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-5">
           {/* Résumé compact (portrait) */}
-          <div className="mb-4 flex items-center gap-3 lg:hidden">
-            <Link href="/admin/caisse/commande" aria-label="Retour aux colis" className="grid size-12 shrink-0 place-items-center rounded-xl border border-line-strong bg-white">
+          <div className="mb-3 flex items-center gap-3 sm:mb-4 lg:hidden">
+            <Link href="/admin/caisse/commande" aria-label="Retour aux colis" className="grid size-11 shrink-0 sm:size-12 place-items-center rounded-xl border border-line-strong bg-white">
               <ArrowLeft className="size-5" aria-hidden="true" />
             </Link>
             <div className="min-w-0 flex-1">
@@ -192,7 +192,7 @@ function Paiement() {
                 type="button"
                 onClick={() => setFeuilleRemise(true)}
                 className={cn(
-                  "flex h-12 items-center gap-2 rounded-xl px-3 font-semibold",
+                  "flex h-11 items-center gap-2 rounded-xl px-3 font-semibold sm:h-12",
                   remise ? "border-2 border-brand bg-brand-soft text-brand-strong" : "border border-line-strong"
                 )}
               >
@@ -202,12 +202,12 @@ function Paiement() {
             )}
           </div>
 
-          <div className="mb-4 flex items-baseline justify-between gap-3 rounded-2xl bg-ink px-5 py-4 text-white lg:hidden">
+          <div className="mb-3 flex items-baseline justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-white sm:mb-4 sm:px-5 sm:py-4 lg:hidden">
             <span className="text-white/75">Net à payer</span>
-            <span className="chiffres text-[32px] font-semibold leading-none tracking-tight">{formatMontant(orderTotal)}</span>
+            <span className="chiffres text-[28px] font-semibold leading-none tracking-tight sm:text-[32px]">{formatMontant(orderTotal)}</span>
           </div>
 
-          <div role="radiogroup" aria-label="Mode de paiement" className="grid grid-cols-3 gap-2">
+          <div role="radiogroup" aria-label="Mode de paiement" className="-mx-3 flex gap-2 overflow-x-auto px-3 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
             {MODES_PAIEMENT.map((m) => {
               const Icone = ICONES[m.valeur];
               const actif = mode === m.valeur;
@@ -219,13 +219,13 @@ function Paiement() {
                   aria-checked={actif}
                   onClick={() => choisirMode(m.valeur)}
                   className={cn(
-                    "flex h-[72px] flex-col items-center justify-center gap-1 rounded-2xl text-[15px] lg:h-14 lg:flex-row lg:gap-2 min-[1180px]:h-[60px]",
-                    m.valeur === "ARRIVEE" && "col-span-2 flex-row gap-3",
+                    "flex h-[60px] min-w-[92px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-sm sm:h-[72px] sm:min-w-0 sm:gap-1 sm:text-[15px] lg:h-14 lg:flex-row lg:gap-2 min-[1180px]:h-[60px]",
+                    m.valeur === "ARRIVEE" && "sm:col-span-2 sm:flex-row sm:gap-3",
                     actif ? "border-2 border-brand bg-brand-soft font-semibold text-brand-strong" : "border border-line-strong bg-white font-medium"
                   )}
                 >
-                  <Icone className="size-6" aria-hidden="true" />
-                  {m.libelle}
+                  <Icone className="size-5 sm:size-6" aria-hidden="true" />
+                  <span className="whitespace-nowrap">{m.libelle}</span>
                 </button>
               );
             })}
@@ -237,7 +237,7 @@ function Paiement() {
               <span className="chiffres font-semibold">{formatMontant(orderTotal)}</span> au retrait des colis.
             </p>
           ) : (
-            <div className="mt-4 flex flex-col gap-3">
+            <div className="mt-3 flex flex-col gap-2.5 sm:mt-4 sm:gap-3">
               <Afficheur libelle={mode === "ESPECES" ? "Montant reçu" : "Montant payé"} valeur={saisie} unite={DEVISE.symbole} vide="0,00" />
               <div aria-live="polite" className="chiffres flex min-h-6 justify-between px-1 text-[15px]">
                 {recu <= 0 ? (
@@ -256,19 +256,6 @@ function Paiement() {
                   <span className="font-caisse font-medium text-brand-strong">Compte juste</span>
                 )}
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {montantsRapides(orderTotal).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setSaisie(formatNombre(v).replace(/ /g, ""))}
-                    className="chiffres h-12 rounded-xl border border-line-strong bg-surface-page text-[15px] font-semibold"
-                  >
-                    {formatNombre(v, v % 1 === 0 ? 0 : DEVISE.decimales)}
-                  </button>
-                ))}
-              </div>
-              <Clavier onTouche={(t) => setSaisie((s) => toucheClavier(s, t))} hauteur="h-[68px] lg:h-[52px] min-[1180px]:h-14" />
               {modeInfo?.reference && (
                 <FloatingLabelInput
                   id={`${id}-reference`}
@@ -278,11 +265,24 @@ function Paiement() {
                   onChange={(e) => setReference(e.target.value)}
                 />
               )}
+              <div className="grid grid-cols-4 gap-2">
+                {montantsRapides(orderTotal).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setSaisie(formatNombre(v).replace(/ /g, ""))}
+                    className="chiffres h-11 rounded-xl border border-line-strong bg-surface-page text-[15px] font-semibold sm:h-12"
+                  >
+                    {formatNombre(v, v % 1 === 0 ? 0 : DEVISE.decimales)}
+                  </button>
+                ))}
+              </div>
+              <Clavier onTouche={(t) => setSaisie((s) => toucheClavier(s, t))} hauteur="h-12 sm:h-[68px] lg:h-[52px] min-[1180px]:h-14" />
             </div>
           )}
         </div>
 
-        <div className="border-t border-line p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
+        <div className="border-t border-line p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] sm:p-4 sm:px-5">
           {!selectedContainer && (
             <p className="mb-2 rounded-xl bg-alerte-soft px-3 py-2 text-sm text-alerte">Choisissez le conteneur (pastille en haut à droite) avant d&apos;enregistrer.</p>
           )}
@@ -290,7 +290,7 @@ function Paiement() {
             type="button"
             disabled={!peutEnregistrer}
             onClick={enregistrer}
-            className="chiffres flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-brand text-lg font-semibold text-white shadow-[0_2px_8px_rgba(14,122,85,.3)] disabled:bg-line-strong disabled:shadow-none"
+            className="chiffres flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-brand text-lg font-semibold sm:h-16 text-white shadow-[0_2px_8px_rgba(14,122,85,.3)] disabled:bg-line-strong disabled:shadow-none"
           >
             {envoi ? <Loader2 className="size-6 animate-spin" aria-hidden="true" /> : <Printer className="size-6" aria-hidden="true" />}
             <span className="font-caisse">{envoi ? "Enregistrement…" : libelleBouton}</span>

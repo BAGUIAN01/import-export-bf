@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Check, Container as IconeConteneur, CreditCard, LayoutGrid, Package, Receipt, User } from "lucide-react";
+import { Check, ChevronLeft, Container as IconeConteneur, CreditCard, LayoutGrid, Package, Receipt, User } from "lucide-react";
 import { useCaisse } from "@/contexts/caisse-context";
 import { PastilleConteneur } from "@/components/caisse/pastille-conteneur";
 import { MenuProfil } from "@/components/gestion/menu-profil";
@@ -54,8 +54,18 @@ export function BarreCaisse() {
       </Link>
       <span className="hidden text-lg font-semibold tracking-tight min-[1180px]:block">Caisse</span>
 
+      {/* Téléphone, Reçus et Conteneurs : retour à la caisse (client ou colis en cours) */}
+      {indexActif < 0 && (
+        <Link
+          href={selectedClient ? "/admin/caisse/commande" : "/admin/caisse/client"}
+          className="-ml-1.5 flex h-11 min-w-0 items-center rounded-xl pr-2 text-[17px] font-medium text-brand-strong active:opacity-60 sm:hidden"
+        >
+          <ChevronLeft className="size-7 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+          Caisse
+        </Link>
+      )}
       {/* Téléphone : l'étape en titre, la progression sous la barre */}
-      <div className="min-w-0 flex-1 leading-tight sm:hidden">
+      <div className={cn("min-w-0 flex-1 leading-tight sm:hidden", indexActif < 0 && "invisible")}>
         <div className="text-[11px] font-medium text-ink-muted">{indexActif >= 0 ? `Caisse · étape ${indexActif + 1} sur ${ETAPES.length}` : "Caisse"}</div>
         <div className="truncate text-[17px] font-semibold">
           {indexActif >= 0 ? ETAPES[indexActif].libelle : chemin === "/admin/caisse/recus" ? "Reçus du jour" : "Conteneurs"}
@@ -142,7 +152,14 @@ export function BarreCaisse() {
           </Link>
         )}
         <PastilleConteneur peutGerer={estChef} />
-        <MenuProfil nom={nom} role={role} liens={[{ href: "/admin/caisse/recus", libelle: "Reçus du jour", icone: Receipt }]} />
+        <MenuProfil
+          nom={nom}
+          role={role}
+          liens={[
+            { href: "/admin/caisse/recus", libelle: "Reçus du jour", icone: Receipt },
+            ...(estChef ? [{ href: "/admin/caisse/conteneurs", libelle: "Conteneurs de la caisse", icone: IconeConteneur }] : []),
+          ]}
+        />
       </div>
     </header>
   );
