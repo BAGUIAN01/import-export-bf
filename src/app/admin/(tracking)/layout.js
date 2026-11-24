@@ -2,34 +2,29 @@
 
 import { useEffect } from 'react'
 import { SessionProvider } from 'next-auth/react'
-import { Inter } from 'next/font/google'
 import { LayoutProvider } from '@/components/layout/admin/layout-provider'
 import { SWRProvider } from '@/components/providers/swr-provider'
-import { MobileSidebar } from '@/components/layout/admin/sidebar/mobile-sidebar'
-import { Sidebar } from '@/components/layout/admin/sidebar/sidebar'
-import { Header } from '@/components/layout/admin/header'
-import { AdminBottomNav } from '@/components/layout/admin/admin-bottom-nav'
+import { BarreGestion } from '@/components/gestion/barre-gestion'
+import { geist, geistMono } from '@/lib/polices'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-})
-
-export default function DashboardLayout({ children }) {
-  // L'app-shell admin occupe tout l'écran (h-[100dvh]) et gère son propre
-  // scroll interne : on verrouille le scroll global (body/html) pour éviter
-  // le double scroll, et on le restaure en quittant l'admin.
+/**
+ * Coquille de la gestion (conteneurs, colis, clients, encaissements, tarifs…) :
+ * barre à onglets en haut comme la caisse, contenu défilant dessous.
+ */
+export default function GestionLayout({ children }) {
+  // La coquille occupe tout l'écran et gère son défilement : pas de double barre.
   useEffect(() => {
     const html = document.documentElement
     const prevHtml = html.style.overflow
     const prevBody = document.body.style.overflow
     html.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
+    // Les feuilles et menus s'ouvrent dans <body> (portail) : ils ont besoin des polices.
+    document.body.classList.add(geist.variable, geistMono.variable)
     return () => {
       html.style.overflow = prevHtml
       document.body.style.overflow = prevBody
+      document.body.classList.remove(geist.variable, geistMono.variable)
     }
   }, [])
 
@@ -38,28 +33,11 @@ export default function DashboardLayout({ children }) {
       <SWRProvider>
         <LayoutProvider>
           <div
-            className={`h-[100dvh] bg-background flex flex-col ${inter.className}`}
-            style={{ paddingTop: "env(safe-area-inset-top)" }}
+            className={`${geist.variable} ${geistMono.variable} flex h-[100dvh] flex-col bg-surface-page font-caisse`}
+            style={{ paddingTop: 'env(safe-area-inset-top)' }}
           >
-            <MobileSidebar />
-
-            <div className="flex flex-1 overflow-hidden">
-              {/* Sidebar fixe */}
-              <Sidebar />
-
-              <div className="flex flex-1 flex-col overflow-hidden">
-                {/* Header fixe */}
-                <Header/>
-
-                {/* Zone scrollable — marges réduites sur mobile pour occuper la largeur */}
-                <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6">
-                  {children}
-                </main>
-              </div>
-            </div>
-
-            {/* Bottom navbar mobile (style application) */}
-            <AdminBottomNav />
+            <BarreGestion />
+            <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6">{children}</main>
           </div>
         </LayoutProvider>
       </SWRProvider>

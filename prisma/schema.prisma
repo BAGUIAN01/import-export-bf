@@ -1,13 +1,11 @@
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL") 
+  url       = env("DATABASE_URL")
   directUrl = env("DATABASE_URL_UNPOOLED")
-
 }
 
 // ===== AUTHENTIFICATION =====
@@ -54,6 +52,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Agence de rattachement (caisse, retraits) ; null = toutes les agences
+  agenceId String?
+  agence   Agence? @relation(fields: [agenceId], references: [id])
+
   // Informations supplémentaires
   firstName   String?
   lastName    String?
@@ -62,7 +64,7 @@ model User {
   country     String?   @default("France")
   dateOfBirth DateTime?
   lastLoginAt DateTime?
-  
+
   // Sécurité et préférences
   twoFactorEnabled     Boolean @default(false)
   notificationSettings Json?
@@ -111,9 +113,10 @@ model PhoneVerification {
 enum UserRole {
   CLIENT
   ADMIN
-  STAFF
-  TRACKER
-  AGENT
+  STAFF // caissier
+  TRACKER // gestionnaire (conteneurs, colis, tarifs)
+  AGENT // agent de retrait (agence d'arrivée)
+  CHEF_CAISSE // caissier + conteneurs, remises, encaissements
 }
 
 enum PackageType {
@@ -331,6 +334,7 @@ model Container {
   driverName       String?
   driverPhone      String?
   plateNumber      String?
+  sealNumber       String? // n° du plomb posé à la fermeture
 
   // Coûts
   transportCost Float?
@@ -361,13 +365,13 @@ model Package {
   userId        String? // Utilisateur qui a créé l'entrée
 
   // Détails du colis — JSON natif
-  types         Json    // [{"type":"CARTON","quantity":2}, {"type":"TV_55","quantity":1}]
+  types         Json // [{"type":"CARTON","quantity":2}, {"type":"TV_55","quantity":1}]
   description   String
   totalQuantity Int     @default(1)
   weight        Float?
   dimensions    String? // "LxlxH en cm"
   value         Float?
-  photos        Json?   // JSON string/obj des URLs des photos
+  photos        Json? // JSON string/obj des URLs des photos
 
   // Statut et suivi
   status    PackageStatus @default(REGISTERED)
@@ -438,7 +442,7 @@ model TrackingUpdate {
 
   // Métadonnées
   isPublic    Boolean  @default(true)
-  photos      Json?    // JSON des URLs des photos
+  photos      Json? // JSON des URLs des photos
   temperature Float?
   timestamp   DateTime @default(now())
   createdAt   DateTime @default(now())
@@ -646,7 +650,7 @@ model AuditLog {
   action     String
   resource   String
   resourceId String?
-  details    Json?    // Détails supplémentaires en JSON
+  details    Json? // Détails supplémentaires en JSON
   ipAddress  String?
   userAgent  String?
   createdAt  DateTime @default(now())
@@ -708,9 +712,10 @@ model Shipment {
   notes               String?
 
   // Remise au destinataire
-  deliveredAt  DateTime? // date/heure de remise
-  receivedBy   String? // nom de la personne qui a récupéré
-  deliveryNote String? // note optionnelle de remise
+  deliveredAt      DateTime? // date/heure de remise
+  receivedBy       String? // nom de la personne qui a récupéré
+  deliveryNote     String? // note optionnelle de remise
+  receivedIdNumber String? // n° de la pièce présentée au retrait
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -724,4 +729,81 @@ model Shipment {
   @@index([shipmentNumber])
   @@index([clientId])
   @@map("shipments")
+}
+
+// ===== AGENCES ET DEVISES =====
+
+enum AgenceRole {
+  DEPART // dépose des colis (caisse)
+  ARRIVEE // retraits des colis
+  DEUX
+}
+
+model Agence {
+  id    String     @id @default(cuid())
+  nom   String
+  ville String
+  pays  String
+  role  AgenceRole @default(DEPART)
+
+  // Devise de l'agence. Les tarifs sont dans la devise de référence (EUR) :
+  // 1 unité de référence = `taux` unités de la devise de l'agence.
+  devise        String   @default("EUR") // EUR, XOF, USD
+  taux          Float    @default(1)
+  pariteFixe    Boolean  @default(true) // 1 € = 655,957 FCFA
+  modesPaiement String[] @default([]) // ESPECES, CARTE, MOBILE, VIREMENT, ARRIVEE
+  prefixeRecu   String   @default("R-")
+  adresse       String?
+  telephone     String?
+  isActive      Boolean  @default(true)
+  ordre         Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+
+  @@map("agences")
+}
+
+// ===== TARIFS (catalogue de la caisse) =====
+
+model FamilleArticle {
+  id       String  @id @default(cuid())
+  cle      String  @unique // "cartons", "futs"…
+  nom      String
+  teinte   String  @default("gris") // ambre, vert, bleu, violet, gris, sable, rose, cyan
+  icone    String  @default("package") // nom d'icône lucide (voir lib/caisse/icones.js)
+  ordre    Int     @default(0)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  articles Article[]
+
+  @@map("familles_articles")
+}
+
+model Article {
+  id            String  @id @default(cuid())
+  code          String // type de colis enregistré (PACKAGE_TYPES.value ou code libre)
+  nom           String
+  detail        String?
+  prix          Float   @default(0) // devise de référence
+  surDevis      Boolean @default(false)
+  image         String? // photo (data URL JPEG réduite)
+  frequent      Boolean @default(false) // dans « Fréquents » à la caisse
+  proposeCaisse Boolean @default(true)
+  ordre         Int     @default(0)
+  isActive      Boolean @default(true)
+
+  familleId String
+  famille   FamilleArticle @relation(fields: [familleId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([familleId])
+  @@map("articles")
 }

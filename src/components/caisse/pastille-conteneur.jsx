@@ -6,18 +6,12 @@ import { Check, ChevronDown, Container as IconeConteneur, Settings2 } from "luci
 import { useCaisse } from "@/contexts/caisse-context";
 import { Feuille } from "@/components/caisse/feuille";
 import { cn } from "@/lib/utils";
+import { STATUTS_CONTENEUR } from "@/lib/conteneurs";
 
-export const STATUTS_CONTENEUR = {
-  PREPARATION: { libelle: "En chargement", classe: "bg-alerte-soft text-alerte" },
-  LOADED: { libelle: "Chargé", classe: "bg-info-soft text-info" },
-  IN_TRANSIT: { libelle: "En transit", classe: "bg-info-soft text-info" },
-  CUSTOMS: { libelle: "En douane", classe: "bg-surface-muted text-ink-muted" },
-  DELIVERED: { libelle: "Arrivé", classe: "bg-brand-soft text-brand-strong" },
-  CANCELLED: { libelle: "Annulé", classe: "bg-danger-soft text-danger" },
-};
+export { STATUTS_CONTENEUR };
 
 // Seuls ces conteneurs reçoivent encore des colis.
-const OUVERTS = ["PREPARATION", "LOADED"];
+const OUVERTS = ["PREPARATION"]; // « Fermé » (LOADED) : plombé, plus de colis
 
 function dateCourte(d) {
   if (!d) return null;

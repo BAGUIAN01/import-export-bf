@@ -44,7 +44,7 @@ const FAMILLES = [
 async function conteneurEnCours() {
   try {
     return await prisma.container.findFirst({
-      where: { status: { in: ["PREPARATION", "LOADED"] } },
+      where: { status: "PREPARATION" },
       orderBy: [{ departureDate: "asc" }, { createdAt: "desc" }],
       select: {
         id: true,
@@ -113,7 +113,7 @@ export default async function AccueilModules() {
             <span className="flex min-w-[220px] flex-1 flex-col leading-snug">
               <span className="font-semibold">
                 <span className="chiffres">{conteneur.containerNumber}</span>{" "}
-                {conteneur.status === "PREPARATION" ? "en chargement" : "chargé"} ·{" "}
+                en chargement ·{" "}
                 <span className="chiffres">{conteneur._count.packages}</span> colis
                 {conteneur.capacity ? ` sur ${conteneur.capacity}` : ""}
               </span>

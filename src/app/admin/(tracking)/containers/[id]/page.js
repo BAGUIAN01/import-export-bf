@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
-import { ContainerDetailView } from "@/components/modules/admin/containers/container-detail-view";
+import { FicheConteneur } from "@/components/gestion/conteneurs/fiche-conteneur";
 
 import {
   PageContainer,
@@ -52,7 +52,7 @@ export default async function ContainerDetailPage({ params }) {
       redirect('/auth/signin');
     }
 
-    if (!['ADMIN', 'STAFF'].includes(session.user.role)) {
+    if (!['ADMIN', 'STAFF', 'TRACKER', 'CHEF_CAISSE'].includes(session.user.role)) {
       redirect('/unauthorized');
     }
 
@@ -63,25 +63,7 @@ export default async function ContainerDetailPage({ params }) {
       notFound();
     }
 
-    return (
-      <PageContainer>
-        <PageTitle title={`Conteneur ${container.containerNumber}`} />
-        <PageHeader
-          breadcrumbs={[
-            { label: "Hub", href: "/admin" },
-            { label: "Expédition" },
-            { label: "Conteneurs", href: "/admin/containers" },
-            { label: container.containerNumber },
-          ]}
-        />
-        <PageBody>
-          <ContainerDetailView 
-            container={container} 
-            currentUser={session.user}
-          />
-        </PageBody>
-      </PageContainer>
-    );
+    return <FicheConteneur container={container} currentUser={session.user} />;
   } catch (error) {
     console.error("Erreur chargement détail conteneur:", error);
     return (

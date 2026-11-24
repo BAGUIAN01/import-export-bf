@@ -160,6 +160,8 @@ export async function PUT(request, { params }) {
       updateData.driverPhone = body.driverPhone?.trim() || null;
     if (body.plateNumber !== undefined)
       updateData.plateNumber = body.plateNumber?.trim() || null;
+    if (body.sealNumber !== undefined)
+      updateData.sealNumber = body.sealNumber?.trim() || null;
     if (body.transportCost !== undefined)
       updateData.transportCost = body.transportCost
         ? parseFloat(body.transportCost)

@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import { CaisseProvider } from "@/contexts/caisse-context";
 import { BarreCaisse } from "@/components/caisse/barre-caisse";
-import { Toaster } from "@/components/ui/sonner";
 import { geist, geistMono } from "@/lib/polices";
 
 
@@ -39,7 +38,6 @@ export default function CaisseLayout({ children }) {
           <BarreCaisse />
           <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
         </div>
-        <Toaster richColors position="top-center" />
       </CaisseProvider>
     </SessionProvider>
   );
