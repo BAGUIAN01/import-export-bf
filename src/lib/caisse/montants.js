@@ -110,3 +110,12 @@ export function initiales(nom = "") {
   if (mots.length === 0) return "?";
   return ((mots[0][0] || "") + (mots.length > 1 ? mots[mots.length - 1][0] : "")).toUpperCase();
 }
+
+/** Saisie du clavier affichée avec les milliers : « 374184 » → « 374 184 », « 1250,5 » → « 1 250,5 ». */
+export function grouperSaisie(saisie) {
+  const s = String(saisie ?? "");
+  if (!s) return "";
+  const [entier, fraction] = s.split(",");
+  const groupe = entier.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return fraction !== undefined ? `${groupe},${fraction}` : groupe;
+}

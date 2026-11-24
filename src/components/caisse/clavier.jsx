@@ -2,6 +2,7 @@
 
 import { Delete } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { grouperSaisie } from "@/lib/caisse/montants";
 
 /**
  * Pavé numérique à l'écran : le clavier du système ne s'ouvre pas et les
@@ -38,7 +39,7 @@ export function Afficheur({ libelle, valeur, unite, vide = "0", className }) {
       <div className="text-xs font-medium text-ink-muted">{libelle}</div>
       <div className="flex items-baseline justify-end gap-2">
         <output className={cn("chiffres text-4xl font-semibold tracking-tight", !valeur && "text-line-strong")}>
-          {valeur || vide}
+          {valeur ? grouperSaisie(valeur) : vide}
         </output>
         {unite && <span className="chiffres text-lg text-ink-muted">{unite}</span>}
       </div>

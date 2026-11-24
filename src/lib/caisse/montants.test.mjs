@@ -67,3 +67,10 @@ test("initiales", () => {
   assert.equal(initiales("Ali"), "A");
   assert.equal(initiales(""), "?");
 });
+
+import { grouperSaisie } from "./montants.js";
+test("saisie groupée", () => {
+  assert.equal(grouperSaisie("374184"), "374 184");
+  assert.equal(grouperSaisie("1250,5"), "1 250,5");
+  assert.equal(grouperSaisie(""), "");
+});
