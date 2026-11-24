@@ -38,7 +38,8 @@ export default function ProfilsPage() {
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Profils et droits</h1>
+        <p className="text-[13px] text-ink-muted">Paramétrage / Profils et droits</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Profils et droits</h1>
         <p className="text-ink-muted">Chaque compte a un profil. Il ne voit que les modules cochés, sur l&apos;accueil comme dans les barres.</p>
       </div>
 

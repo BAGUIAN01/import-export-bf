@@ -1,198 +1,113 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import Dashboard from "@/components/modules/admin/dashboard";
-import { PageContainer, PageBody } from "@/components/layout/admin/page-shell";
-import { PageTitle } from "@/components/layout/admin/page-title";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
+import { Bloc, EnTete, Etat, StatCard, StatGrid } from "@/components/epure";
+import { STATUTS_CONTENEUR, trierConteneurs } from "@/lib/conteneurs";
+import { formatMontant } from "@/lib/caisse/montants";
+import { nomAffiche } from "@/lib/caisse/clients";
 
-async function getDashboardData() {
-  try {
-    const [
-      totalPackages,
-      totalContainers,
-      totalClients,
-      packagesThisMonth,
-      activeContainers,
-      deliveredThisWeek
-    ] = await Promise.all([
-      prisma.package.count(),
+const TON = { PREPARATION: "ambre", LOADED: "bleu", IN_TRANSIT: "bleu", CUSTOMS: "violet", DELIVERED: "vert", CANCELLED: "rouge" };
+const PAIEMENT = { PAID: ["Soldé", "vert"], PARTIAL: ["Acompte", "ambre"], PENDING: ["À payer", "ambre"] };
 
-      prisma.container.count(),
-      
-      prisma.client.count({
-        where: { isActive: true }
-      }),
+const lire = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 
-      prisma.package.count({
-        where: {
-          createdAt: {
-            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+/** Gestion · Tableau de bord : la journée, les conteneurs, les derniers envois. */
+export default function TableauDeBordPage() {
+  const router = useRouter();
+  const [jour, setJour] = useState(null);
+  const [conteneurs, setConteneurs] = useState(null);
+  const [envois, setEnvois] = useState(null);
+
+  useEffect(() => {
+    lire("/api/caisse/stats").then((d) => setJour(d?.stats || {}));
+    lire("/api/containers/resume").then((d) => setConteneurs(d?.containers || []));
+    lire("/api/shipments?limit=8").then((d) => setEnvois(d?.data || []));
+  }, []);
+
+  const liste = trierConteneurs(conteneurs || []).filter((c) => c.status !== "DELIVERED" || c.shipmentsCount > c.deliveredCount).slice(0, 6);
+  const aEncaisser = (conteneurs || []).reduce((n, c) => n + Math.max(0, c.totalAmount - c.paidAmount), 0);
+  const enRoute = (conteneurs || []).filter((c) => ["LOADED", "IN_TRANSIT", "CUSTOMS"].includes(c.status)).length;
+  const date = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+
+  return (
+    <div className="caisse mx-auto flex max-w-[1200px] flex-col gap-5 text-[15px] text-ink">
+      <EnTete chemin="Gestion / Tableau de bord" titre="Tableau de bord" sousTitre={<span className="first-letter:uppercase">{date}</span>} />
+
+      <StatGrid>
+        <StatCard variant="noire" label="Encaissé aujourd'hui" value={jour ? formatMontant(jour.totalRevenue || 0) : "…"} detail={jour ? `${jour.totalSales || 0} envois · ${jour.totalItems || 0} colis` : null} />
+        <StatCard couleur="vert" label="Panier moyen" value={jour ? formatMontant(jour.averageTicket || 0) : "…"} />
+        <StatCard couleur="bleu" label="Conteneurs en route" value={conteneurs ? enRoute : "…"} />
+        <StatCard couleur="ambre" label="Reste à encaisser" value={conteneurs ? formatMontant(aEncaisser) : "…"} />
+      </StatGrid>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Bloc
+          titre="Conteneurs"
+          actions={
+            <Link href="/admin/containers" className="flex items-center gap-1 text-sm font-semibold text-brand">
+              Tous
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </Link>
           }
-        }
-      }),
+        >
+          {conteneurs === null ? (
+            <p className="text-ink-muted">Chargement…</p>
+          ) : liste.length === 0 ? (
+            <p className="text-ink-muted">Aucun conteneur en cours.</p>
+          ) : (
+            <ul className="-mx-2 flex flex-col">
+              {liste.map((c) => (
+                <li key={c.id}>
+                  <button type="button" onClick={() => router.push(`/admin/containers/${c.id}`)} className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-surface-page">
+                    <span className="chiffres min-w-0 flex-1 truncate font-semibold">{c.containerNumber}</span>
+                    <Etat ton={TON[c.status]}>{STATUTS_CONTENEUR[c.status]?.libelle}</Etat>
+                    <span className="chiffres w-24 text-right text-sm text-ink-muted">
+                      {c.status === "DELIVERED" ? `${c.shipmentsCount - c.deliveredCount} à remettre` : `${c.packagesCount} colis`}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Bloc>
 
-      // Conteneurs actifs = conteneurs avec des packages et non livrés/annulés
-      prisma.container.count({
-        where: {
-          status: {
-            in: ['PREPARATION', 'LOADED', 'IN_TRANSIT', 'CUSTOMS']
-          },
-          packages: {
-            some: {}
+        <Bloc
+          titre="Derniers envois"
+          actions={
+            <Link href="/admin/shipments" className="flex items-center gap-1 text-sm font-semibold text-brand">
+              Tous
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </Link>
           }
-        }
-      }),
-
-      prisma.package.count({
-        where: {
-          status: 'DELIVERED',
-          updatedAt: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          }
-        }
-      })
-    ]);
-
-    // ⚠️ IMPORTANT: Calculer le revenu à partir des SHIPMENTS créés ce mois
-    // Utiliser totalAmount pour le CA (chiffre d'affaires) et paidAmount pour les encaissements
-    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    
-    // Récupérer les shipments du mois avec leurs packages pour calculer le revenu
-    const monthlyShipments = await prisma.shipment.findMany({
-      where: {
-        createdAt: {
-          gte: monthStart
-        }
-      },
-      include: {
-        packages: {
-          select: {
-            totalAmount: true
-          }
-        }
-      }
-    });
-
-    // Calculer le CA mensuel : utiliser totalAmount du shipment ou calculer depuis les packages
-    const monthlyRevenue = monthlyShipments.reduce((sum, sh) => {
-      if (sh.totalAmount && sh.totalAmount > 0) {
-        return sum + sh.totalAmount;
-      }
-      // Calculer depuis les packages si le montant du shipment n'est pas disponible
-      const packagesTotal = sh.packages.reduce((pkgSum, pkg) => pkgSum + (pkg.totalAmount || 0), 0);
-      return sum + packagesTotal;
-    }, 0);
-
-    // Encaissements mensuels = paidAmount des shipments payés ce mois
-    const monthlyPaidResult = await prisma.shipment.aggregate({
-      _sum: {
-        paidAmount: true
-      },
-      where: {
-        OR: [
-          {
-            paidAt: {
-              gte: monthStart
-            }
-          },
-          {
-            AND: [
-              { createdAt: { gte: monthStart } },
-              { paidAmount: { gt: 0 } }
-            ]
-          }
-        ]
-      }
-    });
-
-    const monthlyPaid = monthlyPaidResult._sum.paidAmount || 0;
-
-    const recentContainers = await prisma.container.findMany({
-      take: 3,
-      orderBy: {
-        createdAt: 'desc'
-      },
-      select: {
-        id: true,
-        containerNumber: true,
-        name: true,
-        status: true,
-        currentLocation: true,
-        origin: true,
-        departureDate: true,
-        currentLoad: true,
-        capacity: true,
-        updatedAt: true
-      }
-    });
-
-    const stats = {
-      totalPackages,
-      packagesThisMonth,
-      activeContainers,
-      totalClients,
-      monthlyRevenue, // CA mensuel (calculé depuis shipments + packages)
-      monthlyPaid, // Encaissements mensuels
-      deliveredThisWeek
-    };
-
-    return {
-      stats,
-      recentContainers
-    };
-
-  } catch (error) {
-    console.error('Erreur lors de la récupération des données dashboard:', error);
-    throw error;
-  }
-}
-
-
-export default async function DashboardPage() {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      redirect('/auth/signin');
-    }
-
-    if (!['ADMIN', 'STAFF'].includes(session.user.role)) {
-      redirect('/unauthorized');
-    }
-
-    const dashboardData = await getDashboardData();
-
-    return (
-      <PageContainer>
-        <PageTitle title="Tableau de bord" />
-
-        <PageBody>
-          <Dashboard
-            user={session.user}
-            data={dashboardData}
-          />
-        </PageBody>
-      </PageContainer>
-    );
-  } catch (error) {
-    console.error("Erreur chargement dashboard:", error);
-    return (
-      <PageContainer>
-        <PageTitle title="Tableau de bord" />
-        <PageBody>
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Erreur de chargement</h2>
-              <p className="text-muted-foreground">
-                Impossible de charger les données du tableau de bord
-              </p>
-            </div>
-          </div>
-        </PageBody>
-      </PageContainer>
-    );
-  }
+        >
+          {envois === null ? (
+            <p className="text-ink-muted">Chargement…</p>
+          ) : envois.length === 0 ? (
+            <p className="text-ink-muted">Aucun envoi.</p>
+          ) : (
+            <ul className="-mx-2 flex flex-col">
+              {envois.map((e) => {
+                const p = e.deliveredAt ? ["Remis", "vert"] : PAIEMENT[e.paymentStatus] || PAIEMENT.PENDING;
+                return (
+                  <li key={e.id}>
+                    <button type="button" onClick={() => router.push(`/admin/shipments/${e.id}`)} className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-surface-page">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">{nomAffiche(e.client)}</span>
+                        <span className="chiffres block text-[13px] text-ink-muted">{e.shipmentNumber}</span>
+                      </span>
+                      <Etat ton={p[1]}>{p[0]}</Etat>
+                      <span className="chiffres w-24 text-right">{formatMontant(e.totalAmount)}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Bloc>
+      </div>
+    </div>
+  );
 }

@@ -59,6 +59,7 @@ export default function CaisseConteneursPage() {
       <div className="mx-auto flex max-w-[1100px] flex-col gap-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
+            <p className="text-[13px] text-ink-muted">Caisse / Conteneurs</p>
             <h1 className="text-2xl font-semibold tracking-tight">Conteneurs</h1>
             <p className="text-ink-muted">Le conteneur en chargement reçoit les colis enregistrés à la caisse.</p>
           </div>

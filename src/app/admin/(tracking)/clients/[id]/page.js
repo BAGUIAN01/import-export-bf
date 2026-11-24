@@ -13,7 +13,7 @@ import {
   PageBody,
 } from "@/components/layout/admin/page-shell";
 import { PageTitle } from "@/components/layout/admin/page-title";
-import ClientDetail from "@/components/modules/admin/clients/client-details";
+import { FicheClient } from "@/components/gestion/fiches/fiche-client";
 
 async function getClientData(id) {
   // Récupération du client avec ses informations complètes
@@ -277,7 +277,7 @@ export default async function ClientDetailPage({ params }) {
   }
 
   // Vérification des permissions
-  if (!["ADMIN", "STAFF", "AGENT"].includes(session.user.role)) {
+  if (!["ADMIN", "CHEF_CAISSE", "TRACKER", "STAFF", "AGENT"].includes(session.user.role)) {
     redirect("/unauthorized");
   }
 
@@ -306,34 +306,14 @@ export default async function ClientDetailPage({ params }) {
   }
 
   return (
-    <PageContainer>
-      <PageTitle 
-        title={`${client.firstName} ${client.lastName}`}
-        subtitle={`Code client: ${client.clientCode}`}
-      />
-      
-      <PageHeader
-        breadcrumbs={[
-          { label: "Hub", href: "/admin" },
-          { label: "Clients", href: "/admin/clients" },
-          { 
-            label: `${client.firstName} ${client.lastName}`,
-            href: `/admin/clients/${client.id}`,
-          },
-        ]}
-      />
-      
-      <PageBody>
-        <ClientDetail
-          initialClient={JSON.parse(JSON.stringify(client))}
-          initialStats={JSON.parse(JSON.stringify(stats))}
-          initialContainers={JSON.parse(JSON.stringify(availableContainers))}
-          initialActivity={JSON.parse(JSON.stringify(recentActivity))}
-          userRole={session.user.role}
-          userId={session.user.id}
-        />
-      </PageBody>
-    </PageContainer>
+    <FicheClient
+      client={JSON.parse(JSON.stringify(client))}
+      stats={JSON.parse(JSON.stringify(stats))}
+      containers={JSON.parse(JSON.stringify(availableContainers))}
+      activity={JSON.parse(JSON.stringify(recentActivity))}
+      userRole={session.user.role}
+      userId={session.user.id}
+    />
   );
 }
 

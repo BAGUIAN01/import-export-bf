@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import React from "react";
-import { PackagesTable } from "@/components/modules/admin/packages/packages-table";
+import { ListeColis } from "@/components/gestion/colis/liste-colis";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -65,28 +65,11 @@ export default async function PackagesPage() {
 
   if (!session) redirect("/auth/signin");
 
-  if (!["ADMIN", "STAFF", "AGENT"].includes(session.user.role)) {
+  if (!["ADMIN", "TRACKER"].includes(session.user.role)) {
     redirect("/unauthorized");
   }
 
   const { clients, containers } = await getFormData();
 
-  return (
-    <PageContainer>
-      <PageTitle title="Gestion des Colis" />
-      <PageHeader
-        breadcrumbs={[
-          { label: "Hub", href: "/admin" },
-          { label: "Gestion" },
-          { label: "Colis" },
-        ]}
-      />
-      <PageBody>
-        <PackagesTable
-          initialClients={clients}
-          initialContainers={containers}
-        />
-      </PageBody>
-    </PageContainer>
-  );
+  return <ListeColis clients={clients} containers={containers} />;
 }

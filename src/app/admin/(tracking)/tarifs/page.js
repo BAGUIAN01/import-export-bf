@@ -41,7 +41,8 @@ export default function TarifsPage() {
     <div className="caisse mx-auto flex max-w-[1200px] flex-col gap-5 text-[15px] text-ink">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Tarifs</h1>
+          <p className="text-[13px] text-ink-muted">Gestion / Tarifs</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Tarifs</h1>
           <p className="text-ink-muted">
             {total} articles · {avecPhoto} avec photo. La caisse affiche les mêmes familles et les mêmes images.
           </p>

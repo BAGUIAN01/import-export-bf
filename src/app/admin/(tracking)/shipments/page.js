@@ -1,130 +1,140 @@
-// app/admin/shipments/page.js
-export const dynamic = "force-dynamic";
+"use client";
 
-import React from "react";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { EnTete, Etat, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
+import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
+import { useShipmentMutations } from "@/hooks/use-shipments";
+import { formatMontant } from "@/lib/caisse/montants";
+import { nomAffiche } from "@/lib/caisse/clients";
+import { sansAccents } from "@/lib/caisse/familles";
 
-import {
-  PageContainer,
-  PageHeader,
-  PageBody,
-} from "@/components/layout/admin/page-shell";
-import { PageTitle } from "@/components/layout/admin/page-title";
-import { ShipmentsTable } from "@/components/modules/admin/shipments/shipments-table";
+const ETATS_PAIEMENT = {
+  PAID: ["Soldé", "vert"],
+  PARTIAL: ["Acompte", "ambre"],
+  PENDING: ["À payer", "ambre"],
+  CANCELLED: ["Annulé", "gris"],
+  REFUNDED: ["Remboursé", "gris"],
+};
 
-async function getShipmentsData(session) {
-  // Shipments + relations minimales pour listing
-  const shipments = await prisma.shipment.findMany({
-    select: {
-      id: true,
-      shipmentNumber: true,
-      createdAt: true,
-      updatedAt: true,
-      
-      // Champs agrégés importants pour les stats
-      packagesCount: true,
-      totalQuantity: true,
-      subtotal: true,
-      pickupFeeTotal: true,
-      insuranceFeeTotal: true,
-      customsFeeTotal: true,
-      discountTotal: true,
-      totalAmount: true,
-      paidAmount: true,
-      paymentStatus: true,
-      paymentMethod: true,
-      paidAt: true,
-      
-      // Autres infos
-      pickupAddress: true,
-      pickupDate: true,
-      pickupTime: true,
-      deliveryAddress: true,
-      specialInstructions: true,
-      notes: true,
-      
-      // Relations
-      client: {
-        select: {
-          id: true, firstName: true, lastName: true, clientCode: true,
-          recipientCity: true, recipientAddress: true,
-        },
-      },
-      container: {
-        select: {
-          id: true, containerNumber: true, name: true, status: true,
-          departureDate: true, arrivalDate: true,
-        },
-      },
-      user: { select: { id: true, firstName: true, lastName: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+const FILTRES = [
+  { id: "tous", label: "Tous", test: () => true },
+  { id: "payer", label: "À payer", test: (e) => e.paymentStatus === "PENDING" },
+  { id: "acompte", label: "Acompte", test: (e) => e.paymentStatus === "PARTIAL" },
+  { id: "soldes", label: "Soldés", test: (e) => e.paymentStatus === "PAID" },
+];
 
-  // Clients actifs pour l’autocomplete du dialog
-  const clients = await prisma.client.findMany({
-    select: {
-      id: true,
-      clientCode: true,
-      firstName: true,
-      lastName: true,
-      phone: true,
-      email: true,
-      city: true,
-      country: true,
-      recipientName: true,
-      recipientPhone: true,
-      recipientAddress: true,
-      recipientCity: true,
-      isActive: true,
-      isVip: true,
-    },
-    where: { isActive: true },
-    orderBy: { firstName: "asc" },
-  });
+const reste = (e) => Math.max(0, (e.totalAmount || 0) - (e.paidAmount || 0));
 
-  // Conteneurs actifs pour le dialog
-  const containers = await prisma.container.findMany({
-    select: {
-      id: true,
-      containerNumber: true,
-      name: true,
-      status: true,
-      departureDate: true,
-      arrivalDate: true,
-      capacity: true,
-      currentLoad: true,
-    },
-    where: { status: { in: ["PREPARATION", "LOADED", "IN_TRANSIT"] } },
-    orderBy: { createdAt: "desc" },
-  });
+/** Gestion · Encaissements : chaque envoi, ce qui est payé et ce qui reste. */
+export default function EncaissementsPage() {
+  const router = useRouter();
+  const { updateShipment, isLoading: enregistrement } = useShipmentMutations();
+  const [envois, setEnvois] = useState(null);
+  const [filtre, setFiltre] = useState("tous");
+  const [conteneur, setConteneur] = useState("tous");
+  const [recherche, setRecherche] = useState("");
+  const [encaisser, setEncaisser] = useState(null);
 
-  return { shipments, clients, containers };
-}
+  const charger = useCallback(() => {
+    fetch("/api/shipments?limit=1000")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Les envois n'ont pas pu être chargés."))))
+      .then((d) => setEnvois(d.data || []))
+      .catch((e) => {
+        toast.error(e.message);
+        setEnvois([]);
+      });
+  }, []);
+  useEffect(charger, [charger]);
 
-export default async function ShipmentsPage() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/auth/signin");
-  if (!["ADMIN", "STAFF", "AGENT"].includes(session.user.role)) {
-    redirect("/unauthorized");
-  }
-
-  const { shipments, clients, containers } = await getShipmentsData(session);
+  const liste = useMemo(() => envois || [], [envois]);
+  const conteneurs = useMemo(() => {
+    const m = new Map();
+    for (const e of liste) if (e.container) m.set(e.container.id, e.container.containerNumber);
+    return [...m.entries()];
+  }, [liste]);
+  const dansConteneur = liste.filter((e) => conteneur === "tous" || e.container?.id === conteneur);
+  const actif = FILTRES.find((f) => f.id === filtre);
+  const q = sansAccents(recherche).trim();
+  const lignes = dansConteneur.filter(
+    (e) => actif.test(e) && (!q || sansAccents(`${e.shipmentNumber} ${e.client?.firstName} ${e.client?.lastName} ${e.client?.phone}`).includes(q))
+  );
 
   return (
-    <PageContainer>
-      <PageTitle title="Colis" />
-      <PageHeader breadcrumbs={[{ label: "Hub", href: "/admin" }, { label: "Colis" }]} />
-      <PageBody className="px-0 py-2 sm:p-4 md:p-6">
-        <ShipmentsTable
-          initialShipments={shipments}
-          initialClients={clients}
-          initialContainers={containers}
-        />
-      </PageBody>
-    </PageContainer>
+    <div className="caisse mx-auto flex max-w-[1200px] flex-col gap-5 text-[15px] text-ink">
+      <EnTete chemin="Gestion / Encaissements" titre="Encaissements" />
+
+      <StatGrid>
+        <StatCard variant="noire" label="Encaissé" value={envois ? formatMontant(dansConteneur.reduce((s, e) => s + (e.paidAmount || 0), 0)) : "…"} detail={`${dansConteneur.length} envois`} />
+        <StatCard couleur="ambre" label="Reste à encaisser" value={envois ? formatMontant(dansConteneur.reduce((s, e) => s + reste(e), 0)) : "…"} />
+        <StatCard couleur="vert" label="Envois soldés" value={envois ? dansConteneur.filter((e) => e.paymentStatus === "PAID").length : "…"} />
+        <StatCard couleur="bleu" label="Remis au destinataire" value={envois ? dansConteneur.filter((e) => e.deliveredAt).length : "…"} />
+      </StatGrid>
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <Pastilles options={FILTRES.map((f) => ({ id: f.id, label: f.label, compte: dansConteneur.filter(f.test).length }))} valeur={filtre} onChange={setFiltre} libelle="Filtrer par paiement" />
+        <div className="flex gap-2 lg:ml-auto">
+          <label className="sr-only" htmlFor="filtre-conteneur">
+            Conteneur
+          </label>
+          <select
+            id="filtre-conteneur"
+            value={conteneur}
+            onChange={(e) => setConteneur(e.target.value)}
+            className="chiffres h-12 rounded-xl border border-line-strong bg-white px-3 text-[15px]"
+          >
+            <option value="tous">Tous les conteneurs</option>
+            {conteneurs.map(([id, numero]) => (
+              <option key={id} value={id}>
+                {numero}
+              </option>
+            ))}
+          </select>
+          <Recherche valeur={recherche} onChange={setRecherche} placeholder="Client, n° de suivi" className="flex-1 lg:w-72" />
+        </div>
+      </div>
+
+      <Tableau
+        libelle="Envois"
+        chargement={!envois}
+        lignes={lignes}
+        vide="Aucun envoi dans cette liste."
+        onLigne={(e) => router.push(`/admin/shipments/${e.id}`)}
+        colonnes={[
+          { id: "client", titre: "Client", mobile: "titre", rendu: (e) => nomAffiche(e.client) },
+          { id: "suivi", titre: "N° de suivi", rendu: (e) => <span className="chiffres">{e.shipmentNumber}</span> },
+          { id: "conteneur", titre: "Conteneur", rendu: (e) => <span className="chiffres">{e.container?.containerNumber || "—"}</span> },
+          { id: "montant", titre: "Montant", aDroite: true, rendu: (e) => <span className="chiffres">{formatMontant(e.totalAmount)}</span> },
+          { id: "reste", titre: "Reste", aDroite: true, rendu: (e) => (reste(e) > 0 ? <span className="chiffres text-alerte">{formatMontant(reste(e))}</span> : <span className="text-ink-subtle">—</span>) },
+          {
+            id: "etat",
+            titre: "État",
+            rendu: (e) => (e.deliveredAt ? <Etat ton="vert">Remis</Etat> : <Etat ton={(ETATS_PAIEMENT[e.paymentStatus] || ETATS_PAIEMENT.PENDING)[1]}>{(ETATS_PAIEMENT[e.paymentStatus] || ETATS_PAIEMENT.PENDING)[0]}</Etat>),
+          },
+        ]}
+        actions={(e) =>
+          reste(e) > 0 ? (
+            <button type="button" onClick={() => setEncaisser(e)} className="h-10 rounded-xl border border-line-strong bg-white px-3 text-sm font-semibold hover:bg-surface-muted">
+              Encaisser
+            </button>
+          ) : null
+        }
+      />
+
+      <ShipmentEditDialog
+        shipment={encaisser}
+        isOpen={!!encaisser}
+        loading={enregistrement}
+        onClose={() => setEncaisser(null)}
+        onSave={async (donnees) => {
+          const r = await updateShipment(encaisser.id, donnees);
+          if (r?.success) {
+            setEncaisser(null);
+            charger();
+          }
+        }}
+      />
+    </div>
   );
 }

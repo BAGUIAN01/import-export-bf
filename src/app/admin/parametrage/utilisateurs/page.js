@@ -50,7 +50,8 @@ export default function UtilisateursPage() {
     <div className="mx-auto flex max-w-[1200px] flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Utilisateurs</h1>
+          <p className="text-[13px] text-ink-muted">Paramétrage / Utilisateurs</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Utilisateurs</h1>
           <p className="text-ink-muted">Les comptes du personnel : profil, agence, accès.</p>
         </div>
         <button

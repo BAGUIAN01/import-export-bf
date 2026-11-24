@@ -1,210 +1,119 @@
-// app/(dashboard)/admin/clients/page.js
-export const dynamic = "force-dynamic";
+"use client";
 
-import React from "react";
-import { ClientsTable } from "@/components/modules/admin/clients/clients-table";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Star, UserPlus } from "lucide-react";
+import { toast } from "sonner";
+import { EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
+import { NouveauClient } from "@/components/caisse/client/nouveau-client";
+import { formatMontant } from "@/lib/caisse/montants";
+import { nomAffiche, resteDu } from "@/lib/caisse/clients";
+import { affichageTelephone } from "@/lib/telephone";
+import { sansAccents } from "@/lib/caisse/familles";
 
-import {
-  PageContainer,
-  PageHeader,
-  PageBody,
-} from "@/components/layout/admin/page-shell";
-import { PageTitle } from "@/components/layout/admin/page-title";
+const FILTRES = [
+  { id: "tous", label: "Tous", test: () => true },
+  { id: "solder", label: "À solder", test: (c) => resteDu(c) > 0 },
+  { id: "vip", label: "VIP", test: (c) => c.isVip },
+  { id: "sans", label: "Sans envoi", test: (c) => !c.shipmentsCount },
+];
 
-async function getClientsData(session) {
-  try {
-    // Récupération des clients avec les shipments associés
-    const clients = await prisma.client.findMany({
-      include: {
-        packages: {
-          select: {
-            id: true,
-            status: true,
-            totalAmount: true,
-            shipmentId: true,
-          },
-        },
-        shipments: {
-          select: {
-            id: true,
-            totalAmount: true,
-            paidAmount: true,
-            paymentStatus: true,
-            packagesCount: true,
-          },
-        },
-        _count: {
-          select: {
-            packages: true,
-            shipments: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+/** Gestion · Clients : expéditeurs, leur destinataire habituel, leurs envois. */
+export default function ClientsPage() {
+  const router = useRouter();
+  const [clients, setClients] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [filtre, setFiltre] = useState("tous");
+  const [recherche, setRecherche] = useState("");
+  const [nouveau, setNouveau] = useState(false);
 
-    // Enrichissement des données clients
-    const enrichedClients = clients.map(client => {
-      // Calculer le total dépensé basé sur les shipments (logique de paiement centralisée)
-      const totalSpent = client.shipments.reduce((sum, shipment) => sum + (shipment.paidAmount || 0), 0);
-      
-      // Calculer le total des montants des shipments (pour référence)
-      const totalShipmentsAmount = client.shipments.reduce((sum, shipment) => sum + (shipment.totalAmount || 0), 0);
-      
-      // Calculer le nombre total de colis via les shipments
-      const totalPackagesCount = client.shipments.reduce((sum, shipment) => sum + (shipment.packagesCount || 0), 0);
+  const charger = useCallback(() => {
+    fetch("/api/clients?limit=1000&includeStats=true")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Les clients n'ont pas pu être chargés."))))
+      .then((d) => {
+        setClients(d.data || []);
+        setStats(d.stats || null);
+      })
+      .catch((e) => {
+        toast.error(e.message);
+        setClients([]);
+      });
+  }, []);
+  useEffect(charger, [charger]);
 
-      return {
-        ...client,
-        packagesCount: totalPackagesCount,
-        totalSpent,
-        totalShipmentsAmount,
-        shipmentsCount: client._count.shipments,
-        // Garder l'ancien calcul pour compatibilité si nécessaire
-        legacyTotalSpent: client.packages.reduce((sum, pkg) => sum + (pkg.totalAmount || 0), 0),
-      };
-    });
+  const liste = useMemo(() => clients || [], [clients]);
+  const actif = FILTRES.find((f) => f.id === filtre);
+  const q = sansAccents(recherche).trim();
+  const lignes = liste.filter(
+    (c) => actif.test(c) && (!q || sansAccents(`${c.firstName} ${c.lastName} ${c.phone} ${c.clientCode} ${c.recipientName || ""}`).includes(q))
+  );
+  const aSolder = liste.filter((c) => resteDu(c) > 0);
 
-    // Calcul des statistiques
-    const [total, activeCount, vipCount] = await Promise.all([
-      prisma.client.count(),
-      prisma.client.count({
-        where: { isActive: true }
-      }),
-      prisma.client.count({
-        where: { isVip: true }
-      }),
-    ]);
-
-    // Calcul des clients avec commandes (shipments)
-    const withOrdersCount = await prisma.client.count({
-      where: {
-        shipments: {
-          some: {}
+  return (
+    <div className="caisse mx-auto flex max-w-[1200px] flex-col gap-5 text-[15px] text-ink">
+      <EnTete
+        chemin="Gestion / Clients"
+        titre="Clients"
+        actions={
+          <button type="button" onClick={() => setNouveau(true)} className={PRINCIPAL}>
+            <UserPlus className="size-5" aria-hidden="true" />
+            Nouveau client
+          </button>
         }
-      }
-    });
+      />
 
-    // Calcul des nouveaux clients du mois
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const newThisMonth = await prisma.client.count({
-      where: {
-        createdAt: {
-          gte: thirtyDaysAgo
-        }
-      }
-    });
+      <StatGrid>
+        <StatCard variant="noire" label="Clients" value={stats ? stats.total : "…"} detail={stats ? `${stats.newThisMonth} nouveaux en 30 jours` : null} />
+        <StatCard couleur="vert" label="Avec des envois" value={stats ? stats.withOrders : "…"} />
+        <StatCard couleur="ambre" label="À solder" value={clients ? aSolder.length : "…"} detail={clients ? formatMontant(aSolder.reduce((s, c) => s + resteDu(c), 0)) : null} />
+        <StatCard couleur="bleu" label="Encaissé au total" value={stats ? formatMontant(stats.totalPaid) : "…"} />
+      </StatGrid>
 
-    // Calcul des destinataires au Burkina Faso
-    const burkinaRecipientsCount = await prisma.client.count({
-      where: {
-        recipientCity: {
-          not: null,
-          not: ""
-        }
-      }
-    });
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <Pastilles options={FILTRES.map((f) => ({ id: f.id, label: f.label, compte: liste.filter(f.test).length }))} valeur={filtre} onChange={setFiltre} libelle="Filtrer les clients" />
+        <Recherche valeur={recherche} onChange={setRecherche} placeholder="Nom, téléphone, code client" className="md:ml-auto md:w-80" />
+      </div>
 
-    // Calcul des statistiques financières
-    const financialStats = await prisma.shipment.aggregate({
-      _sum: {
-        totalAmount: true,
-        paidAmount: true,
-      },
-      _count: {
-        id: true,
-      },
-    });
+      <Tableau
+        libelle="Clients"
+        chargement={!clients}
+        lignes={lignes}
+        vide="Aucun client dans cette liste."
+        onLigne={(c) => router.push(`/admin/clients/${c.id}`)}
+        colonnes={[
+          {
+            id: "nom",
+            titre: "Client",
+            mobile: "titre",
+            rendu: (c) => (
+              <span className="flex items-center gap-1.5">
+                {nomAffiche(c)}
+                {c.isVip && <Star className="size-4 shrink-0 fill-[#F5B014] text-[#F5B014]" aria-label="VIP" />}
+              </span>
+            ),
+          },
+          { id: "tel", titre: "Téléphone", rendu: (c) => <span className="chiffres">{affichageTelephone(c.phone)}</span> },
+          { id: "dest", titre: "Destinataire", rendu: (c) => [c.recipientName, c.recipientCity].filter(Boolean).join(" · ") || "—" },
+          { id: "envois", titre: "Envois", rendu: (c) => <span className="chiffres">{c.shipmentsCount || 0}</span> },
+          {
+            id: "reste",
+            titre: "Reste à payer",
+            aDroite: true,
+            rendu: (c) => (resteDu(c) > 0 ? <Etat ton="ambre">{formatMontant(resteDu(c))}</Etat> : <span className="text-ink-subtle">—</span>),
+          },
+        ]}
+      />
 
-    const stats = {
-      total,
-      active: activeCount,
-      newThisMonth,
-      withOrders: withOrdersCount,
-      vip: vipCount,
-      burkinaRecipients: burkinaRecipientsCount,
-      // Statistiques financières
-      totalRevenue: financialStats._sum.totalAmount || 0,
-      totalPaid: financialStats._sum.paidAmount || 0,
-      totalShipments: financialStats._count.id || 0,
-    };
-
-    return { clients: enrichedClients, stats };
-  } catch (error) {
-    console.error('Erreur lors de la récupération des données clients:', error);
-    throw error;
-  }
-}
-
-export default async function ClientsPage() {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      redirect('/auth/signin');
-    }
-
-    // Vérification des permissions - Clients gérés par ADMIN et STAFF
-    if (!['ADMIN', 'STAFF'].includes(session.user.role)) {
-      redirect('/unauthorized');
-    }
-
-    const { clients, stats } = await getClientsData(session);
-
-    return (
-      <PageContainer>
-        <PageTitle title="Gestion des Clients" />
-        <PageHeader
-          breadcrumbs={[
-            { label: "Hub", href: "/admin" },
-            { label: "Gestion" },
-            { label: "Clients" },
-          ]}
+      {nouveau && (
+        <NouveauClient
+          onFermer={() => setNouveau(false)}
+          onCree={(c) => {
+            setNouveau(false);
+            toast.success(`${nomAffiche(c)} est enregistré.`);
+            charger();
+          }}
         />
-        <PageBody>
-          <ClientsTable
-            initialClients={clients}
-            initialStats={stats}
-          />
-        </PageBody>
-      </PageContainer>
-    );
-  } catch (error) {
-    console.error("Erreur chargement clients:", error);
-    return (
-      <PageContainer>
-        <PageTitle title="Gestion des Clients" />
-        <PageHeader
-          breadcrumbs={[
-            { label: "Hub", href: "/admin" },
-            { label: "Gestion" },
-            { label: "Clients" },
-          ]}
-        />
-        <PageBody>
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-red-600 mb-2">
-                Erreur de chargement
-              </h2>
-              <p className="text-muted-foreground">
-                Impossible de charger les données des clients
-              </p>
-              <p className="text-sm text-red-500 mt-2">
-                {error?.message ?? "Erreur inconnue"}
-              </p>
-            </div>
-          </div>
-        </PageBody>
-      </PageContainer>
-    );
-  }
+      )}
+    </div>
+  );
 }

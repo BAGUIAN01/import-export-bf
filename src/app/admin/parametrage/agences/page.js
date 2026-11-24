@@ -41,7 +41,8 @@ export default function AgencesPage() {
     <div className="mx-auto flex max-w-[1200px] flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Agences et devises</h1>
+          <p className="text-[13px] text-ink-muted">Paramétrage / Agences et devises</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Agences et devises</h1>
           <p className="text-ink-muted">Chaque agence a sa devise, ses modes de paiement et son reçu.</p>
         </div>
         <button

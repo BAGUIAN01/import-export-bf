@@ -13,7 +13,7 @@ import {
   PageBody,
 } from "@/components/layout/admin/page-shell";
 import { PageTitle } from "@/components/layout/admin/page-title";
-import ShipmentDetail from "@/components/modules/admin/shipments/shipment-detail";
+import { FicheEnvoi } from "@/components/gestion/fiches/fiche-envoi";
 
 async function getShipmentData(id) {
   const shipment = await prisma.shipment.findUnique({
@@ -79,29 +79,17 @@ async function getShipmentData(id) {
 export default async function ShipmentPage({ params }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/signin");
-  if (!["ADMIN", "STAFF", "AGENT"].includes(session.user.role)) redirect("/unauthorized");
+  if (!["ADMIN", "CHEF_CAISSE", "TRACKER", "STAFF", "AGENT"].includes(session.user.role)) redirect("/admin");
 
   const { id } = await params; // Await params
   const data = await getShipmentData(id);
   if (!data) return notFound();
 
   return (
-    <PageContainer>
-      <PageTitle title={`Expédition ${data.shipment.shipmentNumber}`} />
-      <PageHeader
-        breadcrumbs={[
-          { label: "Hub", href: "/admin" },
-          { label: "Expéditions", href: "/admin/shipments" },
-          { label: data.shipment.shipmentNumber },
-        ]}
-      />
-      <PageBody>
-        <ShipmentDetail
-          initialShipment={JSON.parse(JSON.stringify(data.shipment))}
-          initialContainers={JSON.parse(JSON.stringify(data.containers))}
-          initialClients={JSON.parse(JSON.stringify(data.clients))}
-        />
-      </PageBody>
-    </PageContainer>
+    <FicheEnvoi
+      shipment={JSON.parse(JSON.stringify(data.shipment))}
+      containers={JSON.parse(JSON.stringify(data.containers))}
+      clients={JSON.parse(JSON.stringify(data.clients))}
+    />
   );
 }
