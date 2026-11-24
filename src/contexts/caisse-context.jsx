@@ -1,7 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { calculerRemise, arrondi } from "@/lib/caisse/montants";
+import { versClientCaisse } from "@/lib/caisse/clients";
+import { DEPOT_CAISSE } from "@/lib/recherche";
 
 const CaisseContext = createContext(null);
 
@@ -46,6 +48,10 @@ export function CaisseProvider({ children }) {
   // Réponse de POST /api/caisse/orders, pour l'écran de fin et le bordereau
   const [lastOrder, setLastOrder] = useState(null);
   const [restaure, setRestaure] = useState(false);
+  const envoiTermine = useRef(false);
+  useEffect(() => {
+    envoiTermine.current = !!lastOrder;
+  }, [lastOrder]);
 
   /* ── Restauration après rechargement ───────────────────── */
   useEffect(() => {
@@ -59,8 +65,43 @@ export function CaisseProvider({ children }) {
       if (s.paymentInfo) setPaymentInfo(s.paymentInfo);
       if (s.lastOrder) setLastOrder(s.lastOrder);
     }
+    // Client choisi dans la recherche générale, avant d'arriver ici
+    prendreClientRecherche(!!s?.lastOrder);
     setRestaure(true);
   }, []);
+
+  // … ou pendant qu'on est déjà dans la caisse
+  useEffect(() => {
+    const surDepot = (e) => {
+      if (e.detail === DEPOT_CAISSE) prendreClientRecherche(false);
+    };
+    window.addEventListener("recherche:depot", surDepot);
+    return () => window.removeEventListener("recherche:depot", surDepot);
+  }, []);
+
+  /**
+   * Nouvel envoi pour un client trouvé par la recherche : comme le choisir à
+   * l'étape Client (le ticket en cours est gardé) ; après un envoi terminé,
+   * on repart d'un ticket vide.
+   */
+  function prendreClientRecherche(apresEnvoi) {
+    let client = null;
+    try {
+      client = JSON.parse(window.sessionStorage.getItem(DEPOT_CAISSE) || "null");
+      window.sessionStorage.removeItem(DEPOT_CAISSE);
+    } catch {
+      return;
+    }
+    if (!client) return;
+    if (apresEnvoi || envoiTermine.current) {
+      setOrderItems([]);
+      setRemise(null);
+      setOrderOptions(OPTIONS_INITIALES);
+    }
+    setLastOrder(null);
+    setPaymentInfo(null);
+    setSelectedClient(versClientCaisse(client));
+  }
 
   useEffect(() => {
     if (!restaure) return;

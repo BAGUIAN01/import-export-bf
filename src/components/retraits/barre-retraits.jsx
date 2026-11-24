@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { Check, ChevronDown, CreditCard, LayoutGrid, Package, UserRound } from "lucide-react";
 import { useRetraits } from "@/contexts/retraits-context";
 import { MenuProfil } from "@/components/gestion/menu-profil";
+import { RechercheGlobale } from "@/components/recherche/recherche-globale";
 import { Feuille } from "@/components/caisse/feuille";
 import { devise } from "@/lib/devises";
 import { resteEnvoi } from "@/lib/retraits";
@@ -85,6 +86,7 @@ export function BarreRetraits() {
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
+        <RechercheGlobale prefere="envoi" />
         {conteneur && (
           <button type="button" onClick={() => setFeuille(true)} className="flex h-12 items-center gap-2.5 rounded-2xl border-2 border-brand bg-brand-soft/60 px-3 text-left">
             <span aria-hidden="true" className="size-2.5 rounded-full bg-brand" />

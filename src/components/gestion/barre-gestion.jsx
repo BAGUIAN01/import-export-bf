@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Container as IconeConteneur, LayoutDashboard, LayoutGrid, Package, PackageCheck, Receipt, Settings, Tag, UserCog, Users } from "lucide-react";
 import { MenuProfil } from "@/components/gestion/menu-profil";
+import { RechercheGlobale } from "@/components/recherche/recherche-globale";
 import { canAccess } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,7 @@ export function BarreGestion() {
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
+        <RechercheGlobale />
         {conteneur && (
           <Link
             href={`/admin/containers/${conteneur.id}`}

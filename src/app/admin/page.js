@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { geist, geistMono } from "@/lib/polices";
 import { libelleRole } from "@/lib/roles";
 import { CarteUtilisateur } from "@/components/accueil/carte-utilisateur";
+import { RechercheAccueil } from "@/components/recherche/recherche-globale";
 
 export const metadata = { title: "Accueil | Admin" };
 export const dynamic = "force-dynamic";
@@ -101,6 +102,8 @@ export default async function AccueilModules() {
           <h1 className="text-[30px] font-semibold tracking-tight">Bonjour, {nom.split(" ")[0]}</h1>
           <p className="text-base text-ink-muted first-letter:uppercase">{date}</p>
         </div>
+
+        <RechercheAccueil />
 
         {conteneur && (
           <Link

@@ -2,8 +2,20 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { DEPOT_RETRAITS } from "@/lib/recherche";
 
 const RetraitsContext = createContext(null);
+
+/** Dépôt de la recherche générale : { envoiId, conteneurId, nom }, lu une fois. */
+function lireDepot() {
+  try {
+    const d = JSON.parse(window.sessionStorage.getItem(DEPOT_RETRAITS) || "null");
+    window.sessionStorage.removeItem(DEPOT_RETRAITS);
+    return d;
+  } catch {
+    return null;
+  }
+}
 const CLE = "retraits:en-cours";
 
 function lire() {
@@ -36,6 +48,18 @@ export function RetraitsProvider({ children }) {
   const [resultat, setResultat] = useState(null);
   const [restaure, setRestaure] = useState(false);
 
+  /** Retrait d'un envoi trouvé par la recherche : on repart d'une remise vierge. */
+  function prendreEnvoiRecherche() {
+    const d = lireDepot();
+    if (!d?.envoiId) return;
+    setConteneurId(d.conteneurId || null);
+    setEnvoiId(d.envoiId);
+    setVerifies([]);
+    setNom(d.nom || "");
+    setPiece("");
+    setResultat(null);
+  }
+
   useEffect(() => {
     const s = lire();
     if (s) {
@@ -46,13 +70,25 @@ export function RetraitsProvider({ children }) {
       setPiece(s.piece || "");
       setResultat(s.resultat || null);
     }
+    // Envoi choisi dans la recherche générale, avant d'arriver ici
+    prendreEnvoiRecherche();
     setRestaure(true);
+  }, []);
+
+  // … ou pendant qu'on est déjà dans les retraits
+  useEffect(() => {
+    const surDepot = (e) => {
+      if (e.detail === DEPOT_RETRAITS) prendreEnvoiRecherche();
+    };
+    window.addEventListener("recherche:depot", surDepot);
+    return () => window.removeEventListener("recherche:depot", surDepot);
   }, []);
   useEffect(() => {
     if (restaure) ecrire({ conteneurId, envoiId, verifies, nom, piece, resultat });
   }, [restaure, conteneurId, envoiId, verifies, nom, piece, resultat]);
 
   const charger = useCallback(() => {
+    setDonnees((d) => (d && d.conteneur?.id !== conteneurId && conteneurId ? null : d));
     fetch(`/api/retraits${conteneurId ? `?conteneur=${conteneurId}` : ""}`)
       .then((r) => r.json())
       .then((d) => {

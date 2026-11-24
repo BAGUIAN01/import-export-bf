@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LayoutGrid } from "lucide-react";
 import { MenuProfil } from "@/components/gestion/menu-profil";
+import { RechercheGlobale } from "@/components/recherche/recherche-globale";
 import { cn } from "@/lib/utils";
 
 /**
@@ -55,6 +56,7 @@ export function BarreModule({ titre, sousTitre, onglets = [], droite = null }) {
       )}
 
       <div className="ml-auto flex items-center gap-2">
+        <RechercheGlobale />
         {droite}
         <MenuProfil nom={nom} role={data?.user?.role} />
       </div>

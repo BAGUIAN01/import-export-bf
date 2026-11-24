@@ -7,6 +7,7 @@ import { Check, Container as IconeConteneur, CreditCard, LayoutGrid, Package, Re
 import { useCaisse } from "@/contexts/caisse-context";
 import { PastilleConteneur } from "@/components/caisse/pastille-conteneur";
 import { MenuProfil } from "@/components/gestion/menu-profil";
+import { RechercheGlobale } from "@/components/recherche/recherche-globale";
 import { cn } from "@/lib/utils";
 
 const ETAPES = [
@@ -105,6 +106,7 @@ export function BarreCaisse() {
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
+        <RechercheGlobale prefere="client" />
         <Link
           href="/admin/caisse/recus"
           aria-label="Reçus du jour"
