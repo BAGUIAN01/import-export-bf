@@ -8,23 +8,9 @@ import { FloatingLabelTextarea } from "@/components/ui/floating-label-textarea";
 import { FloatingCombobox } from "@/components/ui/floating-combobox";
 import { UserCircle, Package } from "lucide-react";
 import PhoneInput from "@/components/modules/admin/clients/phone-input";
+import { villesDuPays } from "@/lib/data/villes";
 
-const burkinaCities = [
-  "Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora", "Ouahigouya", 
-  "Pouytenga", "Dédougou", "Fada N'gourma", "Kaya", "Tenkodogo"
-];
-
-const frenchCities = [
-  "Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Nantes", "Strasbourg", 
-  "Montpellier", "Bordeaux", "Lille", "Rennes", "Reims", "Le Havre", 
-  "Saint-Étienne", "Toulon", "Grenoble", "Dijon", "Angers", "Nîmes", "Villeurbanne"
-];
-
-const getCitiesForCountry = (country) => {
-  if (country === "France") return frenchCities;
-  if (country === "Burkina Faso") return burkinaCities;
-  return [];
-};
+const getCitiesForCountry = villesDuPays;
 
 export function ClientForm({ initial = {}, onSubmit, onCancel, saving }) {
   const [form, setForm] = useState({

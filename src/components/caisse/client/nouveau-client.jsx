@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Feuille } from "@/components/caisse/feuille";
-import { Champ } from "@/components/caisse/champ";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
+import { FloatingLabelPhoneInput } from "@/components/ui/floating-label-phone-input";
+import { FloatingLabelTextarea } from "@/components/ui/floating-label-textarea";
+import { FloatingCombobox } from "@/components/ui/floating-combobox";
+import { PAYS, VILLES_BURKINA, villesDuPays } from "@/lib/data/villes";
+import { cn } from "@/lib/utils";
 
 const VIDE = {
   lastName: "",
@@ -22,13 +27,22 @@ const VIDE = {
 
 const LIENS = ["Famille", "Conjoint(e)", "Ami(e)", "Entreprise"];
 
+// Texte 16 px dans les champs : pas de zoom automatique sur tablette iOS.
+const TACTILE = "text-base";
+
+function MessageErreur({ children }) {
+  if (!children) return null;
+  return <p className="mt-1 px-1 text-[13px] text-danger">{children}</p>;
+}
+
 /**
  * Fiche « Nouveau client » : les champs exigés par POST /api/clients
  * (nom, prénom, téléphone, adresse, ville, pays) et le destinataire habituel.
- * `onCree(client)` reçoit le client créé.
+ * Montée seulement quand elle est ouverte : chaque ouverture repart d'un
+ * formulaire vide. `onCree(client)` reçoit le client créé.
  */
-// Monté seulement quand la fiche est ouverte : chaque ouverture repart d'un formulaire vide.
 export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
+  const id = useId();
   // Préremplit le téléphone ou le nom avec la recherche restée sans résultat
   const [f, setF] = useState(() => {
     const r = rechercheInitiale.trim();
@@ -39,10 +53,11 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
   const [envoi, setEnvoi] = useState(false);
   const [messageErreur, setMessageErreur] = useState("");
 
-  const maj = (cle) => (e) => {
-    setF((x) => ({ ...x, [cle]: e.target.value }));
+  const changer = (cle, valeur) => {
+    setF((x) => ({ ...x, [cle]: valeur }));
     if (erreurs[cle]) setErreurs((x) => ({ ...x, [cle]: undefined }));
   };
+  const maj = (cle) => (e) => changer(cle, e.target.value);
 
   async function enregistrer(e) {
     e.preventDefault();
@@ -52,12 +67,13 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
       const res = await fetch("/api/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(f),
+        // "+226 " seul (indicatif sans numéro) ne compte pas comme un téléphone
+        body: JSON.stringify({ ...f, recipientPhone: f.recipientPhone.replace(/\s/g, "").length > 4 ? f.recipientPhone.replace(/\s/g, "") : "" }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErreurs(data.errors || {});
-        throw new Error(data.error || "Le client n'a pas pu être créé.");
+        throw new Error(data.errors ? "Complétez les champs en rouge." : data.error || "Le client n'a pas pu être créé.");
       }
       onCree(data.client);
     } catch (err) {
@@ -91,7 +107,7 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
             </button>
             <button
               type="submit"
-              form="form-nouveau-client"
+              form={`${id}-form`}
               disabled={envoi}
               className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-brand font-semibold text-white disabled:opacity-60"
             >
@@ -102,47 +118,95 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
         </div>
       }
     >
-      <form id="form-nouveau-client" onSubmit={enregistrer} className="flex flex-col gap-6">
-        <fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <legend className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-muted">Expéditeur</legend>
-          <Champ libelle="Nom" requis autoComplete="family-name" value={f.lastName} onChange={maj("lastName")} erreur={erreurs.lastName} />
-          <Champ libelle="Prénom" requis autoComplete="given-name" value={f.firstName} onChange={maj("firstName")} erreur={erreurs.firstName} />
-          <Champ libelle="Téléphone" requis type="tel" inputMode="tel" autoComplete="tel" value={f.phone} onChange={maj("phone")} erreur={erreurs.phone} />
-          <Champ libelle="E-mail" type="email" inputMode="email" autoComplete="email" value={f.email} onChange={maj("email")} erreur={erreurs.email} />
-          <Champ libelle="Adresse" requis className="sm:col-span-2" autoComplete="street-address" value={f.address} onChange={maj("address")} erreur={erreurs.address} />
-          <Champ libelle="Code postal" inputMode="numeric" autoComplete="postal-code" value={f.postalCode} onChange={maj("postalCode")} />
-          <Champ libelle="Ville" requis autoComplete="address-level2" value={f.city} onChange={maj("city")} erreur={erreurs.city} />
-          <Champ libelle="Pays" requis autoComplete="country-name" value={f.country} onChange={maj("country")} erreur={erreurs.country} />
+      <form id={`${id}-form`} onSubmit={enregistrer} className="flex flex-col gap-6 pt-2">
+        <fieldset className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2">
+          <legend className="mb-4 text-sm font-semibold uppercase tracking-wide text-ink-muted">Expéditeur</legend>
+          <div>
+            <FloatingLabelInput id={`${id}-nom`} label="Nom *" autoComplete="family-name" className={TACTILE} value={f.lastName} onChange={maj("lastName")} error={erreurs.lastName} disabled={envoi} />
+            <MessageErreur>{erreurs.lastName}</MessageErreur>
+          </div>
+          <div>
+            <FloatingLabelInput id={`${id}-prenom`} label="Prénom *" autoComplete="given-name" className={TACTILE} value={f.firstName} onChange={maj("firstName")} error={erreurs.firstName} disabled={envoi} />
+            <MessageErreur>{erreurs.firstName}</MessageErreur>
+          </div>
+          <div>
+            <FloatingLabelInput id={`${id}-tel`} label="Téléphone *" type="tel" inputMode="tel" autoComplete="tel" className={TACTILE} value={f.phone} onChange={maj("phone")} error={erreurs.phone} disabled={envoi} />
+            <MessageErreur>{erreurs.phone}</MessageErreur>
+          </div>
+          <div>
+            <FloatingLabelInput id={`${id}-email`} label="Email" type="email" inputMode="email" autoComplete="email" className={TACTILE} value={f.email} onChange={maj("email")} error={erreurs.email} disabled={envoi} />
+            <MessageErreur>{erreurs.email}</MessageErreur>
+          </div>
+          <div>
+            <FloatingCombobox
+              id={`${id}-pays`}
+              label="Pays *"
+              value={f.country}
+              onValueChange={(v) => {
+                changer("country", v);
+                changer("city", "");
+              }}
+              error={erreurs.country}
+              disabled={envoi}
+              placeholder="Sélectionnez le pays"
+              options={PAYS}
+            />
+            <MessageErreur>{erreurs.country}</MessageErreur>
+          </div>
+          <div>
+            <FloatingCombobox
+              id={`${id}-ville`}
+              label="Ville *"
+              value={f.city}
+              onValueChange={(v) => changer("city", v)}
+              error={erreurs.city}
+              disabled={!f.country || envoi}
+              placeholder={f.country ? "Sélectionnez la ville" : "Sélectionnez d'abord le pays"}
+              options={villesDuPays(f.country).map((v) => ({ value: v, label: v }))}
+            />
+            <MessageErreur>{erreurs.city}</MessageErreur>
+          </div>
+          <div className="sm:col-span-2 grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-[minmax(0,1fr)_160px]">
+            <div>
+              <FloatingLabelTextarea id={`${id}-adresse`} label="Adresse *" rows={2} className={TACTILE} value={f.address} onChange={maj("address")} error={erreurs.address} disabled={envoi} />
+              <MessageErreur>{erreurs.address}</MessageErreur>
+            </div>
+            <FloatingLabelInput id={`${id}-cp`} label="Code postal" inputMode="numeric" autoComplete="postal-code" className={TACTILE} value={f.postalCode} onChange={maj("postalCode")} disabled={envoi} />
+          </div>
         </fieldset>
 
-        <fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <legend className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-muted">Destinataire habituel</legend>
-          <Champ libelle="Nom du destinataire" value={f.recipientName} onChange={maj("recipientName")} />
-          <Champ libelle="Téléphone du destinataire" type="tel" inputMode="tel" value={f.recipientPhone} onChange={maj("recipientPhone")} />
-          <Champ libelle="Ville au Burkina Faso" placeholder="Ouagadougou" value={f.recipientCity} onChange={maj("recipientCity")} />
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-medium text-ink-muted">Lien avec le client</span>
-            <div role="radiogroup" aria-label="Lien avec le client" className="flex flex-wrap gap-2">
-              {LIENS.map((l) => {
-                const choisi = f.recipientRelation === l;
-                return (
-                  <button
-                    key={l}
-                    type="button"
-                    role="radio"
-                    aria-checked={choisi}
-                    onClick={() => setF((x) => ({ ...x, recipientRelation: choisi ? "" : l }))}
-                    className={
-                      choisi
-                        ? "h-11 rounded-xl border-2 border-brand bg-brand-soft px-3 font-medium text-brand-strong"
-                        : "h-11 rounded-xl border border-line-strong bg-white px-3 text-ink-muted"
-                    }
-                  >
-                    {l}
-                  </button>
-                );
-              })}
-            </div>
+        <fieldset className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2">
+          <legend className="mb-4 text-sm font-semibold uppercase tracking-wide text-ink-muted">Destinataire habituel</legend>
+          <FloatingLabelInput id={`${id}-dest-nom`} label="Nom du destinataire" className={TACTILE} value={f.recipientName} onChange={maj("recipientName")} disabled={envoi} />
+          <FloatingLabelPhoneInput id={`${id}-dest-tel`} label="Téléphone du destinataire" inputMode="tel" className={TACTILE} value={f.recipientPhone} onChange={maj("recipientPhone")} disabled={envoi} />
+          <FloatingCombobox
+            id={`${id}-dest-ville`}
+            label="Ville au Burkina Faso"
+            value={f.recipientCity}
+            onValueChange={(v) => changer("recipientCity", v)}
+            disabled={envoi}
+            placeholder="Sélectionnez la ville"
+            options={VILLES_BURKINA.map((v) => ({ value: v, label: v }))}
+          />
+          <div role="radiogroup" aria-label="Lien avec le client" className="flex flex-wrap items-center gap-2">
+            {LIENS.map((l) => {
+              const choisi = f.recipientRelation === l;
+              return (
+                <button
+                  key={l}
+                  type="button"
+                  role="radio"
+                  aria-checked={choisi}
+                  onClick={() => changer("recipientRelation", choisi ? "" : l)}
+                  className={cn(
+                    "h-11 rounded-xl px-3",
+                    choisi ? "border-2 border-brand bg-brand-soft font-medium text-brand-strong" : "border border-line-strong bg-white text-ink-muted"
+                  )}
+                >
+                  {l}
+                </button>
+              );
+            })}
           </div>
         </fieldset>
       </form>

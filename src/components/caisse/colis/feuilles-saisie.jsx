@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Feuille } from "@/components/caisse/feuille";
 import { Clavier, Afficheur } from "@/components/caisse/clavier";
-import { Champ } from "@/components/caisse/champ";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { VignetteArticle } from "@/components/caisse/vignette-article";
 import { formatMontant, saisieVersNombre, toucheClavier, DEVISE } from "@/lib/caisse/montants";
 
@@ -70,6 +70,7 @@ export function FeuilleQuantite({ ligne, onValider, onRetirer, onFermer }) {
 
 /** Article « sur devis » : prix tapé au clavier, description facultative. */
 export function FeuilleDevis({ article, onAjouter, onFermer }) {
+  const id = useId();
   const [saisie, setSaisie] = useState("");
   const [description, setDescription] = useState("");
   const prix = saisieVersNombre(saisie);
@@ -95,13 +96,15 @@ export function FeuilleDevis({ article, onAjouter, onFermer }) {
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <VignetteArticle article={article} />
-          <Champ
-            className="flex-1"
-            libelle="Description (facultatif)"
-            placeholder="Ex. Toyota RAV4 2015"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <div className="min-w-0 flex-1">
+            <FloatingLabelInput
+              id={`${id}-description`}
+              label="Description (facultatif)"
+              className="text-base"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
         </div>
         <Afficheur libelle="Prix" valeur={saisie} unite={DEVISE.symbole} vide="0,00" />
         <Clavier decimales={DEVISE.decimales} onTouche={(t) => setSaisie((s) => toucheClavier(s, t))} />

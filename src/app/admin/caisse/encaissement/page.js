@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { mutate } from "swr";
@@ -10,7 +10,7 @@ import { useCaisse } from "@/contexts/caisse-context";
 import { GardeClient } from "@/components/caisse/sans-client";
 import { useProfilCaisse } from "@/components/caisse/barre-caisse";
 import { Clavier, Afficheur } from "@/components/caisse/clavier";
-import { Champ } from "@/components/caisse/champ";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { VignetteArticle } from "@/components/caisse/vignette-article";
 import { FeuilleRemise } from "@/components/caisse/paiement/feuille-remise";
 import { formatMontant, formatNombre, montantsRapides, repartirPaiement, saisieVersNombre, toucheClavier, DEVISE } from "@/lib/caisse/montants";
@@ -50,6 +50,7 @@ function Paiement() {
     setSelectedContainer,
   } = useCaisse();
   const { estChef } = useProfilCaisse();
+  const id = useId();
 
   const [mode, setMode] = useState("ESPECES");
   const [saisie, setSaisie] = useState("");
@@ -163,7 +164,7 @@ function Paiement() {
           ))}
         </ul>
         <div className="flex flex-col gap-3 border-t border-line bg-white px-5 py-4">
-          <Champ libelle="Note sur l'envoi (facultatif)" placeholder="Ex. fragile, à livrer à Koudougou" value={note} onChange={(e) => setNote(e.target.value)} />
+          <FloatingLabelInput id={`${id}-note`} label="Note sur l'envoi (facultatif)" className="text-base" value={note} onChange={(e) => setNote(e.target.value)} />
           <Totaux sousTotal={orderSubtotal} remiseMontant={remiseMontant} remise={remise} net={orderTotal} />
           {estChef && <BoutonRemise remise={remise} onClick={() => setFeuilleRemise(true)} />}
         </div>
@@ -267,9 +268,10 @@ function Paiement() {
               </div>
               <Clavier onTouche={(t) => setSaisie((s) => toucheClavier(s, t))} hauteur="h-[68px] lg:h-[52px] min-[1180px]:h-14" />
               {modeInfo?.reference && (
-                <Champ
-                  libelle="Référence de la transaction (facultatif)"
-                  placeholder={mode === "CARTE" ? "N° du ticket carte" : mode === "MOBILE" ? "ID de la transaction" : "Référence du virement"}
+                <FloatingLabelInput
+                  id={`${id}-reference`}
+                  label={mode === "CARTE" ? "N° du ticket carte (facultatif)" : mode === "MOBILE" ? "ID de la transaction (facultatif)" : "Référence du virement (facultatif)"}
+                  className="text-base"
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
                 />
