@@ -252,9 +252,9 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
         colonnes={[
           { id: "description", titre: "Colis", mobile: "titre", rendu: (p) => p.description },
           { id: "numero", titre: "N°", rendu: (p) => <span className="chiffres">{p.packageNumber}</span> },
-          { id: "qte", titre: "Qté", rendu: (p) => <span className="chiffres">{p.totalQuantity}</span> },
-          { id: "etat", titre: "État", rendu: (p) => <Etat ton={(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[1]}>{(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[0]}</Etat> },
-          { id: "montant", titre: "Montant", aDroite: true, rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
+          { id: "qte", titre: "Qté", rendu: (p) => <span className="chiffres">{p.totalQuantity}</span>, mobileRendu: (p) => <span className="chiffres">× {p.totalQuantity}</span> },
+          { id: "etat", titre: "État", mobile: "etat", rendu: (p) => <Etat ton={(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[1]}>{(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[0]}</Etat> },
+          { id: "montant", titre: "Montant", aDroite: true, mobile: "droite", rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
         ]}
         actions={(p) => (
           <span className="flex justify-end gap-1">

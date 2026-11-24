@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
+import { BoutonFlottant, EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { usePackages } from "@/hooks/use-packages";
 import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
@@ -76,10 +76,12 @@ export function ListeColis({ clients, containers }) {
         chemin="Gestion / Colis"
         titre="Colis"
         actions={
-          <button type="button" onClick={() => (caisse ? ouvrirCaisse(router) : setNouveau(true))} className={PRINCIPAL}>
-            <Plus className="size-5" aria-hidden="true" />
-            {caisse ? "Nouvel envoi" : "Nouvelle expédition"}
-          </button>
+          <span className="hidden md:contents">
+            <button type="button" onClick={() => (caisse ? ouvrirCaisse(router) : setNouveau(true))} className={PRINCIPAL}>
+              <Plus className="size-5" aria-hidden="true" />
+              {caisse ? "Nouvel envoi" : "Nouvelle expédition"}
+            </button>
+          </span>
         }
       />
 
@@ -110,12 +112,13 @@ export function ListeColis({ clients, containers }) {
           { id: "description", titre: "Colis", mobile: "titre", rendu: (p) => p.description },
           { id: "numero", titre: "N°", rendu: (p) => <span className="chiffres">{p.packageNumber}</span> },
           { id: "client", titre: "Client", rendu: (p) => nomAffiche(p.client) },
-          { id: "conteneur", titre: "Conteneur", rendu: (p) => <span className="chiffres">{p.container?.containerNumber || "—"}</span> },
-          { id: "etat", titre: "État", rendu: (p) => <Etat ton={(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[1]}>{(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[0]}</Etat> },
-          { id: "montant", titre: "Montant", aDroite: true, rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
+          { id: "conteneur", titre: "Conteneur", rendu: (p) => <span className="chiffres">{p.container?.containerNumber || "—"}</span>, mobileRendu: (p) => p.container?.containerNumber || null },
+          { id: "etat", titre: "État", mobile: "etat", rendu: (p) => <Etat ton={(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[1]}>{(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[0]}</Etat> },
+          { id: "montant", titre: "Montant", aDroite: true, mobile: "droite", rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
         ]}
       />
 
+      <BoutonFlottant libelle={caisse ? "Nouvel envoi" : "Nouvelle expédition"} onClick={() => (caisse ? ouvrirCaisse(router) : setNouveau(true))} />
       <PackageDialog isOpen={nouveau} onClose={() => setNouveau(false)} package={null} clients={clients} containers={containers} onSave={creer} loading={envoi} />
     </div>
   );

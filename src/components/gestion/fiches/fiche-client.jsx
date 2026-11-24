@@ -153,11 +153,12 @@ export function FicheClient({ client, containers, userRole }) {
         colonnes={[
           { id: "suivi", titre: "N° de suivi", mobile: "titre", rendu: (e) => <span className="chiffres">{e.shipmentNumber}</span> },
           { id: "date", titre: "Date", rendu: (e) => new Date(e.createdAt).toLocaleDateString("fr-FR") },
-          { id: "colis", titre: "Colis", rendu: (e) => <span className="chiffres">{e.packagesCount}</span> },
-          { id: "montant", titre: "Montant", aDroite: true, rendu: (e) => <span className="chiffres">{formatMontant(e.totalAmount)}</span> },
+          { id: "colis", titre: "Colis", rendu: (e) => <span className="chiffres">{e.packagesCount}</span>, mobileRendu: (e) => `${e.packagesCount} colis` },
+          { id: "montant", titre: "Montant", aDroite: true, mobile: "droite", rendu: (e) => <span className="chiffres">{formatMontant(e.totalAmount)}</span> },
           {
             id: "etat",
             titre: "État",
+            mobile: "etat",
             rendu: (e) => <Etat ton={(PAIEMENT[e.paymentStatus] || PAIEMENT.PENDING)[1]}>{(PAIEMENT[e.paymentStatus] || PAIEMENT.PENDING)[0]}</Etat>,
           },
         ]}

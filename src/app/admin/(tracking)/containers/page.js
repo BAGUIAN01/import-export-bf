@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
+import { BoutonFlottant, EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
 import { FeuilleConteneur } from "@/components/gestion/conteneurs/feuille-conteneur";
 import { STATUTS_CONTENEUR, trierConteneurs } from "@/lib/conteneurs";
@@ -63,6 +63,7 @@ export default function ConteneursPage() {
       id: "numero",
       titre: "Conteneur",
       mobile: "titre",
+      mobileRendu: (c) => <span className="chiffres">{c.containerNumber}</span>,
       rendu: (c) => (
         <span className="flex flex-wrap items-center gap-2">
           <span className="chiffres font-semibold">{c.containerNumber}</span>
@@ -70,17 +71,30 @@ export default function ConteneursPage() {
         </span>
       ),
     },
-    { id: "depart", titre: "Départ", rendu: (c) => date(c.actualDeparture || c.departureDate) },
-    { id: "colis", titre: "Colis", rendu: (c) => <span className="chiffres">{c.capacity ? `${c.packagesCount} / ${c.capacity}` : c.packagesCount}</span> },
+    { id: "etatTel", titre: "État", bureau: false, mobile: "etat", rendu: (c) => <Etat ton={TON[c.status]}>{STATUTS_CONTENEUR[c.status]?.libelle}</Etat> },
+    {
+      id: "depart",
+      titre: "Départ",
+      rendu: (c) => date(c.actualDeparture || c.departureDate),
+      mobileRendu: (c) => (c.actualDeparture || c.departureDate ? `départ ${date(c.actualDeparture || c.departureDate)}` : "départ à fixer"),
+    },
+    {
+      id: "colis",
+      titre: "Colis",
+      rendu: (c) => <span className="chiffres">{c.capacity ? `${c.packagesCount} / ${c.capacity}` : c.packagesCount}</span>,
+      mobileRendu: (c) => `${c.packagesCount}${c.capacity ? `/${c.capacity}` : ""} colis`,
+    },
     {
       id: "envois",
       titre: "Envois",
       rendu: (c) => <span className="chiffres">{c.status === "DELIVERED" ? `${c.deliveredCount} / ${c.shipmentsCount} remis` : c.shipmentsCount}</span>,
+      mobileRendu: (c) => (c.status === "DELIVERED" ? `${c.deliveredCount}/${c.shipmentsCount} remis` : `${c.shipmentsCount} envoi${c.shipmentsCount > 1 ? "s" : ""}`),
     },
     {
       id: "reste",
       titre: "À encaisser",
       aDroite: true,
+      mobile: "droite",
       rendu: (c) => {
         const r = Math.max(0, c.totalAmount - c.paidAmount);
         return <span className={r > 0 ? "chiffres text-alerte" : "chiffres text-ink-subtle"}>{r > 0 ? formatMontant(r) : "—"}</span>;
@@ -95,10 +109,12 @@ export default function ConteneursPage() {
         titre="Conteneurs"
         actions={
           peutCreer && (
-            <button type="button" onClick={() => setNouveau(true)} className={PRINCIPAL}>
-              <Plus className="size-5" aria-hidden="true" />
-              Nouveau conteneur
-            </button>
+            <span className="hidden md:contents">
+              <button type="button" onClick={() => setNouveau(true)} className={PRINCIPAL}>
+                <Plus className="size-5" aria-hidden="true" />
+                Nouveau conteneur
+              </button>
+            </span>
           )
         }
       />
@@ -130,6 +146,7 @@ export default function ConteneursPage() {
         actions={peutAgir ? (c) => <BoutonActionConteneur conteneur={c} onFait={charger} variante="contour" className="h-10 text-sm" /> : undefined}
       />
 
+      {peutCreer && <BoutonFlottant libelle="Nouveau conteneur" onClick={() => setNouveau(true)} />}
       {peutCreer && nouveau && (
         <FeuilleConteneur
           onFermer={() => setNouveau(false)}

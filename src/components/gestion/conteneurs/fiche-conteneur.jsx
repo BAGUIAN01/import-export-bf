@@ -157,12 +157,18 @@ export function FicheConteneur({ container: initial, currentUser }) {
           colonnes={[
             { id: "client", titre: "Client", mobile: "titre", rendu: (e) => nomAffiche(e.client) },
             { id: "suivi", titre: "N° de suivi", rendu: (e) => <span className="chiffres">{e.shipmentNumber}</span> },
-            { id: "pour", titre: "Destinataire", rendu: (e) => [e.client?.recipientName, e.client?.recipientCity].filter(Boolean).join(" · ") || "—" },
-            { id: "colis", titre: "Colis", rendu: (e) => <span className="chiffres">{e.packagesCount}</span> },
-            { id: "montant", titre: "Montant", aDroite: true, rendu: (e) => <span className="chiffres">{formatMontant(e.totalAmount)}</span> },
+            {
+              id: "pour",
+              titre: "Destinataire",
+              rendu: (e) => [e.client?.recipientName, e.client?.recipientCity].filter(Boolean).join(" · ") || "—",
+              mobileRendu: (e) => (e.client?.recipientName ? `→ ${e.client.recipientName}` : null),
+            },
+            { id: "colis", titre: "Colis", rendu: (e) => <span className="chiffres">{e.packagesCount}</span>, mobileRendu: (e) => `${e.packagesCount} colis` },
+            { id: "montant", titre: "Montant", aDroite: true, mobile: "droite", rendu: (e) => <span className="chiffres">{formatMontant(e.totalAmount)}</span> },
             {
               id: "etat",
               titre: "État",
+              mobile: "etat",
               rendu: (e) => (e.deliveredAt ? <Etat ton="vert">Remis</Etat> : <Etat ton={(PAIEMENT[e.paymentStatus] || PAIEMENT.PENDING)[1]}>{(PAIEMENT[e.paymentStatus] || PAIEMENT.PENDING)[0]}</Etat>),
             },
           ]}
@@ -179,8 +185,8 @@ export function FicheConteneur({ container: initial, currentUser }) {
             { id: "description", titre: "Colis", mobile: "titre", rendu: (p) => p.description },
             { id: "numero", titre: "N°", rendu: (p) => <span className="chiffres">{p.packageNumber}</span> },
             { id: "client", titre: "Client", rendu: (p) => nomAffiche(p.client) },
-            { id: "qte", titre: "Qté", rendu: (p) => <span className="chiffres">{p.totalQuantity}</span> },
-            { id: "montant", titre: "Montant", aDroite: true, rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
+            { id: "qte", titre: "Qté", rendu: (p) => <span className="chiffres">{p.totalQuantity}</span>, mobileRendu: (p) => <span className="chiffres">× {p.totalQuantity}</span> },
+            { id: "montant", titre: "Montant", aDroite: true, mobile: "droite", rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
           ]}
         />
       )}

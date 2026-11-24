@@ -107,12 +107,21 @@ export default function EncaissementsPage() {
         colonnes={[
           { id: "client", titre: "Client", mobile: "titre", rendu: (e) => nomAffiche(e.client) },
           { id: "suivi", titre: "N° de suivi", rendu: (e) => <span className="chiffres">{e.shipmentNumber}</span> },
-          { id: "conteneur", titre: "Conteneur", rendu: (e) => <span className="chiffres">{e.container?.containerNumber || "—"}</span> },
-          { id: "montant", titre: "Montant", aDroite: true, rendu: (e) => <span className="chiffres">{formatMontant(e.totalAmount)}</span> },
-          { id: "reste", titre: "Reste", aDroite: true, rendu: (e) => (reste(e) > 0 ? <span className="chiffres text-alerte">{formatMontant(reste(e))}</span> : <span className="text-ink-subtle">—</span>) },
+          { id: "conteneur", titre: "Conteneur", rendu: (e) => <span className="chiffres">{e.container?.containerNumber || "—"}</span>, mobileRendu: (e) => e.container?.containerNumber || null },
+          {
+            id: "montant",
+            titre: "Montant",
+            aDroite: true,
+            mobile: "droite",
+            rendu: (e) => <span className="chiffres">{formatMontant(e.totalAmount)}</span>,
+            // Téléphone : le reste dû s'il y en a, sinon le montant
+            mobileRendu: (e) => <span className={reste(e) > 0 ? "chiffres text-alerte" : "chiffres"}>{formatMontant(reste(e) > 0 ? reste(e) : e.totalAmount)}</span>,
+          },
+          { id: "reste", titre: "Reste", aDroite: true, mobile: false, rendu: (e) => (reste(e) > 0 ? <span className="chiffres text-alerte">{formatMontant(reste(e))}</span> : <span className="text-ink-subtle">—</span>) },
           {
             id: "etat",
             titre: "État",
+            mobile: "etat",
             rendu: (e) => (e.deliveredAt ? <Etat ton="vert">Remis</Etat> : <Etat ton={(ETATS_PAIEMENT[e.paymentStatus] || ETATS_PAIEMENT.PENDING)[1]}>{(ETATS_PAIEMENT[e.paymentStatus] || ETATS_PAIEMENT.PENDING)[0]}</Etat>),
           },
         ]}

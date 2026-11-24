@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /*
@@ -47,24 +48,24 @@ export function StatCard({ label, value, detail, variant = "default", couleur = 
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-2xl border-2 p-3.5 sm:gap-1.5 sm:p-[18px]",
+        "flex min-w-[132px] flex-col gap-0.5 rounded-xl border-2 px-3 py-2.5 sm:min-w-0 sm:gap-1.5 sm:rounded-2xl sm:p-[18px]",
         noire ? "border-ink bg-ink text-white shadow-[0_8px_20px_rgba(15,23,20,.16)]" : cn("bg-white text-ink shadow-[0_1px_2px_rgba(15,23,20,.04)]", BORDURES[couleur] ?? BORDURES.vert),
         className
       )}
     >
-      <span className={cn("text-[13px]", noire ? "text-white/70" : "text-ink-muted")}>{label}</span>
-      <span className="chiffres text-[21px] font-medium leading-tight tracking-tight sm:text-[28px]">{value}</span>
-      {detail != null && <span className={cn("text-xs", noire ? "text-white/70" : "text-ink-muted")}>{detail}</span>}
+      <span className={cn("text-xs sm:text-[13px]", noire ? "text-white/70" : "text-ink-muted")}>{label}</span>
+      <span className="chiffres whitespace-nowrap text-[19px] font-medium leading-tight tracking-tight sm:text-[28px]">{value}</span>
+      {detail != null && <span className={cn("max-w-[180px] truncate text-[11px] sm:max-w-none sm:text-xs", noire ? "text-white/70" : "text-ink-muted")}>{detail}</span>}
     </div>
   );
 }
 
-/** Rangée de chiffres : deux colonnes sur téléphone, grille sur tablette et PC. */
+/** Rangée de chiffres : bande compacte qui défile au doigt sur téléphone, grille sur tablette et PC. */
 export function StatGrid({ children, className }) {
   return (
     <section
       className={cn(
-        "grid shrink-0 grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] md:gap-4",
+        "-mx-3 flex shrink-0 snap-x scroll-px-3 gap-2 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none] [&>*]:shrink-0 [&>*]:snap-start sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 md:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] md:gap-4",
         className
       )}
     >
@@ -168,11 +169,28 @@ export function Etat({ ton = "gris", children, className }) {
 }
 
 /**
- * Tableau sur PC, cartes sur tablette en portrait.
- * `colonnes` : [{ id, titre, rendu: (ligne) => node, classe?, mobile?: "titre" | "detail" | false, aDroite? }]
- * `actions` (facultatif) : (ligne) => node, toujours visible à droite.
+ * Tableau sur PC et tablette ; liste groupée sur téléphone (comme une application).
+ * `colonnes` : [{ id, titre, rendu: (ligne) => node, classe?, aDroite?,
+ *   mobile?: "titre" | "detail" (défaut) | "droite" | "etat" | false,
+ *   mobileRendu?: (ligne) => node (texte court sur téléphone, ex. « 23/120 colis » ; null = rien),
+ *   bureau?: false (colonne du téléphone seulement) }]
+ * `actions` : (ligne) => node, à droite ; sur téléphone seulement si la ligne ne
+ * s'ouvre pas (sinon dans sa fiche), ou avec `actionsMobile`.
  */
-export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vide = "Aucun résultat.", actions, libelle }) {
+export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vide = "Aucun résultat.", actions, actionsMobile, libelle, parPage = 40 }) {
+  // Longues listes : 40 lignes, puis la suite quand on arrive en bas (ou « Voir plus »)
+  const [nombre, setNombre] = useState(parPage);
+  const fin = useRef(null);
+  const signature = `${lignes.length}:${lignes[0]?.[cle] ?? ""}`;
+  useEffect(() => setNombre(parPage), [signature, parPage]);
+  const reste = lignes.length - nombre;
+  useEffect(() => {
+    if (reste <= 0 || !fin.current || typeof IntersectionObserver === "undefined") return;
+    const o = new IntersectionObserver((e) => e[0].isIntersecting && setNombre((n) => n + parPage), { rootMargin: "400px" });
+    o.observe(fin.current);
+    return () => o.disconnect();
+  }, [reste, parPage]);
+
   if (chargement) {
     return (
       <div className="flex flex-col gap-2" aria-hidden="true">
@@ -185,8 +203,16 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
   if (!lignes.length) {
     return <p className="rounded-2xl border border-dashed border-line-strong bg-white py-10 text-center text-[15px] text-ink-muted">{vide}</p>;
   }
-  const titre = colonnes.find((c) => c.mobile === "titre") || colonnes[0];
-  const details = colonnes.filter((c) => c !== titre && c.mobile !== false);
+  const bureau = colonnes.filter((c) => c.bureau !== false);
+  const tel = colonnes.filter((c) => c.mobile !== false);
+  const titre = tel.find((c) => c.mobile === "titre") || tel[0];
+  const droite = tel.find((c) => c.mobile === "droite");
+  const etat = tel.find((c) => c.mobile === "etat");
+  const details = tel.filter((c) => c !== titre && c !== droite && c !== etat);
+  const rendu = (c, l) => (c.mobileRendu || c.rendu)(l);
+  // Téléphone : les actions d'une ligne qu'on ouvre passent dans sa fiche
+  const avecActions = actions && (actionsMobile ?? !onLigne);
+  const visibles = reste > 0 ? lignes.slice(0, nombre) : lignes;
 
   return (
     <>
@@ -194,7 +220,7 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
         <table className="w-full min-w-[720px] text-left" aria-label={libelle}>
           <thead className="border-b border-line text-[13px] text-ink-muted">
             <tr>
-              {colonnes.map((c) => (
+              {bureau.map((c) => (
                 <th key={c.id} scope="col" className={cn("px-4 py-3 font-medium", c.aDroite && "text-right", c.classe)}>
                   {c.titre}
                 </th>
@@ -207,13 +233,13 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {lignes.map((l) => (
+            {visibles.map((l) => (
               <tr
                 key={l[cle]}
                 onClick={onLigne ? () => onLigne(l) : undefined}
                 className={cn(onLigne && "cursor-pointer hover:bg-surface-page")}
               >
-                {colonnes.map((c) => (
+                {bureau.map((c) => (
                   <td key={c.id} className={cn("px-4 py-3 align-middle text-[15px]", c.aDroite && "text-right", c.classe)}>
                     {c.rendu(l)}
                   </td>
@@ -229,38 +255,81 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
         </table>
       </div>
 
-      <ul className="flex flex-col gap-2 md:hidden">
-        {lignes.map((l) => (
-          <li key={l[cle]}>
-            <div
-              role={onLigne ? "button" : undefined}
-              tabIndex={onLigne ? 0 : undefined}
-              onClick={onLigne ? () => onLigne(l) : undefined}
-              onKeyDown={onLigne ? (e) => e.key === "Enter" && onLigne(l) : undefined}
-              className={cn("flex items-center gap-3 rounded-2xl border border-line bg-white p-3.5", onLigne && "cursor-pointer active:bg-surface-page")}
-            >
-              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <div className="min-w-0 text-[15px] font-semibold">{titre.rendu(l)}</div>
-                {details.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-muted">
-                    {details.map((c) => (
-                      <span key={c.id} className="flex min-w-0 items-center gap-1">
-                        <span className="text-ink-subtle">{c.titre} :</span>
-                        {c.rendu(l)}
-                      </span>
-                    ))}
+      {/* Téléphone : liste groupée comme une application (titre, détail, valeur et état à droite) */}
+      <ul aria-label={libelle} className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white md:hidden">
+        {visibles.map((l) => {
+          const morceaux = details.map((c) => ({ id: c.id, v: rendu(c, l) })).filter((m) => m.v != null && m.v !== false && m.v !== "" && m.v !== "—");
+          return (
+            <li key={l[cle]}>
+              <div
+                role={onLigne ? "button" : undefined}
+                tabIndex={onLigne ? 0 : undefined}
+                onClick={onLigne ? () => onLigne(l) : undefined}
+                onKeyDown={onLigne ? (e) => e.key === "Enter" && onLigne(l) : undefined}
+                className={cn("flex min-h-16 items-center gap-3 px-4 py-3", onLigne && "cursor-pointer select-none active:bg-surface-page")}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-base font-semibold leading-snug">{rendu(titre, l)}</div>
+                  {morceaux.length > 0 && (
+                    <div className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-ink-muted">
+                      {morceaux.map((m, i) => (
+                        <span key={m.id}>
+                          {i > 0 && (
+                            <span aria-hidden="true" className="mx-1 text-ink-subtle">
+                              ·
+                            </span>
+                          )}
+                          {m.v}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {(droite || etat) && (
+                  <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                    {droite && <div className="text-[15px] font-semibold">{rendu(droite, l)}</div>}
+                    {etat && rendu(etat, l)}
                   </div>
                 )}
+                {avecActions && (
+                  <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {actions(l)}
+                  </div>
+                )}
+                {onLigne && !avecActions && <ChevronRight className="-mr-1 size-5 shrink-0 text-ink-subtle" aria-hidden="true" />}
               </div>
-              {actions && (
-                <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-                  {actions(l)}
-                </div>
-              )}
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
+      {reste > 0 && (
+        <div ref={fin} className="flex justify-center pt-1">
+          <button type="button" onClick={() => setNombre((n) => n + parPage)} className="h-11 rounded-xl px-4 text-sm font-semibold text-brand-strong hover:bg-brand-soft">
+            Voir plus <span className="chiffres font-normal text-ink-muted">({reste})</span>
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/**
+ * Téléphone : action principale d'une liste en bouton flottant, au-dessus des
+ * onglets du bas (sur tablette et PC, elle reste dans l'en-tête).
+ */
+export function BoutonFlottant({ libelle, icone: Icone = Plus, onClick }) {
+  return (
+    <>
+      <div aria-hidden="true" className="h-16 md:hidden" />
+      <button
+        type="button"
+        onClick={onClick}
+        className="fixed right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand pr-5 pl-4 font-semibold text-white shadow-[0_8px_24px_rgba(14,122,85,.35)] active:scale-[.97] md:hidden"
+        style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 16px)" }}
+      >
+        <Icone className="size-5" aria-hidden="true" />
+        {libelle}
+      </button>
     </>
   );
 }

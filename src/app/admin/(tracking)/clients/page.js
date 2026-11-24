@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Star, UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
+import { BoutonFlottant, EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
 import { NouveauClient } from "@/components/caisse/client/nouveau-client";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche, resteDu } from "@/lib/caisse/clients";
@@ -58,10 +58,12 @@ export default function ClientsPage() {
         chemin="Gestion / Clients"
         titre="Clients"
         actions={
-          <button type="button" onClick={() => setNouveau(true)} className={PRINCIPAL}>
-            <UserPlus className="size-5" aria-hidden="true" />
-            Nouveau client
-          </button>
+          <span className="hidden md:contents">
+            <button type="button" onClick={() => setNouveau(true)} className={PRINCIPAL}>
+              <UserPlus className="size-5" aria-hidden="true" />
+              Nouveau client
+            </button>
+          </span>
         }
       />
 
@@ -96,17 +98,25 @@ export default function ClientsPage() {
             ),
           },
           { id: "tel", titre: "Téléphone", rendu: (c) => <span className="chiffres">{affichageTelephone(c.phone)}</span> },
-          { id: "dest", titre: "Destinataire", rendu: (c) => [c.recipientName, c.recipientCity].filter(Boolean).join(" · ") || "—" },
-          { id: "envois", titre: "Envois", rendu: (c) => <span className="chiffres">{c.shipmentsCount || 0}</span> },
+          {
+            id: "dest",
+            titre: "Destinataire",
+            rendu: (c) => [c.recipientName, c.recipientCity].filter(Boolean).join(" · ") || "—",
+            mobileRendu: (c) => (c.recipientName ? `→ ${[c.recipientName, c.recipientCity].filter(Boolean).join(", ")}` : null),
+          },
+          { id: "envois", titre: "Envois", rendu: (c) => <span className="chiffres">{c.shipmentsCount || 0}</span>, mobileRendu: (c) => `${c.shipmentsCount || 0} envoi${(c.shipmentsCount || 0) > 1 ? "s" : ""}` },
           {
             id: "reste",
             titre: "Reste à payer",
             aDroite: true,
+            mobile: "droite",
+            mobileRendu: (c) => (resteDu(c) > 0 ? <span className="chiffres text-alerte">{formatMontant(resteDu(c))}</span> : null),
             rendu: (c) => (resteDu(c) > 0 ? <Etat ton="ambre">{formatMontant(resteDu(c))}</Etat> : <span className="text-ink-subtle">—</span>),
           },
         ]}
       />
 
+      <BoutonFlottant libelle="Nouveau client" icone={UserPlus} onClick={() => setNouveau(true)} />
       {nouveau && (
         <NouveauClient
           onFermer={() => setNouveau(false)}
