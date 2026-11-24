@@ -235,7 +235,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "STAFF"].includes(session.user.role)) {
+    if (!session || !["ADMIN", "STAFF", "CHEF_CAISSE", "TRACKER"].includes(session.user.role)) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 

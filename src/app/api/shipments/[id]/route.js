@@ -135,7 +135,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !["ADMIN", "STAFF"].includes(session.user.role)) {
+    if (!session || !["ADMIN", "STAFF", "CHEF_CAISSE", "TRACKER", "AGENT"].includes(session.user.role)) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 

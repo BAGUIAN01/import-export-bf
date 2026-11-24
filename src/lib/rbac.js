@@ -1,12 +1,18 @@
 // lib/rbac.js
 
-export const Roles = ["ADMIN", "STAFF", "TRACKER", "AGENT", "CLIENT"];
+export const Roles = ["ADMIN", "STAFF", "CHEF_CAISSE", "TRACKER", "AGENT", "CLIENT"];
+
+// Profils du personnel (tout sauf CLIENT)
+export const ROLES_PERSONNEL = ["ADMIN", "CHEF_CAISSE", "STAFF", "TRACKER", "AGENT"];
+const CAISSE = ["ADMIN", "CHEF_CAISSE", "STAFF"];
+const GESTION = ["ADMIN", "CHEF_CAISSE", "TRACKER"];
 
 export const roleHome = {
   ADMIN: "/admin",
-  STAFF: "/staff/dashboard",
-  TRACKER: "/tracker/dashboard", 
-  AGENT: "/agent/dashboard",
+  CHEF_CAISSE: "/admin",
+  STAFF: "/admin/caisse",
+  TRACKER: "/admin",
+  AGENT: "/admin/retraits",
   CLIENT: "/client/dashboard",
 };
 
@@ -15,35 +21,36 @@ export const roleHome = {
 export const accessMap = {
 
   // Pages communes
-  "/admin": ["ADMIN"],
+  "/admin": ROLES_PERSONNEL,
+  "/admin/profile": ROLES_PERSONNEL,
   "/client": ["CLIENT"],
   
   // Tableaux de bord
-  "/admin/dashboard": ["ADMIN"],
+  "/admin/dashboard": GESTION,
   "/admin/hub": ["ADMIN"],
   "/client/dashboard": ["CLIENT"],
 
   // Clients (Admin seulement)
-  "/admin/clients": ["ADMIN"],
+  "/admin/clients": GESTION,
   "/admin/clients/vip": ["ADMIN"],
   "/admin/clients/new": ["ADMIN"],
   "/admin/recipients": ["ADMIN"],
 
   // Colis (Admin peut tout voir, Client ses propres colis)
-  "/admin/packages": ["ADMIN"],
+  "/admin/packages": ["ADMIN", "TRACKER"],
 
-  "/admin/shipments": ["ADMIN"],
+  "/admin/shipments": GESTION,
 
   // Caisse (Admin seulement)
-  "/admin/caisse": ["ADMIN"],
+  "/admin/caisse": CAISSE,
 
   // Retraits à l'arrivée, tarifs, paramétrage
-  "/admin/retraits": ["ADMIN"],
-  "/admin/tarifs": ["ADMIN"],
+  "/admin/retraits": ["ADMIN", "CHEF_CAISSE", "AGENT"],
+  "/admin/tarifs": GESTION,
   "/admin/parametrage": ["ADMIN"],
 
   // Conteneurs (Admin seulement)
-  "/admin/containers": ["ADMIN"],
+  "/admin/containers": GESTION,
   "/admin/containers/new": ["ADMIN"],
   "/admin/containers/preparation": ["ADMIN"],
   "/admin/containers/transit": ["ADMIN"],

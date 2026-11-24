@@ -46,7 +46,7 @@ export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !['ADMIN', 'STAFF', 'TRACKER'].includes(session.user.role)) {
+    if (!session || !['ADMIN', 'STAFF', 'TRACKER', 'CHEF_CAISSE'].includes(session.user.role)) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
