@@ -89,7 +89,7 @@ export function RetraitsProvider({ children }) {
 
   const charger = useCallback(() => {
     setDonnees((d) => (d && d.conteneur?.id !== conteneurId && conteneurId ? null : d));
-    fetch(`/api/retraits${conteneurId ? `?conteneur=${conteneurId}` : ""}`)
+    return fetch(`/api/retraits${conteneurId ? `?conteneur=${conteneurId}` : ""}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.error) throw new Error(d.error);
@@ -102,6 +102,18 @@ export function RetraitsProvider({ children }) {
   }, [conteneurId]);
   useEffect(() => {
     if (restaure) charger();
+  }, [restaure, charger]);
+
+  // Retour dans l'application après plus de 30 s : la liste du conteneur est rechargée
+  useEffect(() => {
+    if (!restaure) return;
+    let cache = 0;
+    const surVisibilite = () => {
+      if (document.hidden) cache = Date.now();
+      else if (cache && Date.now() - cache > 30_000) charger();
+    };
+    document.addEventListener("visibilitychange", surVisibilite);
+    return () => document.removeEventListener("visibilitychange", surVisibilite);
   }, [restaure, charger]);
 
   const envoi = useMemo(() => donnees?.envois?.find((e) => e.id === envoiId) || null, [donnees, envoiId]);

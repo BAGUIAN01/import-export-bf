@@ -7,11 +7,11 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
-import { ContainerDialog } from "@/components/modules/admin/containers/container-dialog";
-import { useContainerMutations } from "@/hooks/use-containers";
+import { FeuilleConteneur } from "@/components/gestion/conteneurs/feuille-conteneur";
 import { STATUTS_CONTENEUR, trierConteneurs } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
 import { sansAccents } from "@/lib/caisse/familles";
+import { useActualisation } from "@/components/gestion/actualisation";
 
 const TON = { PREPARATION: "ambre", LOADED: "bleu", IN_TRANSIT: "bleu", CUSTOMS: "violet", DELIVERED: "vert", CANCELLED: "rouge" };
 const FILTRES = [
@@ -29,7 +29,6 @@ export default function ConteneursPage() {
   const role = session?.user?.role;
   const peutAgir = ["ADMIN", "TRACKER", "CHEF_CAISSE", "STAFF"].includes(role);
   const peutCreer = ["ADMIN", "TRACKER", "CHEF_CAISSE"].includes(role);
-  const { createContainer, isLoading: creation } = useContainerMutations();
 
   const [conteneurs, setConteneurs] = useState(null);
   const [filtre, setFiltre] = useState("tous");
@@ -45,7 +44,9 @@ export default function ConteneursPage() {
         setConteneurs([]);
       });
   }, []);
-  useEffect(charger, [charger]);
+  // Tirer pour actualiser, retour dans l'application : on recharge
+  const { version } = useActualisation();
+  useEffect(charger, [charger, version]);
 
   const liste = useMemo(() => trierConteneurs(conteneurs || []), [conteneurs]);
   const de = (statuts) => liste.filter((c) => statuts.includes(c.status));
@@ -129,17 +130,12 @@ export default function ConteneursPage() {
         actions={peutAgir ? (c) => <BoutonActionConteneur conteneur={c} onFait={charger} variante="contour" className="h-10 text-sm" /> : undefined}
       />
 
-      {peutCreer && (
-        <ContainerDialog
-          isOpen={nouveau}
-          onClose={() => setNouveau(false)}
-          loading={creation}
-          onSave={async (donnees) => {
-            const r = await createContainer(donnees);
-            if (r.success) {
-              setNouveau(false);
-              charger();
-            }
+      {peutCreer && nouveau && (
+        <FeuilleConteneur
+          onFermer={() => setNouveau(false)}
+          onFait={() => {
+            setNouveau(false);
+            charger();
           }}
         />
       )}

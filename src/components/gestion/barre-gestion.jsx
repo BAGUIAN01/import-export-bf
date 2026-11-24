@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Container as IconeConteneur, LayoutDashboard, LayoutGrid, Package, PackageCheck, Receipt, Settings, Tag, UserCog, Users } from "lucide-react";
+import { ChevronLeft, Container as IconeConteneur, LayoutDashboard, LayoutGrid, Package, PackageCheck, Receipt, Settings, Tag, UserCog, Users } from "lucide-react";
 import { MenuProfil } from "@/components/gestion/menu-profil";
 import { OngletsBas } from "@/components/gestion/onglets-bas";
 import { RechercheGlobale } from "@/components/recherche/recherche-globale";
@@ -20,6 +20,16 @@ const ONGLETS = [
   { href: "/admin/tarifs", libelle: "Tarifs", icone: Tag },
 ];
 
+// Pages de liste qui ne sont pas des fiches (« /admin/clients/vip »…)
+const PAS_FICHE = new Set(["new", "vip", "preparation", "transit", "tracking", "schedule"]);
+
+/** Fiche ouverte (envoi, client, conteneur) : l'onglet de sa liste, sinon null. */
+export function ficheCourante(chemin) {
+  const m = (chemin || "").replace(/\/$/, "").match(/^\/admin\/(containers|clients|shipments)\/([^/]+)$/);
+  if (!m || PAS_FICHE.has(m[2])) return null;
+  return ONGLETS.find((o) => o.href === `/admin/${m[1]}`) || null;
+}
+
 /**
  * Barre de la gestion, même dessin que la caisse : accueil des modules,
  * onglets en pilule (icône seule sous 1180 px sauf l'onglet actif),
@@ -32,13 +42,32 @@ export function BarreGestion() {
   const nom = data?.user?.name || data?.user?.email || "";
   const onglets = role ? ONGLETS.filter((o) => canAccess(role, o.href)) : ONGLETS;
   const conteneur = useConteneurEnCours();
+  const router = useRouter();
+  const fiche = ficheCourante(chemin);
+
+  // Retour comme dans une application : la page d'avant (liste à sa place) ;
+  // arrivé directement sur la fiche, la liste.
+  function retour() {
+    if (window.history.length > 1) router.back();
+    else router.push(fiche.href);
+  }
 
   return (
     <header className="caisse flex h-16 shrink-0 items-center gap-2 border-b border-line bg-white px-3 font-caisse text-[15px] text-ink sm:h-[72px] sm:gap-3 lg:px-5">
       <Link href="/admin" aria-label="Accueil des modules" className="hidden size-12 shrink-0 place-items-center rounded-xl bg-ink text-white sm:grid">
         <LayoutGrid className="size-5" aria-hidden="true" />
       </Link>
-      <span className="hidden text-lg font-semibold tracking-tight max-md:block min-[1180px]:block">Gestion</span>
+      {fiche && (
+        <button
+          type="button"
+          onClick={retour}
+          className="-ml-1.5 flex h-11 min-w-0 items-center rounded-xl pr-2 text-[17px] font-medium text-brand-strong active:opacity-60 md:hidden"
+        >
+          <ChevronLeft className="size-7 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+          <span className="truncate">{fiche.libelle}</span>
+        </button>
+      )}
+      <span className={cn("hidden text-lg font-semibold tracking-tight min-[1180px]:block", !fiche && "max-md:block")}>Gestion</span>
 
       <nav aria-label="Onglets de la gestion" className="hidden min-w-0 md:block lg:ml-2">
         <ul className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-surface-muted p-1 [scrollbar-width:none]">
@@ -99,8 +128,10 @@ export function BarreGestion() {
 /** Téléphone : les onglets de la gestion en bas, le reste dans « Plus ». */
 export function NavigationBasGestion() {
   const { data } = useSession();
+  const chemin = usePathname() || "";
   const role = data?.user?.role;
-  if (!role) return null;
+  // Sur une fiche, comme dans une application : pas d'onglets, retour en haut, actions en bas
+  if (!role || ficheCourante(chemin)) return null;
   // En bas, les quatre écrans du quotidien d'abord ; Retraits a son propre écran
   const ordre = ["/admin/containers", "/admin/packages", "/admin/clients", "/admin/shipments"];
   const onglets = ONGLETS.filter((o) => canAccess(role, o.href)).sort((a, b) => (ordre.indexOf(a.href) + 1 || 99) - (ordre.indexOf(b.href) + 1 || 99));

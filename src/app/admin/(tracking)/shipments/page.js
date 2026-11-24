@@ -9,6 +9,7 @@ import { useShipmentMutations } from "@/hooks/use-shipments";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
+import { useActualisation } from "@/components/gestion/actualisation";
 
 const ETATS_PAIEMENT = {
   PAID: ["Soldé", "vert"],
@@ -46,7 +47,9 @@ export default function EncaissementsPage() {
         setEnvois([]);
       });
   }, []);
-  useEffect(charger, [charger]);
+  // Tirer pour actualiser, retour dans l'application : on recharge
+  const { version } = useActualisation();
+  useEffect(charger, [charger, version]);
 
   const liste = useMemo(() => envois || [], [envois]);
   const conteneurs = useMemo(() => {

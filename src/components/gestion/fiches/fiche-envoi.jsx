@@ -3,15 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, PackageCheck, Pencil, Plus, Printer, Trash2, Wallet } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Loader2, MoreHorizontal, PackageCheck, Pencil, Plus, Printer, Trash2, Wallet } from "lucide-react";
 import { toast } from "sonner";
-import QRCodeLib from "qrcode";
-import { pdf } from "@react-pdf/renderer";
 import { Bloc, EnTete, Etat, Infos, SECONDAIRE, StatCard, StatGrid, Tableau } from "@/components/epure";
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
-import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
+import { FeuilleEncaissement } from "@/components/gestion/fiches/feuille-encaissement";
+import { BarreActions, FeuilleActions } from "@/components/gestion/barre-actions";
+import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
+import { DEPOT_RETRAITS } from "@/lib/recherche";
+import { canAccess } from "@/lib/rbac";
 import { ShipmentRemitDialog } from "@/components/modules/admin/shipments/shipment-remit-dialog";
-import { ReceiptPDF } from "@/components/modules/admin/shipments/receipt-pdf";
 import { useShipmentDetails, useShipmentMutations } from "@/hooks/use-shipments";
 import { ETATS_COLIS } from "@/components/gestion/colis/liste-colis";
 import { STATUTS_CONTENEUR } from "@/lib/conteneurs";
@@ -40,6 +42,8 @@ async function versDataUrl(chemin) {
  */
 export function FicheEnvoi({ shipment: initial, containers, clients }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const caisse = canAccess(session?.user?.role, "/admin/caisse");
   const { shipment: frais, packages: colisFrais, refresh } = useShipmentDetails(initial.id);
   const { updateShipment, deleteShipment, isLoading } = useShipmentMutations();
   const e = { ...initial, ...(frais || {}), packages: frais ? colisFrais : initial.packages };
@@ -49,6 +53,7 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
   const [impression, setImpression] = useState(false);
   const [colisOuvert, setColisOuvert] = useState(null); // null, "nouveau" ou le colis
   const [envoiColis, setEnvoiColis] = useState(false);
+  const [menuColis, setMenuColis] = useState(null); // téléphone : actions d'un colis
 
   const reste = Math.max(0, (e.totalAmount || 0) - (e.paidAmount || 0));
   const etat = e.deliveredAt ? ["Remis", "vert"] : PAIEMENT[e.paymentStatus] || PAIEMENT.PENDING;
@@ -93,8 +98,9 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
     }
   }
 
-  async function supprimerColis(p) {
-    if (!window.confirm(`Supprimer le colis « ${p.description} » (${p.packageNumber}) ?`)) return;
+  // `confirme` : déjà confirmé dans la feuille d'actions (téléphone)
+  async function supprimerColis(p, confirme = false) {
+    if (!confirme && !window.confirm(`Supprimer le colis « ${p.description} » (${p.packageNumber}) ?`)) return;
     const res = await fetch(`/api/packages/${p.id}`, { method: "DELETE" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return toast.error(data.error || "Le colis n'a pas pu être supprimé.");
@@ -102,17 +108,41 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
     refresh();
   }
 
-  async function supprimerEnvoi() {
-    if (!window.confirm(`Supprimer l'envoi ${e.shipmentNumber} et ses colis ? Cette action est définitive.`)) return;
+  async function supprimerEnvoi(confirme = false) {
+    if (!confirme && !window.confirm(`Supprimer l'envoi ${e.shipmentNumber} et ses colis ? Cette action est définitive.`)) return;
     const r = await deleteShipment(e.id);
     if (r?.success !== false) router.push("/admin/shipments");
   }
+
+  // Remettre : par le module Retraits (vérification des colis, paiement du reste)
+  // quand le conteneur est arrivé ; sinon l'ancienne fenêtre
+  const arrive = ["DELIVERED", "CUSTOMS"].includes(e.container?.status);
+  function remettreEnvoi() {
+    if (!(arrive && canAccess(session?.user?.role, "/admin/retraits"))) return setRemettre(true);
+    try {
+      window.sessionStorage.setItem(DEPOT_RETRAITS, JSON.stringify({ envoiId: e.id, conteneurId: e.container.id, nom: e.client?.recipientName || "" }));
+    } catch {
+      /* stockage indisponible */
+    }
+    window.dispatchEvent(new CustomEvent("recherche:depot", { detail: DEPOT_RETRAITS }));
+    router.push("/admin/retraits/colis");
+  }
+
+  // Ajouter des colis : à la caisse (même client, même conteneur = même envoi)
+  const ajouterColis = () => (caisse ? ouvrirCaisse(router, e.client) : setColisOuvert("nouveau"));
 
   async function imprimer() {
     setImpression(true);
     try {
       const lien = `${window.location.origin}/tracking?q=${encodeURIComponent(e.shipmentNumber)}`;
-      const [qr, logo] = await Promise.all([QRCodeLib.toDataURL(lien, { margin: 1, width: 200 }).catch(() => null), versDataUrl("/logo.jpeg").catch(() => null)]);
+      // Générateur de PDF et QR code chargés au moment d'imprimer (fiche plus légère)
+      const [{ pdf }, { ReceiptPDF }, { default: QRCodeLib }, logo] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/modules/admin/shipments/receipt-pdf"),
+        import("qrcode"),
+        versDataUrl("/logo.jpeg").catch(() => null),
+      ]);
+      const qr = await QRCodeLib.toDataURL(lien, { margin: 2, width: 512, errorCorrectionLevel: "M" }).catch(() => null);
       const blob = await pdf(<ReceiptPDF shipment={e} logoDataUrl={logo} qrCodeDataUrl={qr} dateEdition={new Date().toLocaleDateString("fr-FR")} />).toBlob();
       const url = URL.createObjectURL(blob);
       const f = window.open(url, "_blank");
@@ -139,13 +169,13 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
         titre={nomAffiche(e.client)}
         sousTitre={<span className="chiffres">{e.shipmentNumber}</span>}
         actions={
-          <>
+          <span className="hidden flex-wrap gap-2 md:flex">
             <button type="button" onClick={imprimer} disabled={impression} className={SECONDAIRE}>
               {impression ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Printer className="size-4" aria-hidden="true" />}
               Reçu
             </button>
             {!e.deliveredAt && (
-              <button type="button" onClick={() => setRemettre(true)} className={SECONDAIRE}>
+              <button type="button" onClick={remettreEnvoi} className={SECONDAIRE}>
                 <PackageCheck className="size-4" aria-hidden="true" />
                 Remettre
               </button>
@@ -156,7 +186,7 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
                 Encaisser
               </button>
             )}
-          </>
+          </span>
         }
       >
         <Etat ton={etat[1]} className="text-sm">
@@ -210,7 +240,7 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-semibold">Colis</h2>
-        <button type="button" onClick={() => setColisOuvert("nouveau")} className={SECONDAIRE}>
+        <button type="button" onClick={ajouterColis} className={SECONDAIRE}>
           <Plus className="size-4" aria-hidden="true" />
           Ajouter des colis
         </button>
@@ -228,24 +258,71 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
         ]}
         actions={(p) => (
           <span className="flex justify-end gap-1">
-            <button type="button" onClick={() => setColisOuvert(p)} aria-label={`Modifier ${p.description}`} className={PETIT}>
+            <button type="button" onClick={() => setColisOuvert(p)} aria-label={`Modifier ${p.description}`} className={`${PETIT} hidden md:grid`}>
               <Pencil className="size-4" aria-hidden="true" />
             </button>
-            <button type="button" onClick={() => supprimerColis(p)} aria-label={`Supprimer ${p.description}`} className={`${PETIT} hover:text-danger`}>
+            <button type="button" onClick={() => supprimerColis(p)} aria-label={`Supprimer ${p.description}`} className={`${PETIT} hidden hover:text-danger md:grid`}>
               <Trash2 className="size-4" aria-hidden="true" />
+            </button>
+            {/* Téléphone : un seul bouton « … », grande cible, suppression confirmée */}
+            <button type="button" onClick={() => setMenuColis(p)} aria-label={`Actions : ${p.description}`} className="grid size-11 place-items-center rounded-xl border border-line text-ink-muted md:hidden">
+              <MoreHorizontal className="size-5" aria-hidden="true" />
             </button>
           </span>
         )}
       />
 
-      <div className="flex justify-end">
-        <button type="button" onClick={supprimerEnvoi} className="flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-danger hover:bg-danger-soft">
+      <div className="hidden justify-end md:flex">
+        <button type="button" onClick={() => supprimerEnvoi()} className="flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-danger hover:bg-danger-soft">
           <Trash2 className="size-4" aria-hidden="true" />
           Supprimer l&apos;envoi
         </button>
       </div>
 
-      <ShipmentEditDialog shipment={encaisser ? e : null} isOpen={encaisser} loading={isLoading} onClose={() => setEncaisser(false)} onSave={(d) => enregistrer(d, () => setEncaisser(false))} />
+      {/* Téléphone : action principale en bas, le reste dans « … » */}
+      <BarreActions
+        titreMenu={e.shipmentNumber}
+        principale={
+          reste > 0
+            ? { libelle: `Encaisser · ${formatMontant(reste)}`, icone: Wallet, onClick: () => setEncaisser(true) }
+            : !e.deliveredAt
+              ? { libelle: "Remettre", icone: PackageCheck, onClick: remettreEnvoi }
+              : { libelle: "Reçu", icone: Printer, onClick: imprimer, chargement: impression }
+        }
+        autres={[
+          (reste > 0 || !e.deliveredAt) && { libelle: "Imprimer le reçu", icone: Printer, onClick: imprimer },
+          reste > 0 && !e.deliveredAt && { libelle: "Remettre", icone: PackageCheck, onClick: remettreEnvoi },
+          { libelle: "Ajouter des colis", icone: Plus, onClick: ajouterColis },
+          {
+            libelle: "Supprimer l'envoi",
+            icone: Trash2,
+            danger: true,
+            onClick: () => supprimerEnvoi(true),
+            confirmation: { titre: `Supprimer ${e.shipmentNumber} ?`, texte: "L'envoi et ses colis seront supprimés. Cette action est définitive.", bouton: "Supprimer l'envoi" },
+          },
+        ]}
+      />
+      <FeuilleActions
+        ouvert={!!menuColis}
+        onFermer={() => setMenuColis(null)}
+        titre={menuColis?.description}
+        sousTitre={menuColis ? <span className="chiffres">{menuColis.packageNumber}</span> : null}
+        actions={
+          menuColis
+            ? [
+                { libelle: "Modifier le colis", icone: Pencil, onClick: () => setColisOuvert(menuColis) },
+                {
+                  libelle: "Supprimer le colis",
+                  icone: Trash2,
+                  danger: true,
+                  onClick: () => supprimerColis(menuColis, true),
+                  confirmation: { titre: "Supprimer ce colis ?", texte: `${menuColis.description} (${menuColis.packageNumber})`, bouton: "Supprimer le colis" },
+                },
+              ]
+            : []
+        }
+      />
+      {encaisser && <FeuilleEncaissement envoi={e} onFermer={() => setEncaisser(false)} onEncaisser={(d) => enregistrer(d, () => setEncaisser(false))} />}
       <ShipmentRemitDialog shipment={remettre ? e : null} isOpen={remettre} loading={isLoading} onClose={() => setRemettre(false)} onSubmit={(d) => enregistrer(d, () => setRemettre(false))} />
       <PackageDialog
         isOpen={!!colisOuvert}

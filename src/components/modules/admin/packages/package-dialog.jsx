@@ -39,6 +39,14 @@ const PackageDialog = ({
   const [activePackageIndex, setActivePackageIndex] = useState(-1);
   const [errors, setErrors] = useState({});
 
+  // Échap ferme la fenêtre (comme les feuilles de l'application)
+  useEffect(() => {
+    if (!isOpen) return;
+    const surTouche = (e) => e.key === "Escape" && onClose?.();
+    document.addEventListener("keydown", surTouche);
+    return () => document.removeEventListener("keydown", surTouche);
+  }, [isOpen, onClose]);
+
   const emptyForm = {
     selectedTypes: [],
     description: "",
@@ -368,10 +376,10 @@ const PackageDialog = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-stretch justify-center p-0 sm:p-4">
-      <div className="bg-white w-screen h-screen rounded-none shadow-none sm:w-full sm:max-w-7xl sm:h-[95vh] sm:rounded-xl sm:shadow-2xl overflow-hidden flex">
-        {/* Sidebar */}
+      <div className="bg-white w-screen h-[100dvh] rounded-none shadow-none sm:w-full sm:max-w-7xl sm:h-[95vh] sm:rounded-xl sm:shadow-2xl overflow-hidden flex flex-col md:flex-row">
+        {/* Sidebar : à gauche sur tablette et PC ; sur téléphone, en haut (masquée en modification) */}
         {currentStep <= 2 && (
-          <div className="w-80 border-r bg-gray-50 flex flex-col">
+          <div className={`max-h-44 w-full shrink-0 flex-col border-b bg-gray-50 md:max-h-none md:w-80 md:border-b-0 md:border-r ${editingPackage && !isAddingToShipment ? "hidden md:flex" : "flex"}`}>
             <div className="p-4 border-b bg-white">
               {isAddingToShipment && (
                 <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
@@ -447,7 +455,7 @@ const PackageDialog = ({
         )}
 
         {/* Contenu principal */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {/* Header */}
           <div className="sticky top-0 z-10 border-b bg-gradient-to-r from-amber-50 to-blue-50 px-4 sm:px-6 py-3">
             <div className="flex items-center justify-between">

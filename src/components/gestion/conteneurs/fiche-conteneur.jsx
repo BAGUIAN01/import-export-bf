@@ -7,10 +7,11 @@ import { ClipboardList, FileText, Package, Pencil, Printer, Route } from "lucide
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
 import { SuiviConteneur } from "@/components/gestion/conteneurs/suivi-conteneur";
 import { EtapesConteneur } from "@/components/gestion/conteneurs/etapes-conteneur";
-import { ContainerDialog } from "@/components/modules/admin/containers/container-dialog";
-import { useContainerMutations } from "@/hooks/use-containers";
+import { FeuilleConteneur } from "@/components/gestion/conteneurs/feuille-conteneur";
+import { BarreActions } from "@/components/gestion/barre-actions";
+import { useActualisation } from "@/components/gestion/actualisation";
 import { Bloc, EnTete, Etat, Onglets, Recherche, SECONDAIRE, StatCard, StatGrid, Tableau } from "@/components/epure";
-import { STATUTS_CONTENEUR } from "@/lib/conteneurs";
+import { STATUTS_CONTENEUR, actionSuivante } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { PACKAGE_TYPES } from "@/lib/data/packages";
@@ -39,10 +40,10 @@ export function FicheConteneur({ container: initial, currentUser }) {
   const [recherche, setRecherche] = useState("");
   const peutAgir = ["ADMIN", "TRACKER", "CHEF_CAISSE", "STAFF"].includes(currentUser?.role);
   const [modifier, setModifier] = useState(false);
-  const { updateContainer, isLoading: enregistrement } = useContainerMutations();
   // Données du serveur rafraîchies (étape ajoutée, conteneur modifié)
   useEffect(() => setC(initial), [initial]);
 
+  const { version } = useActualisation();
   useEffect(() => {
     let actif = true;
     fetch(`/api/shipments?containerId=${c.id}&limit=500`)
@@ -56,7 +57,7 @@ export function FicheConteneur({ container: initial, currentUser }) {
     return () => {
       actif = false;
     };
-  }, [c.id]);
+  }, [c.id, version]);
 
   const q = sansAccents(recherche).trim();
   const envoisFiltres = (envois || []).filter(
@@ -92,7 +93,7 @@ export function FicheConteneur({ container: initial, currentUser }) {
           sousTitre={`${c.origin || "France"} → ${c.destination || "Burkina Faso"}${c.sealNumber ? ` · plomb ${c.sealNumber}` : ""}`}
           actions={
             peutAgir && (
-              <>
+              <span className="hidden flex-wrap gap-2 md:flex">
                 <button type="button" onClick={() => setModifier(true)} className={SECONDAIRE}>
                   <Pencil className="size-4" aria-hidden="true" />
                   Modifier
@@ -101,7 +102,7 @@ export function FicheConteneur({ container: initial, currentUser }) {
                     if (m) setC((x) => ({ ...x, ...m }));
                     router.refresh();
                   }} />
-              </>
+              </span>
             )
           }
         >
@@ -226,18 +227,33 @@ export function FicheConteneur({ container: initial, currentUser }) {
 
       {onglet === "suivi" && <SuiviConteneur conteneur={c} onAjoute={() => router.refresh()} />}
 
+      {/* Téléphone : l'étape suivante en bas, Modifier dans « … » */}
       {peutAgir && (
-        <ContainerDialog
-          isOpen={modifier}
-          onClose={() => setModifier(false)}
-          container={c}
-          loading={enregistrement}
-          onSave={async (donnees) => {
-            const r = await updateContainer(c.id, donnees);
-            if (r?.success) {
-              setModifier(false);
-              router.refresh();
-            }
+        <BarreActions
+          titreMenu={c.containerNumber}
+          principale={
+            actionSuivante(c.status) ? (
+              <BoutonActionConteneur
+                conteneur={{ ...c, packagesCount: colis?.length ?? c.packagesCount }}
+                onFait={(m) => {
+                  if (m) setC((x) => ({ ...x, ...m }));
+                  router.refresh();
+                }}
+              />
+            ) : null
+          }
+          autres={[{ libelle: "Modifier le conteneur", icone: Pencil, onClick: () => setModifier(true) }]}
+        />
+      )}
+
+      {peutAgir && modifier && (
+        <FeuilleConteneur
+          conteneur={c}
+          onFermer={() => setModifier(false)}
+          onFait={(m) => {
+            setModifier(false);
+            setC((x) => ({ ...x, ...m }));
+            router.refresh();
           }}
         />
       )}

@@ -2,11 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { EnTete, Etat, PRINCIPAL, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
 import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { usePackages } from "@/hooks/use-packages";
+import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
+import { canAccess } from "@/lib/rbac";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
@@ -37,6 +40,9 @@ export function ListeColis({ clients, containers }) {
   const [recherche, setRecherche] = useState("");
   const [nouveau, setNouveau] = useState(false);
   const [envoi, setEnvoi] = useState(false);
+  // Nouvel envoi : à la caisse (sans accès à la caisse, l'ancien formulaire)
+  const { data: session } = useSession();
+  const caisse = canAccess(session?.user?.role, "/admin/caisse");
 
   const liste = useMemo(() => packages || [], [packages]);
   const de = (statuts) => liste.filter((p) => statuts.includes(p.status));
@@ -70,9 +76,9 @@ export function ListeColis({ clients, containers }) {
         chemin="Gestion / Colis"
         titre="Colis"
         actions={
-          <button type="button" onClick={() => setNouveau(true)} className={PRINCIPAL}>
+          <button type="button" onClick={() => (caisse ? ouvrirCaisse(router) : setNouveau(true))} className={PRINCIPAL}>
             <Plus className="size-5" aria-hidden="true" />
-            Nouvelle expédition
+            {caisse ? "Nouvel envoi" : "Nouvelle expédition"}
           </button>
         }
       />

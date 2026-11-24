@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, PackageSearch } from "lucide-react";
 import { useRetraits } from "@/contexts/retraits-context";
 import { Etat, Pastilles, Recherche } from "@/components/epure";
+import { ZoneActualisable } from "@/components/gestion/actualisation";
 import { formatDevise } from "@/lib/devises";
 import { initiales } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
@@ -26,7 +27,7 @@ const FILTRES = [
  */
 export default function RetraitsDestinatairePage() {
   const router = useRouter();
-  const { donnees, envois, agence, conteneur, envoi, choisir } = useRetraits();
+  const { donnees, envois, agence, conteneur, envoi, choisir, charger } = useRetraits();
   const [filtre, setFiltre] = useState("aRetirer");
   const [recherche, setRecherche] = useState("");
 
@@ -54,7 +55,7 @@ export default function RetraitsDestinatairePage() {
           <Pastilles options={FILTRES.map((f) => ({ id: f.id, label: f.label, compte: envois.filter(f.test).length }))} valeur={filtre} onChange={setFiltre} libelle="Filtrer" />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+        <ZoneActualisable onActualiser={charger} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
           {donnees === null ? (
             <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2" aria-hidden="true">
               {[0, 1, 2, 3].map((i) => (
@@ -103,7 +104,7 @@ export default function RetraitsDestinatairePage() {
               })}
             </ul>
           )}
-        </div>
+        </ZoneActualisable>
       </div>
 
       {/* Panneau droit en paysage : le conteneur du jour */}

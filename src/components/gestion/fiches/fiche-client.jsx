@@ -11,6 +11,9 @@ import { NouveauClient } from "@/components/caisse/client/nouveau-client";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { affichageTelephone } from "@/lib/telephone";
+import { BarreActions } from "@/components/gestion/barre-actions";
+import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
+import { canAccess } from "@/lib/rbac";
 
 const PAIEMENT = {
   PAID: ["Soldé", "vert"],
@@ -31,6 +34,9 @@ export function FicheClient({ client, containers, userRole }) {
   const [envoi, setEnvoi] = useState(false);
   const peutModifier = ["ADMIN", "STAFF", "CHEF_CAISSE", "TRACKER"].includes(userRole);
   const peutSupprimer = userRole === "ADMIN";
+  // Nouvel envoi : à la caisse avec ce client ; sans accès à la caisse, l'ancien formulaire
+  const caisse = canAccess(userRole, "/admin/caisse");
+  const nouvelEnvoi = () => (caisse ? ouvrirCaisse(router, client) : setExpedition(true));
 
   async function creerExpedition(form) {
     setEnvoi(true);
@@ -48,8 +54,8 @@ export function FicheClient({ client, containers, userRole }) {
     }
   }
 
-  async function supprimer() {
-    if (!window.confirm(`Supprimer ${nomAffiche(client)} ? S'il a des envois, il sera seulement désactivé.`)) return;
+  async function supprimer(confirme = false) {
+    if (!confirme && !window.confirm(`Supprimer ${nomAffiche(client)} ? S'il a des envois, il sera seulement désactivé.`)) return;
     const res = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return toast.error(data.error || "Le client n'a pas pu être supprimé.");
@@ -75,16 +81,16 @@ export function FicheClient({ client, containers, userRole }) {
         sousTitre={<span className="chiffres">{client.clientCode}</span>}
         actions={
           peutModifier && (
-            <>
+            <span className="hidden flex-wrap gap-2 md:flex">
               <button type="button" onClick={() => setModifier(true)} className={SECONDAIRE}>
                 <Pencil className="size-4" aria-hidden="true" />
                 Modifier
               </button>
-              <button type="button" onClick={() => setExpedition(true)} className={PRINCIPAL}>
+              <button type="button" onClick={nouvelEnvoi} className={PRINCIPAL}>
                 <PackagePlus className="size-5" aria-hidden="true" />
-                Nouvelle expédition
+                {caisse ? "Nouvel envoi" : "Nouvelle expédition"}
               </button>
-            </>
+            </span>
           )
         }
       >
@@ -158,16 +164,38 @@ export function FicheClient({ client, containers, userRole }) {
       />
 
       {peutSupprimer && (
-        <div className="flex justify-end">
+        <div className="hidden justify-end md:flex">
           <button
             type="button"
-            onClick={supprimer}
+            onClick={() => supprimer()}
             className="flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-danger hover:bg-danger-soft"
           >
             <Trash2 className="size-4" aria-hidden="true" />
             Supprimer le client
           </button>
         </div>
+      )}
+
+      {/* Téléphone : action principale en bas, le reste dans « … » */}
+      {peutModifier && (
+        <BarreActions
+          titreMenu={nomAffiche(client)}
+          principale={{ libelle: caisse ? "Nouvel envoi" : "Nouvelle expédition", icone: PackagePlus, onClick: nouvelEnvoi }}
+          autres={[
+            { libelle: "Modifier le client", icone: Pencil, onClick: () => setModifier(true) },
+            peutSupprimer && {
+              libelle: "Supprimer le client",
+              icone: Trash2,
+              danger: true,
+              onClick: () => supprimer(true),
+              confirmation: {
+                titre: `Supprimer ${nomAffiche(client)} ?`,
+                texte: "S'il a des envois, il sera seulement désactivé.",
+                bouton: "Supprimer le client",
+              },
+            },
+          ]}
+        />
       )}
 
       {modifier && (

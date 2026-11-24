@@ -6,6 +6,7 @@ import { LayoutProvider } from '@/components/layout/admin/layout-provider'
 import { SWRProvider } from '@/components/providers/swr-provider'
 import { BarreGestion, NavigationBasGestion } from '@/components/gestion/barre-gestion'
 import { geist, geistMono } from '@/lib/polices'
+import { ContenuActualisable } from '@/components/gestion/actualisation'
 
 /**
  * Coquille de la gestion (conteneurs, colis, clients, encaissements, tarifs…) :
@@ -37,7 +38,7 @@ export default function GestionLayout({ children }) {
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
           >
             <BarreGestion />
-            <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6">{children}</main>
+            <ContenuActualisable className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6">{children}</ContenuActualisable>
             <NavigationBasGestion />
           </div>
         </LayoutProvider>

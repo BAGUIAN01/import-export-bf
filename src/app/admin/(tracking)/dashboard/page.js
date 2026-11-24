@@ -8,6 +8,7 @@ import { Bloc, EnTete, Etat, StatCard, StatGrid } from "@/components/epure";
 import { STATUTS_CONTENEUR, trierConteneurs } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
+import { useActualisation } from "@/components/gestion/actualisation";
 
 const TON = { PREPARATION: "ambre", LOADED: "bleu", IN_TRANSIT: "bleu", CUSTOMS: "violet", DELIVERED: "vert", CANCELLED: "rouge" };
 const PAIEMENT = { PAID: ["Soldé", "vert"], PARTIAL: ["Acompte", "ambre"], PENDING: ["À payer", "ambre"] };
@@ -21,11 +22,12 @@ export default function TableauDeBordPage() {
   const [conteneurs, setConteneurs] = useState(null);
   const [envois, setEnvois] = useState(null);
 
+  const { version } = useActualisation();
   useEffect(() => {
     lire("/api/caisse/stats").then((d) => setJour(d?.stats || {}));
     lire("/api/containers/resume").then((d) => setConteneurs(d?.containers || []));
     lire("/api/shipments?limit=8").then((d) => setEnvois(d?.data || []));
-  }, []);
+  }, [version]);
 
   const liste = trierConteneurs(conteneurs || []).filter((c) => c.status !== "DELIVERED" || c.shipmentsCount > c.deliveredCount).slice(0, 6);
   const aEncaisser = (conteneurs || []).reduce((n, c) => n + Math.max(0, c.totalAmount - c.paidAmount), 0);

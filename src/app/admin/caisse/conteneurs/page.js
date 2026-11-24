@@ -1,16 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Container as IconeConteneur, FileText, Loader2, Lock, Plus } from "lucide-react";
+import { Container as IconeConteneur, FileText, Lock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useCaisse } from "@/contexts/caisse-context";
 import { useProfilCaisse } from "@/components/caisse/barre-caisse";
-import { Feuille } from "@/components/caisse/feuille";
+import { FeuilleConteneur } from "@/components/gestion/conteneurs/feuille-conteneur";
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
 import { EtapesConteneur } from "@/components/gestion/conteneurs/etapes-conteneur";
-import { FloatingLabelInput } from "@/components/ui/floating-label-input";
-import { FloatingLabelDatePicker } from "@/components/ui/floating-label-date-picker";
 import { STATUTS_CONTENEUR, joursAvant } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
 import { cn } from "@/lib/utils";
@@ -166,9 +164,9 @@ export default function CaisseConteneursPage() {
       </div>
 
       {nouveau && (
-        <FeuilleNouveauConteneur
+        <FeuilleConteneur
           onFermer={() => setNouveau(false)}
-          onCree={(c) => {
+          onFait={(c) => {
             setNouveau(false);
             setSelectedContainer({ ...c, packagesCount: 0 });
             charger();
@@ -176,59 +174,5 @@ export default function CaisseConteneursPage() {
         />
       )}
     </div>
-  );
-}
-
-function FeuilleNouveauConteneur({ onFermer, onCree }) {
-  const id = useId();
-  const [depart, setDepart] = useState("");
-  const [capacite, setCapacite] = useState("100");
-  const [envoi, setEnvoi] = useState(false);
-
-  async function creer() {
-    setEnvoi(true);
-    try {
-      const date = depart ? new Date(depart) : null;
-      const res = await fetch("/api/containers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `Chargement ${date ? `du ${date.toLocaleDateString("fr-FR")}` : new Date().toLocaleDateString("fr-FR")}`,
-          departureDate: date ? date.toISOString() : null,
-          capacity: parseInt(capacite, 10) || 100,
-          status: "PREPARATION",
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Le conteneur n'a pas pu être ouvert.");
-      const c = data.container || data;
-      toast.success(`${c.containerNumber} est ouvert : la caisse y enregistre les colis.`);
-      onCree(c);
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setEnvoi(false);
-    }
-  }
-
-  return (
-    <Feuille
-      ouvert
-      onFermer={onFermer}
-      titre="Ouvrir un conteneur"
-      sousTitre="Il devient le conteneur en chargement de la caisse."
-      largeur="max-w-md"
-      pied={
-        <button type="button" onClick={creer} disabled={envoi} className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand font-semibold text-white disabled:opacity-50">
-          {envoi && <Loader2 className="size-5 animate-spin" aria-hidden="true" />}
-          Ouvrir le conteneur
-        </button>
-      }
-    >
-      <div className="flex flex-col gap-5 pt-2">
-        <FloatingLabelDatePicker id={`${id}-depart`} label="Départ prévu" value={depart} onChange={(v) => setDepart(v?.target ? v.target.value : v)} />
-        <FloatingLabelInput id={`${id}-capacite`} label="Capacité (colis)" inputMode="numeric" className="chiffres text-base" value={capacite} onChange={(e) => setCapacite(e.target.value.replace(/\D/g, ""))} />
-      </div>
-    </Feuille>
   );
 }

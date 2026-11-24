@@ -10,6 +10,7 @@ import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche, resteDu } from "@/lib/caisse/clients";
 import { affichageTelephone } from "@/lib/telephone";
 import { sansAccents } from "@/lib/caisse/familles";
+import { useActualisation } from "@/components/gestion/actualisation";
 
 const FILTRES = [
   { id: "tous", label: "Tous", test: () => true },
@@ -39,7 +40,9 @@ export default function ClientsPage() {
         setClients([]);
       });
   }, []);
-  useEffect(charger, [charger]);
+  // Tirer pour actualiser, retour dans l'application : on recharge
+  const { version } = useActualisation();
+  useEffect(charger, [charger, version]);
 
   const liste = useMemo(() => clients || [], [clients]);
   const actif = FILTRES.find((f) => f.id === filtre);
