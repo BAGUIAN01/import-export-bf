@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Container as IconeConteneur, FileText, Lock, Plus } from "lucide-react";
+import { ChevronRight, Container as IconeConteneur, FileText, Lock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useCaisse } from "@/contexts/caisse-context";
 import { useProfilCaisse } from "@/components/caisse/barre-caisse";
 import { FeuilleConteneur } from "@/components/gestion/conteneurs/feuille-conteneur";
+import { Feuille } from "@/components/caisse/feuille";
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
 import { EtapesConteneur } from "@/components/gestion/conteneurs/etapes-conteneur";
 import { STATUTS_CONTENEUR, joursAvant } from "@/lib/conteneurs";
@@ -27,6 +28,7 @@ export default function CaisseConteneursPage() {
   const { setSelectedContainer } = useCaisse();
   const [conteneurs, setConteneurs] = useState(null);
   const [nouveau, setNouveau] = useState(false);
+  const [ouvert, setOuvert] = useState(null); // téléphone : conteneur de la liste ouvert en feuille
 
   const charger = useCallback(() => {
     fetch("/api/containers/resume")
@@ -58,12 +60,12 @@ export default function CaisseConteneursPage() {
     .slice(0, 8);
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain p-4 sm:p-6">
+    <div className="h-full overflow-y-auto overscroll-contain p-3 sm:p-6">
       <div className="mx-auto flex max-w-[1100px] flex-col gap-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="hidden text-[13px] text-ink-muted sm:block">Caisse / Conteneurs</p>
-            <h1 className="text-2xl font-semibold tracking-tight">Conteneurs</h1>
+            <h1 className="text-[28px] font-semibold leading-tight tracking-tight sm:text-2xl">Conteneurs</h1>
             <p className="text-ink-muted">Le conteneur en chargement reçoit les colis enregistrés à la caisse.</p>
           </div>
           <button type="button" onClick={() => setNouveau(true)} className="flex h-12 items-center gap-2 rounded-xl border border-line-strong bg-white px-4 font-semibold">
@@ -89,14 +91,14 @@ export default function CaisseConteneursPage() {
             const jours = joursAvant(c.departureDate);
             const remplissage = c.capacity ? Math.min(100, Math.round((c.packagesCount / c.capacity) * 100)) : null;
             return (
-              <section key={c.id} aria-label={`Conteneur ${c.containerNumber}`} className="flex flex-col gap-5 rounded-[22px] border border-line bg-white p-5 sm:p-6">
-                <div className="flex flex-wrap items-start gap-4">
-                  <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-[#FFEDD5] text-[#C2410C]">
+              <section key={c.id} aria-label={`Conteneur ${c.containerNumber}`} className="flex flex-col gap-4 rounded-[22px] border border-line bg-white p-4 sm:gap-5 sm:p-6">
+                <div className="flex flex-wrap items-start gap-3 sm:gap-4">
+                  <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#FFEDD5] text-[#C2410C] sm:size-14">
                     <IconeConteneur className="size-7" strokeWidth={1.8} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="chiffres text-2xl font-semibold">{c.containerNumber}</h2>
+                      <h2 className="chiffres text-xl font-semibold sm:text-2xl">{c.containerNumber}</h2>
                       <span className={cn("rounded-full px-2.5 py-0.5 text-sm font-medium", STATUTS_CONTENEUR.PREPARATION.classe)}>En chargement</span>
                     </div>
                     <p className="text-ink-muted">
@@ -105,16 +107,19 @@ export default function CaisseConteneursPage() {
                     </p>
                   </div>
                 </div>
-                <dl className="grid grid-cols-3 gap-3">
+                <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
                   {[
                     { libelle: "Colis", valeur: `${c.packagesCount}${c.capacity ? ` / ${c.capacity}` : ""}` },
                     { libelle: "Envois", valeur: c.shipmentsCount },
                     { libelle: "Encaissé", valeur: formatMontant(c.paidAmount), detail: c.totalAmount - c.paidAmount > 0 ? `reste ${formatMontant(c.totalAmount - c.paidAmount)}` : null },
                   ].map((x) => (
-                    <div key={x.libelle} className="rounded-2xl bg-surface-page p-3 sm:p-4">
+                    <div
+                      key={x.libelle}
+                      className={cn("rounded-2xl bg-surface-page p-3 sm:p-4", x.libelle === "Encaissé" && "col-span-2 flex items-baseline justify-between gap-3 sm:col-span-1 sm:block")}
+                    >
                       <dt className="text-sm text-ink-muted">{x.libelle}</dt>
-                      <dd className="chiffres text-xl font-semibold sm:text-2xl">{x.valeur}</dd>
-                      {x.detail && <dd className="chiffres text-xs text-alerte">{x.detail}</dd>}
+                      <dd className="chiffres whitespace-nowrap text-xl font-semibold sm:text-2xl">{x.valeur}</dd>
+                      {x.detail && <dd className="chiffres whitespace-nowrap text-xs text-alerte">{x.detail}</dd>}
                     </div>
                   ))}
                 </dl>
@@ -124,9 +129,9 @@ export default function CaisseConteneursPage() {
                   </div>
                 )}
                 <EtapesConteneur conteneur={c} onFait={charger} />
-                <div className="flex flex-wrap gap-3">
-                  <BoutonActionConteneur conteneur={c} onFait={charger} className="h-14 flex-1 text-lg" />
-                  <Link href={`/admin/containers/${c.id}`} className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border border-line-strong bg-white text-lg font-semibold">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
+                  <BoutonActionConteneur conteneur={c} onFait={charger} className="h-14 w-full whitespace-nowrap text-base sm:flex-1 sm:text-lg" />
+                  <Link href={`/admin/containers/${c.id}`} className="flex h-14 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-line-strong bg-white text-base font-semibold sm:flex-1 sm:text-lg">
                     <FileText className="size-5" aria-hidden="true" />
                     Manifeste et envois
                   </Link>
@@ -139,7 +144,27 @@ export default function CaisseConteneursPage() {
         {autres.length > 0 && (
           <section aria-label="Les autres conteneurs" className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">Les autres conteneurs</h2>
-            <ul className="flex flex-col gap-2">
+            <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white md:hidden">
+              {autres.map((c) => {
+                const statut = STATUTS_CONTENEUR[c.status];
+                return (
+                  <li key={c.id}>
+                    <button type="button" onClick={() => setOuvert(c)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left active:bg-surface-page">
+                      <span className="min-w-0 flex-1">
+                        <span className="chiffres block truncate text-base font-semibold">{c.containerNumber}</span>
+                        <span className="block truncate text-[13px] text-ink-muted">
+                          {c.packagesCount} colis · {c.shipmentsCount} envois
+                          {c.actualDeparture ? ` · parti le ${jourMois(c.actualDeparture)}` : ""}
+                        </span>
+                      </span>
+                      <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-medium", statut.classe)}>{statut.libelle}</span>
+                      <ChevronRight className="-mr-1 size-5 shrink-0 text-ink-subtle" aria-hidden="true" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <ul className="hidden flex-col gap-2 md:flex">
               {autres.map((c) => {
                 const statut = STATUTS_CONTENEUR[c.status];
                 return (
@@ -162,6 +187,32 @@ export default function CaisseConteneursPage() {
           </section>
         )}
       </div>
+
+      {/* Téléphone : un conteneur de la liste, ses étapes en feuille */}
+      <Feuille
+        ouvert={!!ouvert}
+        onFermer={() => setOuvert(null)}
+        titre={ouvert ? <span className="chiffres">{ouvert.containerNumber}</span> : ""}
+        sousTitre={ouvert ? `${STATUTS_CONTENEUR[ouvert.status]?.libelle} · ${ouvert.packagesCount} colis · ${ouvert.shipmentsCount} envois` : ""}
+        largeur="max-w-md"
+      >
+        {ouvert && (
+          <div className="flex flex-col gap-3 pt-1">
+            <EtapesConteneur
+              conteneur={ouvert}
+              compact
+              onFait={() => {
+                setOuvert(null);
+                charger();
+              }}
+            />
+            <Link href={`/admin/containers/${ouvert.id}`} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-line-strong font-semibold">
+              <FileText className="size-5" aria-hidden="true" />
+              Manifeste et envois
+            </Link>
+          </div>
+        )}
+      </Feuille>
 
       {nouveau && (
         <FeuilleConteneur

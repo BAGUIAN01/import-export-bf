@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Check, X } from "lucide-react"
+import { Check, Search, X } from "lucide-react"
+import { Feuille } from "@/components/caisse/feuille"
 import { cn } from "@/lib/utils"
 import {
   Command,
@@ -16,6 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+
+const sansAccents = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
 
 /**
  * Combobox avec floating label, sélection depuis une liste OU saisie libre.
@@ -38,6 +41,15 @@ function FloatingCombobox({
 }) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
+  // Téléphone : la liste s'ouvre en feuille du bas (grandes lignes, recherche)
+  const [feuille, setFeuille] = React.useState(false)
+  const ouvrir = (o) => {
+    if (o && typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+      setFeuille(true)
+      return
+    }
+    setOpen(o)
+  }
 
   // Trouver le label affiché : soit le label de l'option, soit la valeur brute (saisie libre)
   const selectedOption = options.find((o) => o.value === value)
@@ -50,6 +62,7 @@ function FloatingCombobox({
     onValueChange(optionValue, false)
     setSearch("")
     setOpen(false)
+    setFeuille(false)
   }
 
   const handleUseCustom = () => {
@@ -57,6 +70,7 @@ function FloatingCombobox({
       onValueChange(search.trim(), true)
       setSearch("")
       setOpen(false)
+      setFeuille(false)
     }
   }
 
@@ -73,7 +87,8 @@ function FloatingCombobox({
   )
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <>
+    <Popover open={open} onOpenChange={ouvrir}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -193,6 +208,52 @@ function FloatingCombobox({
         </Command>
       </PopoverContent>
     </Popover>
+      <Feuille ouvert={feuille} onFermer={() => setFeuille(false)} titre={String(label || "").replace(/\s*\*$/, "")} largeur="max-w-md" className="h-[86dvh]">
+        <div className="sticky top-0 z-10 -mx-5 bg-white px-5 pb-2">
+          <label className="flex h-12 items-center gap-2 rounded-xl border border-line-strong px-3 focus-within:border-brand">
+            <Search className="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
+            <span className="sr-only">Rechercher</span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={placeholder}
+              autoComplete="off"
+              className="h-full min-w-0 flex-1 bg-transparent text-base outline-none"
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch("")} aria-label="Effacer" className="-mr-1 grid size-9 place-items-center rounded-lg text-ink-muted">
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            )}
+          </label>
+        </div>
+        <ul role="listbox" aria-label={String(label || "")} className="-mx-2 flex flex-col">
+          {options
+            .filter((o) => !searchTrimmed || sansAccents(o.label).includes(sansAccents(searchTrimmed)))
+            .map((o) => (
+              <li key={o.value}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={value === o.value}
+                  onClick={() => handleSelect(o.value)}
+                  className={cn("flex h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-base active:bg-surface-page", value === o.value && "font-semibold text-brand-strong")}
+                >
+                  <span className="flex-1">{o.label}</span>
+                  {value === o.value && <Check className="size-5" aria-hidden="true" />}
+                </button>
+              </li>
+            ))}
+          {searchTrimmed && !exactMatch && (
+            <li>
+              <button type="button" onClick={handleUseCustom} className="flex h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-base text-brand-strong active:bg-surface-page">
+                Utiliser « {searchTrimmed} »
+              </button>
+            </li>
+          )}
+        </ul>
+      </Feuille>
+    </>
   )
 }
 
