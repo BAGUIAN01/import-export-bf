@@ -22,7 +22,7 @@ const DetailsStep = ({ form, setForm, errors, setErrors }) => (
           }}
           placeholder="Décrivez précisément le contenu du colis..."
           rows={4}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent resize-none
             ${errors.description ? "border-red-300" : "border-gray-300"}`}
         />
         {errors.description && (
@@ -45,7 +45,7 @@ const DetailsStep = ({ form, setForm, errors, setErrors }) => (
               setForm((prev) => ({ ...prev, quantity: parseInt(e.target.value) || 1 }));
               setErrors((prev) => ({ ...prev, quantity: undefined }));
             }}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent
               ${errors.quantity ? "border-red-300" : "border-gray-300"}`}
           />
         </div>
@@ -58,7 +58,7 @@ const DetailsStep = ({ form, setForm, errors, setErrors }) => (
             value={form.weight}
             onChange={(e) => setForm((prev) => ({ ...prev, weight: e.target.value }))}
             placeholder="0.0"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           />
         </div>
         <div>
@@ -70,7 +70,7 @@ const DetailsStep = ({ form, setForm, errors, setErrors }) => (
             value={form.value}
             onChange={(e) => setForm((prev) => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
             placeholder="0.00"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           />
         </div>
       </div>
@@ -100,10 +100,10 @@ const DetailsStep = ({ form, setForm, errors, setErrors }) => (
             type="checkbox"
             checked={form.isFragile}
             onChange={(e) => setForm((prev) => ({ ...prev, isFragile: e.target.checked }))}
-            className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+            className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
           />
           <span className="ml-2 text-sm text-gray-700 flex items-center">
-            <AlertTriangle size={16} className="mr-1 text-amber-500" />
+            <AlertTriangle size={16} className="mr-1 text-brand" />
             Fragile
           </span>
         </label>
@@ -116,7 +116,7 @@ const AddressesStep = ({ form, setForm, errors, setErrors, selectedClient }) => 
   <div className="space-y-6 max-w-3xl mx-auto">
     <section className="rounded-xl p-4 sm:p-6 border border-amber-200 bg-amber-50/60 space-y-4">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-        <MapPin className="mr-2 text-amber-600" size={18} />
+        <MapPin className="mr-2 text-brand" size={18} />
         Ramassage (optionnel)
       </h3>
 
@@ -127,7 +127,7 @@ const AddressesStep = ({ form, setForm, errors, setErrors, selectedClient }) => 
           onChange={(e) => setForm((prev) => ({ ...prev, pickupAddress: e.target.value }))}
           placeholder="Adresse complète de ramassage"
           rows={2}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
         />
       </div>
 
@@ -166,7 +166,7 @@ const AddressesStep = ({ form, setForm, errors, setErrors, selectedClient }) => 
           <select
             value={form.pickupTime}
             onChange={(e) => setForm((prev) => ({ ...prev, pickupTime: e.target.value }))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent min-h-[44px]"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent min-h-[44px]"
           >
             <option value="">Sélectionner un créneau</option>
             <option value="08:00-12:00">08:00 - 12:00</option>
@@ -190,14 +190,14 @@ const AddressesStep = ({ form, setForm, errors, setErrors, selectedClient }) => 
           }}
           placeholder={selectedClient?.recipientAddress || "Adresse complète de livraison"}
           rows={3}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent resize-none
             ${errors.deliveryAddress ? "border-red-300" : "border-gray-300"}`}
         />
         {selectedClient && (
           <button
             type="button"
             onClick={() => setForm((prev) => ({ ...prev, deliveryAddress: selectedClient.recipientAddress }))}
-            className="mt-2 text-sm text-amber-600 hover:text-amber-800 font-medium"
+            className="mt-2 text-sm text-brand hover:text-amber-800 font-medium"
           >
             Utiliser l'adresse du destinataire
           </button>
@@ -217,7 +217,7 @@ const AddressesStep = ({ form, setForm, errors, setErrors, selectedClient }) => 
           onChange={(e) => setForm((prev) => ({ ...prev, specialInstructions: e.target.value }))}
           placeholder="Instructions particulières pour la livraison..."
           rows={2}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus-border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus-border-transparent"
         />
       </div>
     </section>
@@ -241,7 +241,7 @@ const FieldNumber = ({ label, value, onChange, help, min = "0", step = "0.01" })
       min={min}
       value={value}
       onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
     />
     {help && <p className="text-xs text-gray-500 mt-1">{help}</p>}
   </div>
@@ -251,7 +251,7 @@ const PricingStep = ({ form, setForm }) => (
   <div className="space-y-6 max-w-3xl mx-auto">
     <section className="bg-gradient-to-br from-blue-50 to-amber-50 border border-amber-200 rounded-xl p-4 sm:p-6">
       <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
-        <Euro className="mr-2 text-amber-600" size={22} />
+        <Euro className="mr-2 text-brand" size={22} />
         Détail des coûts
       </h3>
 
@@ -269,7 +269,7 @@ const PricingStep = ({ form, setForm }) => (
 
         <div className="flex justify-between items-center py-3 bg-white rounded-lg px-4 border border-amber-300">
           <span className="text-lg font-bold text-gray-900">Total</span>
-          <span className="text-xl sm:text-2xl font-bold text-amber-600">
+          <span className="text-xl sm:text-2xl font-bold text-brand">
             {getTotal(form).toFixed(2)}€
           </span>
         </div>
@@ -300,7 +300,7 @@ const PricingStep = ({ form, setForm }) => (
           type="checkbox"
           checked={form.isInsured}
           onChange={(e) => setForm((prev) => ({ ...prev, isInsured: e.target.checked }))}
-          className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+          className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
         />
         <label htmlFor="insured" className="ml-2 text-sm text-gray-700 flex items-center">
           <Shield size={16} className="mr-1 text-green-600" />
@@ -351,7 +351,7 @@ const PricingStep = ({ form, setForm }) => (
                 paymentStatus: paid <= 0 ? "PENDING" : paid < total ? "PARTIAL" : "PAID",
               }));
             }}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           />
           <p className="text-xs text-gray-500 mt-1">
             Total: <b>{getTotal(form).toFixed(2)}€</b>
@@ -398,10 +398,10 @@ const PricingStep = ({ form, setForm }) => (
               type="button"
               onClick={() => setForm((prev) => ({ ...prev, paymentMethod: method.value }))}
               className={`p-4 rounded-lg border-2 text-center transition-all active:scale-[0.98] min-h-[64px]
-                ${form.paymentMethod === method.value ? "border-amber-500 bg-amber-50 shadow" : "border-gray-200 hover:border-gray-300"}`}
+                ${form.paymentMethod === method.value ? "border-brand bg-amber-50 shadow" : "border-gray-200 hover:border-gray-300"}`}
             >
-              <Icon size={22} className={`mx-auto mb-1 ${form.paymentMethod === method.value ? "text-amber-600" : "text-gray-600"}`} />
-              <div className={`text-sm font-medium ${form.paymentMethod === method.value ? "text-amber-600" : "text-gray-900"}`}>
+              <Icon size={22} className={`mx-auto mb-1 ${form.paymentMethod === method.value ? "text-brand" : "text-gray-600"}`} />
+              <div className={`text-sm font-medium ${form.paymentMethod === method.value ? "text-brand" : "text-gray-900"}`}>
                 {method.label}
               </div>
               <div className="text-[11px] text-gray-500 mt-0.5">{method.desc}</div>

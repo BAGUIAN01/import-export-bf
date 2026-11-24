@@ -1,7 +1,6 @@
+import { EnTete } from "@/components/epure"
 import { Suspense } from 'react'
 import { ProfileDashboard } from '@/components/modules/admin/profile/profile-dashboard'
-import { PageContainer, PageHeader, PageBody } from '@/components/layout/admin/page-shell'
-import { PageTitle } from '@/components/layout/admin/page-title'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -50,24 +49,13 @@ function ProfileSkeleton() {
 
 export default function ProfilePage() {
   return (
-    <PageContainer>
-      <PageTitle
-        title="Mon Profil"
-        description="Gérez vos informations personnelles et paramètres de sécurité"
-      />
-      
-      <PageHeader
-        breadcrumbs={[
-          { label: "Hub", href: "/admin" },
-          { label: "Mon Profil" },
-        ]}
-      />
-      
-      <PageBody>
+    <div className="caisse mx-auto flex max-w-[1200px] flex-col gap-5 text-[15px] text-ink">
+      <EnTete chemin="Compte / Mon profil" titre="Mon profil" />
+      <div className="font-sans">
         <Suspense fallback={<ProfileSkeleton />}>
           <ProfileDashboard />
         </Suspense>
-      </PageBody>
-    </PageContainer>
+      </div>
+    </div>
   )
 }

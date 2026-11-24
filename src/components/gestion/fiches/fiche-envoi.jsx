@@ -3,16 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Loader2, PackageCheck, Pencil, Printer, Wallet } from "lucide-react";
+import { Loader2, PackageCheck, Pencil, Plus, Printer, Trash2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import QRCodeLib from "qrcode";
 import { pdf } from "@react-pdf/renderer";
-import { Bloc, EnTete, Etat, Infos, Onglets, SECONDAIRE, StatCard, StatGrid, Tableau } from "@/components/epure";
-import ShipmentDetail from "@/components/modules/admin/shipments/shipment-detail";
+import { Bloc, EnTete, Etat, Infos, SECONDAIRE, StatCard, StatGrid, Tableau } from "@/components/epure";
+import PackageDialog from "@/components/modules/admin/packages/package-dialog";
 import { ShipmentEditDialog } from "@/components/modules/admin/shipments/shipment-edit-dialog";
 import { ShipmentRemitDialog } from "@/components/modules/admin/shipments/shipment-remit-dialog";
 import { ReceiptPDF } from "@/components/modules/admin/shipments/receipt-pdf";
-import { useShipmentMutations } from "@/hooks/use-shipments";
+import { useShipmentDetails, useShipmentMutations } from "@/hooks/use-shipments";
 import { ETATS_COLIS } from "@/components/gestion/colis/liste-colis";
 import { STATUTS_CONTENEUR } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
@@ -22,6 +22,7 @@ import { affichageTelephone } from "@/lib/telephone";
 const PAIEMENT = { PAID: ["Soldé", "vert"], PARTIAL: ["Acompte", "ambre"], PENDING: ["À payer", "ambre"], CANCELLED: ["Annulé", "gris"], REFUNDED: ["Remboursé", "gris"] };
 const MODES = { CASH: "Espèces", CARD: "Carte", MOBILE_MONEY: "Mobile money", TRANSFER: "Virement", CHEQUE: "Chèque" };
 const jour = (d) => (d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : null);
+const PETIT = "grid size-10 place-items-center rounded-xl text-ink-muted hover:bg-surface-muted";
 
 async function versDataUrl(chemin) {
   const blob = await (await fetch(chemin)).blob();
@@ -34,18 +35,20 @@ async function versDataUrl(chemin) {
 }
 
 /**
- * Fiche d'un envoi, épurée : chiffres, expéditeur, destinataire, colis ;
- * Encaisser, Remettre, Reçu. L'écran complet (modifier les colis) reste
- * dans l'onglet « Modifier ».
+ * Fiche d'un envoi, épurée : chiffres, expéditeur, destinataire, conteneur,
+ * colis (ajouter, modifier, supprimer) ; Reçu, Remettre, Encaisser.
  */
 export function FicheEnvoi({ shipment: initial, containers, clients }) {
   const router = useRouter();
-  const [e, setE] = useState(initial);
-  const [onglet, setOnglet] = useState("resume");
+  const { shipment: frais, packages: colisFrais, refresh } = useShipmentDetails(initial.id);
+  const { updateShipment, deleteShipment, isLoading } = useShipmentMutations();
+  const e = { ...initial, ...(frais || {}), packages: frais ? colisFrais : initial.packages };
+
   const [encaisser, setEncaisser] = useState(false);
   const [remettre, setRemettre] = useState(false);
   const [impression, setImpression] = useState(false);
-  const { updateShipment, isLoading } = useShipmentMutations();
+  const [colisOuvert, setColisOuvert] = useState(null); // null, "nouveau" ou le colis
+  const [envoiColis, setEnvoiColis] = useState(false);
 
   const reste = Math.max(0, (e.totalAmount || 0) - (e.paidAmount || 0));
   const etat = e.deliveredAt ? ["Remis", "vert"] : PAIEMENT[e.paymentStatus] || PAIEMENT.PENDING;
@@ -54,10 +57,55 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
   async function enregistrer(donnees, fermer) {
     const r = await updateShipment(e.id, donnees);
     if (r?.success) {
-      setE((x) => ({ ...x, ...donnees, ...(r.data?.shipment || {}) }));
       fermer();
-      router.refresh();
+      refresh();
     }
+  }
+
+  async function enregistrerColis(payload) {
+    setEnvoiColis(true);
+    try {
+      const nouveau = colisOuvert === "nouveau";
+      const corps = nouveau
+        ? (payload.packages || []).map((p) => ({
+            ...p,
+            clientId: e.client.id,
+            containerId: payload.containerId || e.containerId || null,
+            deliveryAddress: payload.sharedData?.deliveryAddress || e.deliveryAddress || null,
+            specialInstructions: payload.sharedData?.specialInstructions || e.specialInstructions || null,
+            shipmentId: e.id,
+          }))
+        : payload;
+      const res = await fetch(nouveau ? "/api/packages" : `/api/packages/${colisOuvert.id}`, {
+        method: nouveau ? "POST" : "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corps),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.message || "Le colis n'a pas pu être enregistré.");
+      toast.success(nouveau ? "Colis ajoutés à l'envoi." : "Colis modifié.");
+      setColisOuvert(null);
+      refresh();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setEnvoiColis(false);
+    }
+  }
+
+  async function supprimerColis(p) {
+    if (!window.confirm(`Supprimer le colis « ${p.description} » (${p.packageNumber}) ?`)) return;
+    const res = await fetch(`/api/packages/${p.id}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return toast.error(data.error || "Le colis n'a pas pu être supprimé.");
+    toast.success("Colis supprimé.");
+    refresh();
+  }
+
+  async function supprimerEnvoi() {
+    if (!window.confirm(`Supprimer l'envoi ${e.shipmentNumber} et ses colis ? Cette action est définitive.`)) return;
+    const r = await deleteShipment(e.id);
+    if (r?.success !== false) router.push("/admin/shipments");
   }
 
   async function imprimer() {
@@ -116,84 +164,101 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
         </Etat>
       </EnTete>
 
-      <Onglets
-        valeur={onglet}
-        onChange={setOnglet}
-        libelle="Fiche de l'envoi"
-        options={[
-          { id: "resume", label: "Résumé", icon: ClipboardList },
-          { id: "modifier", label: "Modifier", icon: Pencil },
-        ]}
-      />
+      <StatGrid>
+        <StatCard variant="noire" label="Montant" value={formatMontant(e.totalAmount)} detail={e.discountTotal > 0 ? `remise ${formatMontant(e.discountTotal)}` : null} />
+        <StatCard couleur="vert" label="Payé" value={formatMontant(e.paidAmount)} detail={e.paymentMethod ? MODES[e.paymentMethod] || e.paymentMethod : null} />
+        <StatCard couleur="ambre" label="Reste" value={formatMontant(reste)} />
+        <StatCard couleur="bleu" label="Colis" value={nbColis} detail={`${(e.packages || []).length} ligne(s)`} />
+      </StatGrid>
 
-      {onglet === "resume" ? (
-        <>
-          <StatGrid>
-            <StatCard variant="noire" label="Montant" value={formatMontant(e.totalAmount)} detail={e.discountTotal > 0 ? `remise ${formatMontant(e.discountTotal)}` : null} />
-            <StatCard couleur="vert" label="Payé" value={formatMontant(e.paidAmount)} detail={e.paymentMethod ? MODES[e.paymentMethod] || e.paymentMethod : null} />
-            <StatCard couleur="ambre" label="Reste" value={formatMontant(reste)} />
-            <StatCard couleur="bleu" label="Colis" value={nbColis} detail={`${(e.packages || []).length} ligne(s)`} />
-          </StatGrid>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <Bloc titre="Expéditeur">
-              <Infos
-                lignes={[
-                  ["Nom", nomAffiche(e.client)],
-                  ["Téléphone", <span key="t" className="chiffres">{affichageTelephone(e.client?.phone)}</span>],
-                  ["Ville", [e.client?.city, e.client?.country].filter(Boolean).join(", ")],
-                  ["Code", e.client?.clientCode],
-                ]}
-              />
-            </Bloc>
-            <Bloc titre="Destinataire">
-              <Infos
-                lignes={[
-                  ["Nom", e.client?.recipientName || "—"],
-                  ["Téléphone", e.client?.recipientPhone ? <span key="t" className="chiffres">{affichageTelephone(e.client.recipientPhone)}</span> : null],
-                  ["Ville", e.client?.recipientCity],
-                  ["Remis le", e.deliveredAt ? jour(e.deliveredAt) : null],
-                  ["À", e.receivedBy],
-                  ["Pièce", e.receivedIdNumber],
-                ]}
-              />
-            </Bloc>
-            <Bloc titre="Conteneur">
-              {e.container ? (
-                <Infos
-                  lignes={[
-                    ["N°", <Link key="c" href={`/admin/containers/${e.container.id}`} className="chiffres text-brand underline-offset-2 hover:underline">{e.container.containerNumber}</Link>],
-                    ["État", STATUTS_CONTENEUR[e.container.status]?.libelle],
-                    ["Départ", jour(e.container.departureDate)],
-                  ]}
-                />
-              ) : (
-                <p className="text-ink-muted">Pas encore dans un conteneur.</p>
-              )}
-            </Bloc>
-          </div>
-
-          <Tableau
-            libelle="Colis de l'envoi"
-            lignes={e.packages || []}
-            vide="Aucun colis."
-            colonnes={[
-              { id: "description", titre: "Colis", mobile: "titre", rendu: (p) => p.description },
-              { id: "numero", titre: "N°", rendu: (p) => <span className="chiffres">{p.packageNumber}</span> },
-              { id: "qte", titre: "Qté", rendu: (p) => <span className="chiffres">{p.totalQuantity}</span> },
-              { id: "etat", titre: "État", rendu: (p) => <Etat ton={(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[1]}>{(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[0]}</Etat> },
-              { id: "montant", titre: "Montant", aDroite: true, rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Bloc titre="Expéditeur">
+          <Infos
+            lignes={[
+              ["Nom", <Link key="n" href={`/admin/clients/${e.client?.id}`} className="text-brand underline-offset-2 hover:underline">{nomAffiche(e.client)}</Link>],
+              ["Téléphone", <span key="t" className="chiffres">{affichageTelephone(e.client?.phone)}</span>],
+              ["Ville", [e.client?.city, e.client?.country].filter(Boolean).join(", ")],
             ]}
           />
-        </>
-      ) : (
-        <div className="font-sans">
-          <ShipmentDetail initialShipment={initial} initialContainers={containers} initialClients={clients} />
-        </div>
-      )}
+        </Bloc>
+        <Bloc titre="Destinataire">
+          <Infos
+            lignes={[
+              ["Nom", e.client?.recipientName || "—"],
+              ["Téléphone", e.client?.recipientPhone ? <span key="t" className="chiffres">{affichageTelephone(e.client.recipientPhone)}</span> : null],
+              ["Ville", e.client?.recipientCity],
+              ["Remis le", e.deliveredAt ? jour(e.deliveredAt) : null],
+              ["À", e.receivedBy],
+              ["Pièce", e.receivedIdNumber],
+            ]}
+          />
+        </Bloc>
+        <Bloc titre="Conteneur">
+          {e.container ? (
+            <Infos
+              lignes={[
+                ["N°", <Link key="c" href={`/admin/containers/${e.container.id}`} className="chiffres text-brand underline-offset-2 hover:underline">{e.container.containerNumber}</Link>],
+                ["État", STATUTS_CONTENEUR[e.container.status]?.libelle],
+                ["Départ", jour(e.container.departureDate)],
+              ]}
+            />
+          ) : (
+            <p className="text-ink-muted">Pas encore dans un conteneur.</p>
+          )}
+        </Bloc>
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-base font-semibold">Colis</h2>
+        <button type="button" onClick={() => setColisOuvert("nouveau")} className={SECONDAIRE}>
+          <Plus className="size-4" aria-hidden="true" />
+          Ajouter des colis
+        </button>
+      </div>
+      <Tableau
+        libelle="Colis de l'envoi"
+        lignes={e.packages || []}
+        vide="Aucun colis."
+        colonnes={[
+          { id: "description", titre: "Colis", mobile: "titre", rendu: (p) => p.description },
+          { id: "numero", titre: "N°", rendu: (p) => <span className="chiffres">{p.packageNumber}</span> },
+          { id: "qte", titre: "Qté", rendu: (p) => <span className="chiffres">{p.totalQuantity}</span> },
+          { id: "etat", titre: "État", rendu: (p) => <Etat ton={(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[1]}>{(ETATS_COLIS[p.status] || ETATS_COLIS.REGISTERED)[0]}</Etat> },
+          { id: "montant", titre: "Montant", aDroite: true, rendu: (p) => <span className="chiffres">{formatMontant(p.totalAmount)}</span> },
+        ]}
+        actions={(p) => (
+          <span className="flex justify-end gap-1">
+            <button type="button" onClick={() => setColisOuvert(p)} aria-label={`Modifier ${p.description}`} className={PETIT}>
+              <Pencil className="size-4" aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => supprimerColis(p)} aria-label={`Supprimer ${p.description}`} className={`${PETIT} hover:text-danger`}>
+              <Trash2 className="size-4" aria-hidden="true" />
+            </button>
+          </span>
+        )}
+      />
+
+      <div className="flex justify-end">
+        <button type="button" onClick={supprimerEnvoi} className="flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-danger hover:bg-danger-soft">
+          <Trash2 className="size-4" aria-hidden="true" />
+          Supprimer l&apos;envoi
+        </button>
+      </div>
 
       <ShipmentEditDialog shipment={encaisser ? e : null} isOpen={encaisser} loading={isLoading} onClose={() => setEncaisser(false)} onSave={(d) => enregistrer(d, () => setEncaisser(false))} />
       <ShipmentRemitDialog shipment={remettre ? e : null} isOpen={remettre} loading={isLoading} onClose={() => setRemettre(false)} onSubmit={(d) => enregistrer(d, () => setRemettre(false))} />
+      <PackageDialog
+        isOpen={!!colisOuvert}
+        onClose={() => setColisOuvert(null)}
+        package={colisOuvert && colisOuvert !== "nouveau" ? colisOuvert : null}
+        prefilledClient={colisOuvert === "nouveau" ? e.client : null}
+        prefilledContainer={colisOuvert === "nouveau" ? e.container : null}
+        prefilledSharedData={null}
+        clients={clients}
+        containers={containers}
+        onSave={enregistrerColis}
+        loading={envoiColis}
+      />
     </div>
   );
 }

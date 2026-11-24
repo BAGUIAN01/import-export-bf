@@ -1,7 +1,6 @@
+import { EnTete } from "@/components/epure"
 import { Suspense } from 'react'
 import { SettingsDashboard } from '@/components/modules/admin/settings/settings-dashboard'
-import { PageContainer, PageHeader, PageBody } from '@/components/layout/admin/page-shell'
-import { PageTitle } from '@/components/layout/admin/page-title'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -50,24 +49,13 @@ function SettingsSkeleton() {
 
 export default function SettingsPage() {
   return (
-    <PageContainer>
-      <PageTitle
-        title="Paramètres"
-        description="Gérez les paramètres de votre application et de votre compte"
-      />
-      
-      <PageHeader
-        breadcrumbs={[
-          { label: "Hub", href: "/admin" },
-          { label: "Paramètres" },
-        ]}
-      />
-      
-      <PageBody>
+    <div className="caisse mx-auto flex max-w-[1200px] flex-col gap-5 text-[15px] text-ink">
+      <EnTete chemin="Paramétrage / Réglages" titre="Réglages" />
+      <div className="font-sans">
         <Suspense fallback={<SettingsSkeleton />}>
           <SettingsDashboard />
         </Suspense>
-      </PageBody>
-    </PageContainer>
+      </div>
+    </div>
   )
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Check, ChevronDown, ChevronRight, Search, X } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
+import { Etat, Pastilles, Recherche } from "@/components/epure";
 import { toast } from "sonner";
 import { BarreModule, CoquilleModule } from "@/components/gestion/barre-module";
 import { Feuille } from "@/components/caisse/feuille";
@@ -88,37 +89,13 @@ export default function RetraitsPage() {
         {/* Liste des destinataires */}
         <section aria-label="Destinataires" className={cn("min-h-0 flex-col border-line bg-surface-page lg:flex lg:border-r", envoiChoisi ? "hidden" : "flex")}>
           <div className="flex flex-col gap-3 p-4">
-            <label className="relative flex h-14 items-center rounded-2xl border border-line-strong bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20">
-              <span className="sr-only">Rechercher un destinataire</span>
-              <Search className="ml-4 size-5 text-ink-muted" aria-hidden="true" />
-              <input
-                type="search"
-                value={recherche}
-                onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Nom, téléphone, n° d'envoi"
-                className="h-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none [&::-webkit-search-cancel-button]:hidden"
-              />
-              {recherche && (
-                <button type="button" onClick={() => setRecherche("")} aria-label="Effacer la recherche" className="mr-1 grid size-11 place-items-center rounded-xl text-ink-muted">
-                  <X className="size-5" aria-hidden="true" />
-                </button>
-              )}
-            </label>
-            <div role="tablist" aria-label="Filtrer" className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
-              {FILTRES.map((f) => (
-                <button
-                  key={f.cle}
-                  type="button"
-                  role="tab"
-                  aria-selected={filtre === f.cle}
-                  onClick={() => setFiltre(f.cle)}
-                  className={cn("flex h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5", filtre === f.cle ? "border-brand bg-brand font-semibold text-white" : "border-line bg-white font-medium")}
-                >
-                  {f.libelle}
-                  <span className={cn("chiffres text-xs", filtre === f.cle ? "text-white/80" : "text-ink-muted")}>{envois.filter(f.test).length}</span>
-                </button>
-              ))}
-            </div>
+            <Recherche valeur={recherche} onChange={setRecherche} placeholder="Nom, téléphone, n° de suivi" libelle="Rechercher un destinataire" />
+            <Pastilles
+              options={FILTRES.map((f) => ({ id: f.cle, label: f.libelle, compte: envois.filter(f.test).length }))}
+              valeur={filtre}
+              onChange={setFiltre}
+              libelle="Filtrer"
+            />
           </div>
 
           <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 pb-4">
@@ -138,30 +115,21 @@ export default function RetraitsPage() {
                     <button
                       type="button"
                       onClick={() => setChoisi(e.id)}
-                      className={cn("flex w-full items-center gap-3 rounded-2xl border bg-white p-3 text-left", actif ? "border-2 border-brand bg-brand-soft/40" : "border-line")}
+                      className={cn("flex w-full items-center gap-3 rounded-2xl border bg-white px-4 py-3 text-left", actif ? "border-2 border-brand bg-brand-soft/40" : "border-line")}
                     >
-                      <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-surface-muted text-sm font-semibold text-ink-muted">
-                        {(e.client?.recipientName || nomAffiche(e.client)).slice(0, 2).toUpperCase()}
-                      </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-semibold">{e.client?.recipientName || nomAffiche(e.client)}</span>
-                        <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                          {e.deliveredAt ? (
-                            <span className="flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-strong">
-                              <Check className="size-3" aria-hidden="true" />
-                              Retiré
-                            </span>
-                          ) : reste > 0.009 ? (
-                            <span className="chiffres rounded-full bg-alerte-soft px-2 py-0.5 text-xs font-medium text-alerte">Reste {formatDevise(reste, agence)}</span>
-                          ) : (
-                            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-strong">Soldé</span>
-                          )}
-                          <span className="chiffres text-[13px] text-ink-muted">
-                            {nb} colis · {e.shipmentNumber}
-                          </span>
+                        <span className="chiffres block truncate text-[13px] text-ink-muted">
+                          {nb} colis · {e.shipmentNumber}
                         </span>
                       </span>
-                      <ChevronRight className="size-5 shrink-0 text-brand" aria-hidden="true" />
+                      {e.deliveredAt ? (
+                        <Etat ton="vert">Retiré</Etat>
+                      ) : reste > 0.009 ? (
+                        <Etat ton="ambre">{formatDevise(reste, agence)}</Etat>
+                      ) : (
+                        <Etat ton="vert">Soldé</Etat>
+                      )}
                     </button>
                   </li>
                 );

@@ -8,12 +8,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-import {
-  PageContainer,
-  PageHeader,
-  PageBody,
-} from "@/components/layout/admin/page-shell";
-import { PageTitle } from "@/components/layout/admin/page-title";
 
 // Charge uniquement les données nécessaires au dialog (clients + conteneurs actifs).
 // Les colis et stats sont chargés côté client via SWR dans PackagesTable.

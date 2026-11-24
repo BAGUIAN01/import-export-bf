@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ClipboardList, FileText, Package, Printer, Route } from "lucide-react";
+import { ClipboardList, FileText, Package, Pencil, Printer, Route } from "lucide-react";
 import { BoutonActionConteneur } from "@/components/gestion/conteneurs/action-conteneur";
-import { ContainerDetailView } from "@/components/modules/admin/containers/container-detail-view";
+import { SuiviConteneur } from "@/components/gestion/conteneurs/suivi-conteneur";
+import { ContainerDialog } from "@/components/modules/admin/containers/container-dialog";
+import { useContainerMutations } from "@/hooks/use-containers";
 import { Bloc, EnTete, Etat, Onglets, Recherche, SECONDAIRE, StatCard, StatGrid, Tableau } from "@/components/epure";
 import { STATUTS_CONTENEUR } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
@@ -35,6 +37,10 @@ export function FicheConteneur({ container: initial, currentUser }) {
   const [colis, setColis] = useState(null);
   const [recherche, setRecherche] = useState("");
   const peutAgir = ["ADMIN", "TRACKER", "CHEF_CAISSE", "STAFF"].includes(currentUser?.role);
+  const [modifier, setModifier] = useState(false);
+  const { updateContainer, isLoading: enregistrement } = useContainerMutations();
+  // Données du serveur rafraîchies (étape ajoutée, conteneur modifié)
+  useEffect(() => setC(initial), [initial]);
 
   useEffect(() => {
     let actif = true;
@@ -83,7 +89,17 @@ export function FicheConteneur({ container: initial, currentUser }) {
           }
           titre={<span className="chiffres">{c.containerNumber}</span>}
           sousTitre={`${c.origin || "France"} → ${c.destination || "Burkina Faso"}${c.sealNumber ? ` · plomb ${c.sealNumber}` : ""}`}
-          actions={peutAgir && <BoutonActionConteneur conteneur={{ ...c, packagesCount: colis?.length ?? c.packagesCount }} onFait={(m) => m && setC((x) => ({ ...x, ...m }))} />}
+          actions={
+            peutAgir && (
+              <>
+                <button type="button" onClick={() => setModifier(true)} className={SECONDAIRE}>
+                  <Pencil className="size-4" aria-hidden="true" />
+                  Modifier
+                </button>
+                <BoutonActionConteneur conteneur={{ ...c, packagesCount: colis?.length ?? c.packagesCount }} onFait={(m) => m && setC((x) => ({ ...x, ...m }))} />
+              </>
+            )
+          }
         >
           <Etat ton={TON[c.status]} className="text-sm">
             {STATUTS_CONTENEUR[c.status]?.libelle}
@@ -198,10 +214,22 @@ export function FicheConteneur({ container: initial, currentUser }) {
         </Bloc>
       )}
 
-      {onglet === "suivi" && (
-        <div className="font-sans">
-          <ContainerDetailView container={c} currentUser={currentUser} />
-        </div>
+      {onglet === "suivi" && <SuiviConteneur conteneur={c} onAjoute={() => router.refresh()} />}
+
+      {peutAgir && (
+        <ContainerDialog
+          isOpen={modifier}
+          onClose={() => setModifier(false)}
+          container={c}
+          loading={enregistrement}
+          onSave={async (donnees) => {
+            const r = await updateContainer(c.id, donnees);
+            if (r?.success) {
+              setModifier(false);
+              router.refresh();
+            }
+          }}
+        />
       )}
     </div>
   );

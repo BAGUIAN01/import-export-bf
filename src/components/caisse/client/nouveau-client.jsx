@@ -42,10 +42,12 @@ function MessageErreur({ children }) {
  * Montée seulement quand elle est ouverte : chaque ouverture repart d'un
  * formulaire vide. `onCree(client)` reçoit le client créé.
  */
-export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
+export function NouveauClient({ onFermer, onCree, rechercheInitiale = "", client = null }) {
   const id = useId();
   // Préremplit le téléphone ou le nom avec la recherche restée sans résultat
   const [f, setF] = useState(() => {
+    // Modification : on part du client existant
+    if (client) return Object.fromEntries(Object.keys(VIDE).map((k) => [k, client[k] ?? VIDE[k]]));
     const r = rechercheInitiale.trim();
     if (!r) return VIDE;
     return /^[+\d\s]+$/.test(r) ? { ...VIDE, phone: normaliserTelephone(r, "FR") } : { ...VIDE, lastName: r };
@@ -74,17 +76,17 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
     setEnvoi(true);
     setMessageErreur("");
     try {
-      const res = await fetch("/api/clients", {
-        method: "POST",
+      const res = await fetch(client ? `/api/clients/${client.id}` : "/api/clients", {
+        method: client ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(f),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErreurs(data.errors || {});
-        throw new Error(data.errors ? "Complétez les champs en rouge." : data.error || "Le client n'a pas pu être créé.");
+        throw new Error(data.errors ? "Complétez les champs en rouge." : data.error || "Le client n'a pas pu être enregistré.");
       }
-      onCree(data.client);
+      onCree(data.client || { ...client, ...f });
     } catch (err) {
       setMessageErreur(err.message);
     } finally {
@@ -96,7 +98,7 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
     <Feuille
       ouvert
       onFermer={onFermer}
-      titre="Nouveau client"
+      titre={client ? "Modifier le client" : "Nouveau client"}
       sousTitre="Les champs marqués * sont obligatoires."
       largeur="max-w-2xl"
       pied={
@@ -121,7 +123,7 @@ export function NouveauClient({ onFermer, onCree, rechercheInitiale = "" }) {
               className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-brand font-semibold text-white disabled:opacity-60"
             >
               {envoi && <Loader2 className="size-5 animate-spin" aria-hidden="true" />}
-              Créer et continuer
+              {client ? "Enregistrer" : "Créer et continuer"}
             </button>
           </div>
         </div>

@@ -494,7 +494,7 @@ export function FinalizationStep({ formData, handleChange }) {
             />
             <div className="flex-1">
               <Label htmlFor="isVip" className="text-sm font-medium cursor-pointer flex items-center gap-2">
-                <Star className="h-4 w-4 text-amber-600 fill-amber-600" />
+                <Star className="h-4 w-4 text-brand fill-amber-600" />
                 <span className="text-amber-900">Marquer comme client VIP</span>
               </Label>
               <p className="text-xs text-amber-700 mt-0.5">

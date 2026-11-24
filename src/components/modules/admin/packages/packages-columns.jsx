@@ -58,7 +58,7 @@ const PriorityBadge = ({ priority }) => {
   const priorityConfig = {
     LOW: { label: "Faible", color: "bg-gray-50 text-gray-600" },
     NORMAL: { label: "Normal", color: "bg-blue-50 text-blue-600" },
-    HIGH: { label: "Élevé", color: "bg-amber-50 text-amber-600" },
+    HIGH: { label: "Élevé", color: "bg-amber-50 text-brand" },
     URGENT: { label: "Urgent", color: "bg-red-50 text-red-600" },
   };
 

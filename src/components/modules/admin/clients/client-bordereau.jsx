@@ -336,7 +336,7 @@ const BordereauDialog = ({ client, onClose, isOpen, containerId = null }) => {
       case 'PAID':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'PARTIAL':
-        return <Clock className="h-4 w-4 text-amber-600" />;
+        return <Clock className="h-4 w-4 text-brand" />;
       default:
         return <XCircle className="h-4 w-4 text-red-600" />;
     }

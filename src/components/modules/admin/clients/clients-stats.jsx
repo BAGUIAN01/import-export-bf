@@ -31,7 +31,7 @@ export function ClientsStats({ stats }) {
       title: "Avec Commandes", 
       value: stats?.withOrders || 0, 
       icon: CreditCard, 
-      color: "text-amber-600", 
+      color: "text-brand", 
       bg: "bg-amber-50" 
     },
     { 

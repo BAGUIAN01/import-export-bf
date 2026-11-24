@@ -39,7 +39,7 @@ export function ContainersStats({ stats }) {
         </CardContent>
       </Card>
 
-      <Card className="border-2 border-amber-500">
+      <Card className="border-2 border-brand">
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -47,7 +47,7 @@ export function ContainersStats({ stats }) {
               <p className="text-2xl font-bold">{formatNumber(inTransit)}</p>
             </div>
             <div className="p-3 bg-amber-50 rounded-lg">
-              <Truck className="h-6 w-6 text-amber-600" />
+              <Truck className="h-6 w-6 text-brand" />
             </div>
           </div>
         </CardContent>

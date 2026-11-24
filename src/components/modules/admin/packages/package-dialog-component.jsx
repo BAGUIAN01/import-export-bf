@@ -67,7 +67,7 @@ export const PackageItem = ({
     <div
       className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
         isActive
-          ? "border-amber-500 bg-amber-50"
+          ? "border-brand bg-amber-50"
           : "border-gray-200 hover:border-gray-300"
       }`}
       onClick={onClick}
@@ -77,7 +77,7 @@ export const PackageItem = ({
           <div className="flex items-center mb-1">
             <PackageIcon
               size={16}
-              className={isActive ? "text-amber-600" : "text-gray-600"}
+              className={isActive ? "text-brand" : "text-gray-600"}
             />
             <span className="ml-2 font-medium text-sm">Colis #{index + 1}</span>
           </div>
@@ -134,7 +134,7 @@ export const ClientSelection = ({
   <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center justify-between">
       <span className="flex items-center">
-        <User className="mr-2 text-amber-600" size={18} />
+        <User className="mr-2 text-brand" size={18} />
         {isLocked ? "Client de l'expédition" : "Sélectionner un client"}
       </span>
       {isLocked && (
@@ -156,7 +156,7 @@ export const ClientSelection = ({
           placeholder="Rechercher par nom, téléphone, email..."
           value={searchClient}
           onChange={(e) => setSearchClient(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent transition-colors"
         />
       </div>
     )}
@@ -225,7 +225,7 @@ export const ClientSelection = ({
                 setSelectedClientId("");
                 setSearchClient("");
               }}
-              className="text-amber-600 hover:text-amber-800 text-xs font-medium shrink-0"
+              className="text-brand hover:text-amber-800 text-xs font-medium shrink-0"
             >
               Changer
             </button>
@@ -313,7 +313,7 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
   return (
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-        <PackageIcon className="mr-2 text-amber-600" size={18} />
+        <PackageIcon className="mr-2 text-brand" size={18} />
         Types de colis
       </h3>
 
@@ -330,7 +330,7 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
                   className="flex items-center justify-between bg-white p-3 rounded-lg border"
                 >
                   <div className="flex items-center">
-                    <Icon size={18} className="text-amber-600 mr-2" />
+                    <Icon size={18} className="text-brand mr-2" />
                     <div>
                       <span className="font-medium">{t?.label || item.type}</span>
                       <div className="text-sm text-gray-600">
@@ -407,7 +407,7 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
               type="checkbox"
               checked={isParisRegion}
               onChange={(e) => setIsParisRegion(e.target.checked)}
-              className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 mr-2"
+              className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand mr-2"
             />
             Région Parisienne (prix différents pour certains articles)
           </label>
@@ -428,17 +428,17 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
               onClick={() => handleTypeSelection(type.value, price, type.isQuoteOnly)}
               className={`p-3 rounded-lg border-2 text-left transition-all active:scale-[0.98] min-h-[100px] flex flex-col relative ${
                 currentQuantity > 0
-                  ? "border-amber-500 bg-amber-50 shadow"
+                  ? "border-brand bg-amber-50 shadow"
                   : "border-gray-200 hover:border-gray-300"
               }`}
             >
               {currentQuantity > 0 && (
-                <div className="absolute -top-2 -right-2 bg-amber-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
+                <div className="absolute -top-2 -right-2 bg-brand-strong text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
                   {currentQuantity}
                 </div>
               )}
               <div className="flex items-center mb-1.5">
-                <Icon size={18} className={currentQuantity > 0 ? "text-amber-600" : "text-gray-600"} />
+                <Icon size={18} className={currentQuantity > 0 ? "text-brand" : "text-gray-600"} />
                 <span className="ml-2 font-medium text-xs leading-tight">{type.label}</span>
               </div>
               <div className="text-xs text-gray-600 mb-1.5 flex-1 line-clamp-2">
@@ -446,7 +446,7 @@ export const PackageTypeSelection = ({ form, setForm, errors, setErrors }) => {
               </div>
               <div
                 className={`text-sm font-bold ${
-                  currentQuantity > 0 ? "text-amber-600" : "text-gray-900"
+                  currentQuantity > 0 ? "text-brand" : "text-gray-900"
                 } ${type.isQuoteOnly ? "text-xs" : ""}`}
               >
                 {displayPrice}
@@ -491,7 +491,7 @@ export const PackageDetails = ({ form, setForm, errors, setErrors }) => (
           }}
           placeholder="Décrivez précisément le contenu du colis..."
           rows={4}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none ${
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent resize-none ${
             errors?.description ? "border-red-300" : "border-gray-300"
           }`}
         />
@@ -515,7 +515,7 @@ export const PackageDetails = ({ form, setForm, errors, setErrors }) => (
             value={form.weight || ""}
             onChange={(e) => setForm((prev) => ({ ...prev, weight: e.target.value }))}
             placeholder="0.0"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           />
         </div>
         <div>
@@ -531,7 +531,7 @@ export const PackageDetails = ({ form, setForm, errors, setErrors }) => (
               setForm((prev) => ({ ...prev, value: parseFloat(e.target.value) || 0 }))
             }
             placeholder="0.00"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent"
           />
         </div>
       </div>
@@ -564,10 +564,10 @@ export const PackageDetails = ({ form, setForm, errors, setErrors }) => (
             type="checkbox"
             checked={form.isFragile || false}
             onChange={(e) => setForm((prev) => ({ ...prev, isFragile: e.target.checked }))}
-            className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+            className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand"
           />
           <span className="ml-2 text-sm text-gray-700 flex items-center">
-            <AlertTriangle size={16} className="mr-1 text-amber-500" />
+            <AlertTriangle size={16} className="mr-1 text-brand" />
             Fragile
           </span>
         </label>
@@ -594,7 +594,7 @@ export const AddressStep = ({ selectedClient, sharedData, setSharedData, hasPref
     
     <section className="rounded-xl p-4 sm:p-6 border border-amber-200 bg-amber-50/60 space-y-4">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-        <MapPin className="mr-2 text-amber-600" size={18} />
+        <MapPin className="mr-2 text-brand" size={18} />
         Ramassage (optionnel)
       </h3>
 
@@ -620,7 +620,7 @@ export const AddressStep = ({ selectedClient, sharedData, setSharedData, hasPref
           }
           placeholder="Adresse complète de ramassage (optionnel)"
           rows={2}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
         />
       </div>
 
@@ -662,7 +662,7 @@ export const AddressStep = ({ selectedClient, sharedData, setSharedData, hasPref
           <select
             value={sharedData.pickupTime || ""}
             onChange={(e) => setSharedData((prev) => ({ ...prev, pickupTime: e.target.value }))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent min-h-[44px]"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent min-h-[44px]"
           >
             <option value="">Sélectionner un créneau</option>
             <option value="08:00-12:00">08:00 - 12:00</option>
@@ -716,7 +716,7 @@ export const AddressStep = ({ selectedClient, sharedData, setSharedData, hasPref
           }
           placeholder="Instructions particulières pour la livraison..."
           rows={3}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
         />
         <p className="text-xs text-gray-500 mt-1">
           Ces instructions s'appliquent à tous les colis de cette expédition
@@ -744,7 +744,7 @@ export const ContainerAndSummaryStep = ({
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center justify-between">
         <span className="flex items-center">
-          <Truck className="mr-2 text-amber-600" size={18} />
+          <Truck className="mr-2 text-brand" size={18} />
           {isContainerLocked ? "Conteneur de l'expédition" : "Conteneur de transport"}
         </span>
         {isContainerLocked && selectedContainerId && (
@@ -797,7 +797,7 @@ export const ContainerAndSummaryStep = ({
                 onClick={() => setSelectedContainerId(container.id)}
                 className={`p-4 rounded-lg border-2 text-left transition-all ${
                   selectedContainerId === container.id
-                    ? "border-amber-500 bg-amber-50 shadow"
+                    ? "border-brand bg-amber-50 shadow"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >
@@ -837,7 +837,7 @@ export const ContainerAndSummaryStep = ({
     {/* Récap colis (multi-types) */}
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-        <PackageIcon className="mr-2 text-amber-600" size={18} />
+        <PackageIcon className="mr-2 text-brand" size={18} />
         Récapitulatif des colis ({packages.length})
       </h3>
 
@@ -872,7 +872,7 @@ export const ContainerAndSummaryStep = ({
                     </ul>
                     <div className="text-xs text-gray-500 mt-1">
                       {pkg.weight ? `${pkg.weight} kg` : "Poids non spécifié"}
-                      {pkg.isFragile && <span className="ml-2 text-amber-600">• Fragile</span>}
+                      {pkg.isFragile && <span className="ml-2 text-brand">• Fragile</span>}
                       {pkg.isInsured && <span className="ml-2 text-green-600">• Assuré</span>}
                     </div>
                   </div>
@@ -892,7 +892,7 @@ export const ContainerAndSummaryStep = ({
     {/* Total général */}
     <section className="bg-gradient-to-br from-blue-50 to-amber-50 border border-amber-200 rounded-xl p-4 sm:p-6">
       <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
-        <Euro className="mr-2 text-amber-600" size={22} />
+        <Euro className="mr-2 text-brand" size={22} />
         Total de l'expédition
       </h3>
 
@@ -910,7 +910,7 @@ export const ContainerAndSummaryStep = ({
 
         <div className="flex justify-between items-center py-3 bg-white rounded-lg px-4 border border-amber-300">
           <span className="text-lg font-bold text-gray-900">Total général</span>
-          <span className="text-xl sm:text-2xl font-bold text-amber-600">
+          <span className="text-xl sm:text-2xl font-bold text-brand">
             {totalAmount.toFixed(2)}€
           </span>
         </div>
@@ -972,7 +972,7 @@ export const StepIndicator = ({ steps, currentStep, onStepClick }) => (
                   isCompleted
                     ? "bg-green-500 text-white"
                     : isActive
-                    ? "bg-amber-600 text-white shadow"
+                    ? "bg-brand-strong text-white shadow"
                     : "bg-gray-200 text-gray-600",
                 ].join(" ")}
                 aria-label={`Aller à l'étape ${step.number}`}
@@ -982,7 +982,7 @@ export const StepIndicator = ({ steps, currentStep, onStepClick }) => (
               <div className="ml-2 hidden xs:block">
                 <div
                   className={`text-xs sm:text-sm font-medium ${
-                    isActive ? "text-amber-600" : "text-gray-600"
+                    isActive ? "text-brand" : "text-gray-600"
                   }`}
                 >
                   {step.title}
@@ -1047,7 +1047,7 @@ export const DialogFooter = ({
             type="button"
             onClick={onNextStep}
             disabled={currentStep === 1 && packages.length === 0}
-            className="inline-flex items-center px-5 sm:px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+            className="inline-flex items-center px-5 sm:px-6 py-3 bg-brand-strong text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
           >
             Suivant
             <ChevronRight size={16} className="ml-1" />

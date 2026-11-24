@@ -399,7 +399,7 @@ const PackageDialog = ({
                 <button
                   type="button"
                   onClick={addNewPackage}
-                  className="w-full flex items-center justify-center px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+                  className="w-full flex items-center justify-center px-3 py-2 bg-brand-strong text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
                 >
                   <Plus size={16} className="mr-1" />
                   Ajouter un colis
@@ -437,7 +437,7 @@ const PackageDialog = ({
               <div className="p-4 border-t bg-white">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-amber-600">
+                  <span className="text-xl font-bold text-brand">
                     {totalAmount.toFixed(2)}€
                   </span>
                 </div>

@@ -26,7 +26,7 @@ const ClientAndTypeStep = ({
     {/* Sélection client */}
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-        <User className="mr-2 text-amber-600" size={18} />
+        <User className="mr-2 text-brand" size={18} />
         Sélectionner un client
       </h3>
 
@@ -37,7 +37,7 @@ const ClientAndTypeStep = ({
           placeholder="Rechercher par nom, téléphone, email..."
           value={searchClient}
           onChange={(e) => setSearchClient(e.target.value)}
-          className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors
+          className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent transition-colors
             ${errors.clientId ? "border-red-300" : "border-gray-300"}`}
         />
       </div>
@@ -101,7 +101,7 @@ const ClientAndTypeStep = ({
               setForm((prev) => ({ ...prev, clientId: "" })); 
               setSearchClient(""); 
             }}
-              className="text-amber-600 hover:text-amber-800 text-xs font-medium shrink-0"
+              className="text-brand hover:text-amber-800 text-xs font-medium shrink-0"
             >
               Changer
             </button>
@@ -120,7 +120,7 @@ const ClientAndTypeStep = ({
     {/* Type de colis */}
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-        <PackageIcon className="mr-2 text-amber-600" size={18} />
+        <PackageIcon className="mr-2 text-brand" size={18} />
         Type de colis
       </h3>
 
@@ -154,7 +154,7 @@ const ClientAndTypeStep = ({
               type="checkbox"
               checked={isParisRegion}
               onChange={(e) => setIsParisRegion(e.target.checked)}
-              className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 mr-2"
+              className="w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand mr-2"
             />
             Région Parisienne (prix différents pour certains articles)
           </label>
@@ -182,14 +182,14 @@ const ClientAndTypeStep = ({
                 }
               }}
               className={`p-3 rounded-lg border-2 text-left transition-all active:scale-[0.98] min-h-[100px] flex flex-col
-                ${form.type === type.value ? "border-amber-500 bg-amber-50 shadow" : "border-gray-200 hover:border-gray-300"}`}
+                ${form.type === type.value ? "border-brand bg-amber-50 shadow" : "border-gray-200 hover:border-gray-300"}`}
             >
               <div className="flex items-center mb-1.5">
-                <Icon size={18} className={form.type === type.value ? "text-amber-600" : "text-gray-600"} />
+                <Icon size={18} className={form.type === type.value ? "text-brand" : "text-gray-600"} />
                 <span className="ml-2 font-medium text-xs leading-tight">{type.label}</span>
               </div>
               <div className="text-xs text-gray-600 mb-1.5 flex-1 line-clamp-2">{type.desc}</div>
-              <div className={`text-sm font-bold ${form.type === type.value ? "text-amber-600" : "text-gray-900"} ${type.isQuoteOnly ? "text-xs" : ""}`}>
+              <div className={`text-sm font-bold ${form.type === type.value ? "text-brand" : "text-gray-900"} ${type.isQuoteOnly ? "text-xs" : ""}`}>
                 {displayPrice}
               </div>
             </button>
