@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Check, CreditCard, LayoutGrid, Package, Receipt, User } from "lucide-react";
+import { Check, Container as IconeConteneur, CreditCard, LayoutGrid, Package, Receipt, User } from "lucide-react";
 import { useCaisse } from "@/contexts/caisse-context";
 import { PastilleConteneur } from "@/components/caisse/pastille-conteneur";
 import { MenuProfil } from "@/components/gestion/menu-profil";
@@ -34,10 +34,8 @@ export function BarreCaisse() {
   const { selectedClient, orderItems } = useCaisse();
   const { nom, role, estChef } = useProfilCaisse();
 
-  const indexActif = Math.max(
-    0,
-    ETAPES.findIndex((e) => e.chemins.includes(chemin))
-  );
+  // -1 sur les écrans Conteneurs et Reçus : aucune étape en cours
+  const indexActif = ETAPES.findIndex((e) => e.chemins.includes(chemin));
   const accessible = {
     client: true,
     colis: !!selectedClient,
@@ -58,7 +56,7 @@ export function BarreCaisse() {
       <nav aria-label="Étapes de la caisse" className="flex min-w-0 items-center gap-1 rounded-2xl bg-surface-muted p-1 lg:ml-2">
         {ETAPES.map((e, i) => {
           const actif = i === indexActif;
-          const fait = i < indexActif;
+          const fait = indexActif > 0 && i < indexActif;
           const ok = accessible[e.cle];
           const Icone = e.icone;
           const contenu = (
@@ -107,6 +105,24 @@ export function BarreCaisse() {
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
+        <Link
+          href="/admin/caisse/recus"
+          aria-label="Reçus du jour"
+          aria-current={chemin === "/admin/caisse/recus" ? "page" : undefined}
+          className={cn("hidden size-12 place-items-center rounded-xl border sm:grid", chemin === "/admin/caisse/recus" ? "border-brand bg-brand-soft text-brand-strong" : "border-line text-ink-muted")}
+        >
+          <Receipt className="size-5" aria-hidden="true" />
+        </Link>
+        {estChef && (
+          <Link
+            href="/admin/caisse/conteneurs"
+            aria-label="Conteneurs"
+            aria-current={chemin === "/admin/caisse/conteneurs" ? "page" : undefined}
+            className={cn("hidden size-12 place-items-center rounded-xl border sm:grid", chemin === "/admin/caisse/conteneurs" ? "border-brand bg-brand-soft text-brand-strong" : "border-line text-ink-muted")}
+          >
+            <IconeConteneur className="size-5" aria-hidden="true" />
+          </Link>
+        )}
         <PastilleConteneur peutGerer={estChef} />
         <MenuProfil nom={nom} role={role} liens={[{ href: "/admin/caisse/recus", libelle: "Reçus du jour", icone: Receipt }]} />
       </div>

@@ -89,7 +89,7 @@ export function PastilleConteneur({ peutGerer }) {
         pied={
           peutGerer ? (
             <Link
-              href="/admin/containers"
+              href="/admin/caisse/conteneurs"
               className="flex h-12 items-center justify-center gap-2 rounded-xl border border-line-strong font-semibold text-ink"
             >
               <Settings2 className="size-5" aria-hidden="true" />
