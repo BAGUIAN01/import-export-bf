@@ -1,11 +1,16 @@
 // lib/twilio.js
 import twilio from 'twilio'
 
-// Configuration Twilio
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-)
+// Client Twilio créé au premier envoi, pas à l'import : sans les variables
+// TWILIO_* (build Vercel, environnement de prévisualisation), le chargement
+// des routes qui importent lib/auth ne doit pas échouer.
+let clientTwilio = null
+function client() {
+  if (!clientTwilio) {
+    clientTwilio = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+  }
+  return clientTwilio
+}
 
 /**
  * Envoie un SMS via Twilio
@@ -65,7 +70,7 @@ export async function sendSMS(to, message, options = {}) {
     }
 
     // Envoyer le SMS
-    const result = await client.messages.create(smsParams)
+    const result = await client().messages.create(smsParams)
     
     console.log(`✅ SMS envoyé avec succès:`, {
       sid: result.sid,
@@ -155,7 +160,7 @@ export async function sendWhatsAppMessage(to, message, templateName = null, opti
       messageData.body = message
     }
 
-    const result = await client.messages.create(messageData)
+    const result = await client().messages.create(messageData)
     
     console.log(`✅ WhatsApp envoyé avec succès:`, {
       sid: result.sid,
@@ -182,7 +187,7 @@ export async function getMessageStatus(messageSid) {
       throw new Error('SID du message requis')
     }
 
-    const message = await client.messages(messageSid).fetch()
+    const message = await client().messages(messageSid).fetch()
     
     return {
       sid: message.sid,
@@ -225,7 +230,7 @@ export async function getMessages(filters = {}) {
       options.dateSentBefore = new Date(filters.dateSentBefore)
     }
 
-    const messages = await client.messages.list(options)
+    const messages = await client().messages.list(options)
     
     return messages.map(message => ({
       sid: message.sid,
@@ -263,7 +268,7 @@ export async function validateTwilioConfig() {
     }
 
     // Tester la connexion en récupérant le compte
-    const account = await client.api.accounts(process.env.TWILIO_ACCOUNT_SID).fetch()
+    const account = await client().api.accounts(process.env.TWILIO_ACCOUNT_SID).fetch()
     
     console.log('✅ Configuration Twilio valide:', {
       accountSid: account.sid,
