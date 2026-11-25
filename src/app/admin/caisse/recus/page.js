@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Loader2, MessageCircle, Printer, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatMontant } from "@/lib/caisse/montants";
@@ -8,6 +9,7 @@ import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
 import { Etat, Tableau } from "@/components/epure";
 import { lienSuivi, lienWhatsApp, messageSuivi } from "@/lib/caisse/partage";
+import { selectionEnvois } from "@/components/gestion/actions-groupees";
 
 const MODES = { CASH: "Espèces", CARD: "Carte", MOBILE_MONEY: "Mobile money", TRANSFER: "Virement", CHEQUE: "Chèque" };
 
@@ -40,6 +42,8 @@ const messageDe = (e) =>
  * Les envois enregistrés ou complétés aujourd'hui, à réimprimer au besoin.
  */
 export default function RecusPage() {
+  const { data: session } = useSession();
+  const [recharge, setRecharge] = useState(0); // après une action groupée
   const [envois, setEnvois] = useState(null);
   const [recherche, setRecherche] = useState("");
   const [impression, setImpression] = useState(null);
@@ -52,7 +56,7 @@ export default function RecusPage() {
         toast.error(e.message);
         setEnvois([]);
       });
-  }, []);
+  }, [recharge]);
 
   const q = sansAccents(recherche).trim();
   const liste = useMemo(
@@ -121,6 +125,7 @@ export default function RecusPage() {
         </label>
 
         <Tableau
+          selection={session?.user?.role === "ADMIN" ? selectionEnvois(() => setRecharge((n) => n + 1)) : undefined}
           libelle="Reçus du jour"
           chargement={envois === null}
           lignes={liste}

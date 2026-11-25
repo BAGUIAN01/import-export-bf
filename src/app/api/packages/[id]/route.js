@@ -371,10 +371,6 @@ export async function DELETE(request, { params }) {
     // Vérifier que le colis existe et peut être supprimé
     const packageToDelete = await prisma.package.findUnique({
       where: { id },
-      include: {
-        invoiceItems: true,
-        payments: true,
-      },
       select: {
         id: true,
         packageNumber: true,
@@ -459,5 +455,41 @@ export async function DELETE(request, { params }) {
       { error: "Erreur lors de la suppression du colis" },
       { status: 500 }
     );
+  }
+}
+
+// PATCH /api/packages/[id] — changer seulement le conteneur d'un colis
+// (actions groupées) : aucun montant n'est recalculé, rien d'autre ne change.
+export async function PATCH(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role === "CLIENT") {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+    const { id } = await params;
+    const body = await request.json().catch(() => ({}));
+    if (!("containerId" in body)) {
+      return NextResponse.json({ error: "Indiquez le conteneur." }, { status: 400 });
+    }
+    const colis = await prisma.package.findUnique({ where: { id }, select: { id: true, packageNumber: true } });
+    if (!colis) return NextResponse.json({ error: "Colis non trouvé" }, { status: 404 });
+    if (body.containerId) {
+      const conteneur = await prisma.container.findUnique({ where: { id: body.containerId }, select: { id: true } });
+      if (!conteneur) return NextResponse.json({ error: "Conteneur non trouvé" }, { status: 400 });
+    }
+    const maj = await prisma.package.update({ where: { id }, data: { containerId: body.containerId || null }, select: { id: true, containerId: true } });
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "UPDATE_PACKAGE_CONTAINER",
+        resource: "package",
+        resourceId: id,
+        details: JSON.stringify({ packageNumber: colis.packageNumber, containerId: maj.containerId }),
+      },
+    });
+    return NextResponse.json({ package: maj });
+  } catch (error) {
+    console.error("Erreur PATCH /api/packages/[id] :", error);
+    return NextResponse.json({ error: "Le colis n'a pas pu être déplacé." }, { status: 500 });
   }
 }

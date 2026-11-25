@@ -14,6 +14,7 @@ import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
 import { useEtatSession } from "@/hooks/use-etat-session";
+import { selectionColis } from "@/components/gestion/actions-groupees";
 
 export const ETATS_COLIS = {
   REGISTERED: ["Enregistré", "gris"],
@@ -104,6 +105,7 @@ export function ListeColis({ clients, containers }) {
       </div>
 
       <Tableau
+        selection={session?.user?.role === "ADMIN" ? selectionColis(() => mutate()) : undefined}
         libelle="Colis"
         chargement={isLoading}
         lignes={lignes}

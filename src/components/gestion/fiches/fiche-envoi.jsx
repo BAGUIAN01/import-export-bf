@@ -21,6 +21,7 @@ import { STATUTS_CONTENEUR } from "@/lib/conteneurs";
 import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { affichageTelephone } from "@/lib/telephone";
+import { selectionColis } from "@/components/gestion/actions-groupees";
 
 const PAIEMENT = { PAID: ["Soldé", "vert"], PARTIAL: ["Acompte", "ambre"], PENDING: ["À payer", "ambre"], CANCELLED: ["Annulé", "gris"], REFUNDED: ["Remboursé", "gris"] };
 const MODES = { CASH: "Espèces", CARD: "Carte", MOBILE_MONEY: "Mobile money", TRANSFER: "Virement", CHEQUE: "Chèque" };
@@ -248,6 +249,14 @@ export function FicheEnvoi({ shipment: initial, containers, clients }) {
         </button>
       </div>
       <Tableau
+        selection={
+          session?.user?.role === "ADMIN"
+            ? selectionColis(() => {
+                refresh();
+                router.refresh();
+              })
+            : undefined
+        }
         libelle="Colis de l'envoi"
         lignes={e.packages || []}
         vide="Aucun colis."

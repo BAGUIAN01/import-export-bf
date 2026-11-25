@@ -14,6 +14,7 @@ import { affichageTelephone } from "@/lib/telephone";
 import { BarreActions } from "@/components/gestion/barre-actions";
 import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
 import { canAccess } from "@/lib/rbac";
+import { selectionEnvois } from "@/components/gestion/actions-groupees";
 
 const PAIEMENT = {
   PAID: ["Soldé", "vert"],
@@ -146,6 +147,7 @@ export function FicheClient({ client, containers, userRole }) {
       </div>
 
       <Tableau
+        selection={userRole === "ADMIN" ? selectionEnvois(() => router.refresh()) : undefined}
         libelle="Envois du client"
         lignes={envois}
         vide="Aucun envoi pour ce client."

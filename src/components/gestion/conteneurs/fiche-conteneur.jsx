@@ -16,6 +16,7 @@ import { formatMontant } from "@/lib/caisse/montants";
 import { nomAffiche } from "@/lib/caisse/clients";
 import { PACKAGE_TYPES } from "@/lib/data/packages";
 import { sansAccents } from "@/lib/caisse/familles";
+import { selectionColis, selectionEnvois } from "@/components/gestion/actions-groupees";
 
 const TON = { PREPARATION: "ambre", LOADED: "bleu", IN_TRANSIT: "bleu", CUSTOMS: "violet", DELIVERED: "vert", CANCELLED: "rouge" };
 const PAIEMENT = { PAID: ["Soldé", "vert"], PARTIAL: ["Acompte", "ambre"], PENDING: ["À payer", "ambre"], CANCELLED: ["Annulé", "gris"], REFUNDED: ["Remboursé", "gris"] };
@@ -44,6 +45,12 @@ export function FicheConteneur({ container: initial, currentUser }) {
   useEffect(() => setC(initial), [initial]);
 
   const { version } = useActualisation();
+  const [recharge, setRecharge] = useState(0); // après une action groupée
+  const apresAction = () => {
+    setRecharge((n) => n + 1);
+    router.refresh();
+  };
+  const admin = currentUser?.role === "ADMIN";
   useEffect(() => {
     let actif = true;
     fetch(`/api/shipments?containerId=${c.id}&limit=500`)
@@ -57,7 +64,7 @@ export function FicheConteneur({ container: initial, currentUser }) {
     return () => {
       actif = false;
     };
-  }, [c.id, version]);
+  }, [c.id, version, recharge]);
 
   const q = sansAccents(recherche).trim();
   const envoisFiltres = (envois || []).filter(
@@ -149,6 +156,7 @@ export function FicheConteneur({ container: initial, currentUser }) {
 
       {onglet === "envois" && (
         <Tableau
+          selection={admin ? selectionEnvois(apresAction) : undefined}
           libelle="Envois du conteneur"
           chargement={envois === null}
           lignes={envoisFiltres}
@@ -177,6 +185,7 @@ export function FicheConteneur({ container: initial, currentUser }) {
 
       {onglet === "colis" && (
         <Tableau
+          selection={admin ? selectionColis(apresAction) : undefined}
           libelle="Colis du conteneur"
           chargement={colis === null}
           lignes={colisFiltres}

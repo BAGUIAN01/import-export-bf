@@ -228,11 +228,13 @@ export async function PUT(request, { params }) {
     // Debug: afficher les données avant mise à jour
     console.log(`🔍 Données de mise à jour pour shipment ${id}:`, updateData);
 
-    // Mise à jour
-    const updatedShipment = await prisma.shipment.update({
-      where: { id },
-      data: updateData,
-    });
+    // Mise à jour ; un envoi qui change de conteneur emmène ses colis avec lui
+    const [updatedShipment] = await prisma.$transaction([
+      prisma.shipment.update({ where: { id }, data: updateData }),
+      ...(body.containerId !== undefined
+        ? [prisma.package.updateMany({ where: { shipmentId: id }, data: { containerId: body.containerId } })]
+        : []),
+    ]);
 
     // Debug: afficher les données après mise à jour
     console.log(`✅ Shipment ${id} mis à jour:`, {

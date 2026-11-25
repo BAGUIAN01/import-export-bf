@@ -13,6 +13,7 @@ import { formatMontant } from "@/lib/caisse/montants";
 import { sansAccents } from "@/lib/caisse/familles";
 import { useActualisation } from "@/components/gestion/actualisation";
 import { useEtatSession } from "@/hooks/use-etat-session";
+import { selectionConteneurs } from "@/components/gestion/actions-groupees";
 
 const TON = { PREPARATION: "ambre", LOADED: "bleu", IN_TRANSIT: "bleu", CUSTOMS: "violet", DELIVERED: "vert", CANCELLED: "rouge" };
 const FILTRES = [
@@ -138,6 +139,7 @@ export default function ConteneursPage() {
       </div>
 
       <Tableau
+        selection={role === "ADMIN" ? selectionConteneurs(charger) : undefined}
         libelle="Conteneurs"
         colonnes={colonnes}
         lignes={lignes}

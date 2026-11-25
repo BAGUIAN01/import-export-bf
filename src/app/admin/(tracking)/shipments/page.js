@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { EnTete, Etat, Pastilles, Recherche, StatCard, StatGrid, Tableau } from "@/components/epure";
 import { Phone, Wallet } from "lucide-react";
@@ -13,6 +14,7 @@ import { nomAffiche } from "@/lib/caisse/clients";
 import { sansAccents } from "@/lib/caisse/familles";
 import { useActualisation } from "@/components/gestion/actualisation";
 import { useEtatSession } from "@/hooks/use-etat-session";
+import { selectionEnvois } from "@/components/gestion/actions-groupees";
 
 const ETATS_PAIEMENT = {
   PAID: ["Soldé", "vert"],
@@ -34,6 +36,7 @@ const reste = (e) => Math.max(0, (e.totalAmount || 0) - (e.paidAmount || 0));
 /** Gestion · Encaissements : chaque envoi, ce qui est payé et ce qui reste. */
 export default function EncaissementsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const { updateShipment } = useShipmentMutations();
   const [envois, setEnvois] = useState(null);
   const [filtre, setFiltre] = useEtatSession("encaissements:filtre", "tous");
@@ -102,6 +105,7 @@ export default function EncaissementsPage() {
       </div>
 
       <Tableau
+        selection={session?.user?.role === "ADMIN" ? selectionEnvois(charger) : undefined}
         libelle="Envois"
         chargement={!envois}
         lignes={lignes}

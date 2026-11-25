@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LigneGlissable } from "@/components/epure/ligne-glissable";
-import { ChevronRight, Plus, Search, X } from "lucide-react";
+import { BarreSelection } from "@/components/epure/selection";
+import { Check, ChevronRight, Plus, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /*
@@ -181,7 +182,36 @@ export function Etat({ ton = "gris", children, className }) {
  * `glisser` : (ligne) => [actions] révélées en glissant la ligne (téléphone),
  * ou par un appui long (voir LigneGlissable).
  */
-export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vide = "Aucun résultat.", actions, actionsMobile, glisser, libelle, parPage = 40 }) {
+export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vide = "Aucun résultat.", actions, actionsMobile, glisser, selection, libelle, parPage = 40 }) {
+  // Sélection de plusieurs lignes (actions groupées) : cases à cocher sur PC,
+  // mode « Sélectionner » sur téléphone. Seulement si `selection` est fourni.
+  const [choisis, setChoisis] = useState(() => new Set());
+  const [modeTel, setModeTel] = useState(false);
+  const caseTout = useRef(null);
+  const choisies = selection ? lignes.filter((l) => choisis.has(l[cle])) : [];
+  const nChoisies = choisies.length;
+  const basculer = (l) =>
+    setChoisis((s) => {
+      const n = new Set(s);
+      if (n.has(l[cle])) n.delete(l[cle]);
+      else n.add(l[cle]);
+      return n;
+    });
+  const vider = () => {
+    setChoisis(new Set());
+    setModeTel(false);
+  };
+  const toutChoisir = () => setChoisis(new Set(lignes.map((l) => l[cle])));
+  useEffect(() => {
+    if (caseTout.current) caseTout.current.indeterminate = nChoisies > 0 && nChoisies < lignes.length;
+  }, [nChoisies, lignes.length]);
+  // Pendant une sélection, le bouton flottant s'efface (la barre d'actions prend sa place)
+  useEffect(() => {
+    const actif = nChoisies > 0 || modeTel;
+    document.body.classList.toggle("selection-active", actif);
+    return () => document.body.classList.remove("selection-active");
+  }, [nChoisies, modeTel]);
+
   // Longues listes : 40 lignes, puis la suite quand on arrive en bas (ou « Voir plus »)
   const [nombre, setNombre] = useState(parPage);
   const fin = useRef(null);
@@ -215,8 +245,10 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
   const details = tel.filter((c) => c !== titre && c !== droite && c !== etat);
   const rendu = (c, l) => (c.mobileRendu || c.rendu)(l);
   // Téléphone : les actions d'une ligne qu'on ouvre passent dans sa fiche
-  const avecActions = actions && (actionsMobile ?? !onLigne);
+  const avecActions = actions && (actionsMobile ?? !onLigne) && !modeTel;
   const visibles = reste > 0 ? lignes.slice(0, nombre) : lignes;
+  const ouvrirLigne = (l) => (modeTel ? basculer(l) : onLigne?.(l));
+  const ligneActive = !!onLigne || modeTel;
 
   return (
     <>
@@ -224,6 +256,18 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
         <table className="w-full min-w-[720px] text-left" aria-label={libelle}>
           <thead className="border-b border-line text-[13px] text-ink-muted">
             <tr>
+              {selection && (
+                <th scope="col" className="w-12 py-3 pl-4">
+                  <input
+                    ref={caseTout}
+                    type="checkbox"
+                    checked={nChoisies > 0 && nChoisies === lignes.length}
+                    onChange={() => (nChoisies === lignes.length ? setChoisis(new Set()) : toutChoisir())}
+                    aria-label="Tout sélectionner"
+                    className="size-[18px] cursor-pointer accent-[#0E7A55]"
+                  />
+                </th>
+              )}
               {bureau.map((c) => (
                 <th key={c.id} scope="col" className={cn("px-4 py-3 font-medium", c.aDroite && "text-right", c.classe)}>
                   {c.titre}
@@ -241,8 +285,19 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
               <tr
                 key={l[cle]}
                 onClick={onLigne ? () => onLigne(l) : undefined}
-                className={cn(onLigne && "cursor-pointer hover:bg-surface-page")}
+                className={cn(onLigne && "cursor-pointer hover:bg-surface-page", choisis.has(l[cle]) && "bg-brand-soft/40")}
               >
+                {selection && (
+                  <td className="w-12 py-3 pl-4" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={choisis.has(l[cle])}
+                      onChange={() => basculer(l)}
+                      aria-label="Sélectionner la ligne"
+                      className="size-[18px] cursor-pointer accent-[#0E7A55]"
+                    />
+                  </td>
+                )}
                 {bureau.map((c) => (
                   <td key={c.id} className={cn("px-4 py-3 align-middle text-[15px]", c.aDroite && "text-right", c.classe)}>
                     {c.rendu(l)}
@@ -260,19 +315,47 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
       </div>
 
       {/* Téléphone : liste groupée comme une application (titre, détail, valeur et état à droite) */}
+      {selection && (
+        <div className="-mb-1 flex items-center justify-end gap-3 md:hidden">
+          {modeTel && (
+            <button type="button" onClick={() => (nChoisies === lignes.length ? setChoisis(new Set()) : toutChoisir())} className="h-10 px-1 text-[15px] font-medium text-brand-strong">
+              {nChoisies === lignes.length ? "Tout désélectionner" : "Tout sélectionner"}
+            </button>
+          )}
+          <button type="button" onClick={() => (modeTel ? vider() : setModeTel(true))} className="h-10 px-1 text-[15px] font-semibold text-brand-strong">
+            {modeTel ? "Terminé" : "Sélectionner"}
+          </button>
+        </div>
+      )}
       <ul aria-label={libelle} className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white md:hidden">
         {visibles.map((l) => {
           const morceaux = details.map((c) => ({ id: c.id, v: rendu(c, l) })).filter((m) => m.v != null && m.v !== false && m.v !== "" && m.v !== "—");
           return (
             <li key={l[cle]}>
-              <LigneGlissable actions={glisser ? glisser(l).filter(Boolean) : []} titre={rendu(titre, l)}>
+              <LigneGlissable actions={glisser && !modeTel ? glisser(l).filter(Boolean) : []} titre={rendu(titre, l)}>
               <div
-                role={onLigne ? "button" : undefined}
-                tabIndex={onLigne ? 0 : undefined}
-                onClick={onLigne ? () => onLigne(l) : undefined}
-                onKeyDown={onLigne ? (e) => e.key === "Enter" && onLigne(l) : undefined}
-                className={cn("flex min-h-16 items-center gap-3 px-4 py-3", onLigne && "cursor-pointer select-none active:bg-surface-page")}
+                role={ligneActive ? (modeTel ? "checkbox" : "button") : undefined}
+                aria-checked={modeTel ? choisis.has(l[cle]) : undefined}
+                tabIndex={ligneActive ? 0 : undefined}
+                onClick={ligneActive ? () => ouvrirLigne(l) : undefined}
+                onKeyDown={ligneActive ? (e) => e.key === "Enter" && ouvrirLigne(l) : undefined}
+                className={cn(
+                  "flex min-h-16 items-center gap-3 px-4 py-3",
+                  ligneActive && "cursor-pointer select-none active:bg-surface-page",
+                  modeTel && choisis.has(l[cle]) && "bg-brand-soft/40"
+                )}
               >
+                {modeTel && (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "grid size-6 shrink-0 place-items-center rounded-full border-2",
+                      choisis.has(l[cle]) ? "border-brand bg-brand text-white" : "border-line-strong"
+                    )}
+                  >
+                    {choisis.has(l[cle]) && <Check className="size-4" strokeWidth={3} />}
+                  </span>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-base font-semibold leading-snug">{rendu(titre, l)}</div>
                   {morceaux.length > 0 && (
@@ -301,7 +384,7 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
                     {actions(l)}
                   </div>
                 )}
-                {onLigne && !avecActions && <ChevronRight className="-mr-1 size-5 shrink-0 text-ink-subtle" aria-hidden="true" />}
+                {onLigne && !avecActions && !modeTel && <ChevronRight className="-mr-1 size-5 shrink-0 text-ink-subtle" aria-hidden="true" />}
               </div>
               </LigneGlissable>
             </li>
@@ -315,6 +398,7 @@ export function Tableau({ colonnes, lignes, cle = "id", onLigne, chargement, vid
           </button>
         </div>
       )}
+      {selection && <BarreSelection choisies={choisies} total={lignes.length} selection={selection} onTout={toutChoisir} onVider={vider} />}
     </>
   );
 }
@@ -335,7 +419,7 @@ export function BoutonFlottant({ libelle, icone: Icone = Plus, onClick }) {
       <button
         type="button"
         onClick={onClick}
-        className="caisse fixed right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand pr-5 pl-4 font-caisse text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(14,122,85,.35)] active:scale-[.97] md:hidden"
+        className="caisse bouton-flottant fixed right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand pr-5 pl-4 font-caisse text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(14,122,85,.35)] active:scale-[.97] md:hidden"
         style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 16px)" }}
       >
         <Icone className="size-5" aria-hidden="true" />

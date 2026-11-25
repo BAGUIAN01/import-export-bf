@@ -366,3 +366,8 @@ html:has(.caisse) {
 @media (prefers-reduced-motion: reduce) {
   .panier-bump { animation: none; }
 }
+
+/* Sélection de lignes en cours : la barre d'actions remplace le bouton flottant. */
+body.selection-active .bouton-flottant {
+  display: none;
+}

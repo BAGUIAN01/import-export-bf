@@ -15,6 +15,7 @@ import { useActualisation } from "@/components/gestion/actualisation";
 import { useEtatSession } from "@/hooks/use-etat-session";
 import { ouvrirCaisse } from "@/lib/caisse/ouvrir";
 import { canAccess } from "@/lib/rbac";
+import { selectionClients } from "@/components/gestion/actions-groupees";
 
 const FILTRES = [
   { id: "tous", label: "Tous", test: () => true },
@@ -86,6 +87,7 @@ export default function ClientsPage() {
       </div>
 
       <Tableau
+        selection={session?.user?.role === "ADMIN" ? selectionClients(charger) : undefined}
         libelle="Clients"
         chargement={!clients}
         lignes={lignes}
