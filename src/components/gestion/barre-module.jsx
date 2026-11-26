@@ -69,7 +69,7 @@ export function CoquilleModule({ barre, bas = null, children, defilement = true 
   return (
     <div className="flex h-[100dvh] flex-col bg-surface-page font-caisse" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {barre}
-      <main className={cn("caisse min-h-0 flex-1 text-[15px] text-ink", defilement ? "overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6" : "overflow-hidden")}>
+      <main className={cn("caisse defilant min-h-0 flex-1 text-[15px] text-ink", defilement ? "overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6" : "overflow-hidden")}>
         {children}
       </main>
       {bas}

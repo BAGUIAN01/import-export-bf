@@ -419,8 +419,9 @@ export function BoutonFlottant({ libelle, icone: Icone = Plus, onClick }) {
       <button
         type="button"
         onClick={onClick}
-        className="caisse bouton-flottant fixed right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand pr-5 pl-4 font-caisse text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(14,122,85,.35)] active:scale-[.97] md:hidden"
-        style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 16px)" }}
+        className="caisse bouton-flottant fixed right-4 z-30 flex h-14 items-center gap-2 rounded-2xl border border-line-strong bg-white pr-5 pl-4 font-caisse text-[15px] font-semibold text-brand-strong shadow-[0_8px_22px_rgba(15,23,20,.14)] active:scale-[.97] md:hidden"
+        // Au-dessus de la capsule des onglets (68 px, posée à 12 px du bas ou de la zone système)
+        style={{ bottom: "calc(max(12px, env(safe-area-inset-bottom)) + 82px)" }}
       >
         <Icone className="size-5" aria-hidden="true" />
         {libelle}

@@ -104,7 +104,7 @@ const estEditable = (el) => el instanceof HTMLElement && (el.isContentEditable |
  * palette Ctrl+K ou « / », scanneur par la caméra, douchette (lecteur de
  * codes-barres qui tape le code puis Entrée, n'importe où dans l'application).
  */
-export function RechercheGlobale({ apparence = "barre", prefere = null }) {
+export function RechercheGlobale({ apparence = "barre", prefere = null, scanTelephone = true }) {
   const [ouvert, setOuvert] = useState(false);
   const [depart, setDepart] = useState({ saisie: "", scanner: false, auto: false });
   const [raccourci, setRaccourci] = useState("Ctrl K");
@@ -118,6 +118,13 @@ export function RechercheGlobale({ apparence = "barre", prefere = null }) {
   useEffect(() => {
     if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) setRaccourci("⌘ K");
   }, []);
+
+  // Ouverture depuis ailleurs (bouton « Scanner » de la barre du bas)
+  useEffect(() => {
+    const surDemande = (e) => ouvrir(e.detail || {});
+    window.addEventListener("recherche:ouvrir", surDemande);
+    return () => window.removeEventListener("recherche:ouvrir", surDemande);
+  }, [ouvrir]);
 
   // Raccourcis et douchette
   useEffect(() => {
@@ -191,19 +198,25 @@ export function RechercheGlobale({ apparence = "barre", prefere = null }) {
             type="button"
             onClick={() => ouvrir()}
             aria-label="Rechercher"
-            className="flex items-center gap-2 rounded-l-[15px] pr-2 pl-2.5 text-ink-muted sm:pr-2.5 sm:pl-3 transition-colors hover:bg-surface-page hover:text-ink min-[1400px]:w-[200px]"
+            className={cn(
+              "flex items-center gap-2 rounded-l-[15px] pr-2 pl-2.5 text-ink-muted sm:pr-2.5 sm:pl-3 transition-colors hover:bg-surface-page hover:text-ink min-[1400px]:w-[200px]",
+              !scanTelephone && "max-md:rounded-[15px] max-md:px-2.5"
+            )}
           >
             <Search className="size-5 shrink-0" aria-hidden="true" />
             <span className="hidden flex-1 text-left text-[15px] min-[1400px]:block">Rechercher…</span>
             <kbd className="hidden rounded-md border border-line bg-surface-page px-1.5 py-0.5 font-caisse text-xs min-[1400px]:block">{raccourci}</kbd>
           </button>
-          <span aria-hidden="true" className="my-2.5 w-px bg-line" />
+          <span aria-hidden="true" className={cn("my-2.5 w-px bg-line", !scanTelephone && "max-md:hidden")} />
           <button
             type="button"
             onClick={() => ouvrir({ scanner: true })}
             aria-label="Scanner un code"
             title="Scanner un QR code"
-            className="grid w-10 place-items-center rounded-r-[15px] text-ink-muted sm:w-12 transition-colors hover:bg-surface-page hover:text-brand-strong"
+            className={cn(
+              "grid w-10 place-items-center rounded-r-[15px] text-ink-muted sm:w-12 transition-colors hover:bg-surface-page hover:text-brand-strong",
+              !scanTelephone && "max-md:hidden"
+            )}
           >
             <ScanLine className="size-5" aria-hidden="true" />
           </button>

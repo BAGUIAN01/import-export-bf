@@ -95,7 +95,8 @@ export function BarreGestion() {
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
-        <RechercheGlobale />
+        {/* Téléphone : le scanneur est au centre de la barre du bas (sauf sur une fiche, qui n'en a pas) */}
+        <RechercheGlobale scanTelephone={!!fiche} />
         {conteneur && (
           <Link
             href={`/admin/containers/${conteneur.id}`}
@@ -125,7 +126,11 @@ export function BarreGestion() {
   );
 }
 
-/** Téléphone : les onglets de la gestion en bas, le reste dans « Plus ». */
+/**
+ * Téléphone : les onglets de la gestion en bas autour du scanneur, le reste
+ * (encaissements, retraits, tarifs, tableau de bord, paramétrage, modules)
+ * dans « Plus ».
+ */
 export function NavigationBasGestion() {
   const { data } = useSession();
   const chemin = usePathname() || "";
@@ -135,8 +140,12 @@ export function NavigationBasGestion() {
   // En bas, les quatre écrans du quotidien d'abord ; Retraits a son propre écran
   const ordre = ["/admin/containers", "/admin/packages", "/admin/clients", "/admin/shipments"];
   const onglets = ONGLETS.filter((o) => canAccess(role, o.href)).sort((a, b) => (ordre.indexOf(a.href) + 1 || 99) - (ordre.indexOf(b.href) + 1 || 99));
-  // Le compte (tableau de bord, profil, paramétrage, accueil) est dans l'avatar : pas de doublon ici
-  return <OngletsBas onglets={onglets} />;
+  const liens = [
+    ...(canAccess(role, "/admin/dashboard") ? [{ href: "/admin/dashboard", libelle: "Tableau de bord", icone: LayoutDashboard }] : []),
+    ...(canAccess(role, "/admin/parametrage") ? [{ href: "/admin/parametrage", libelle: "Paramétrage", icone: Settings }] : []),
+    { href: "/admin", libelle: "Accueil des modules", court: "Modules", icone: LayoutGrid },
+  ];
+  return <OngletsBas onglets={onglets} liens={liens} scanner />;
 }
 
 /** Conteneur qui reçoit les colis (le plus proche du départ). */

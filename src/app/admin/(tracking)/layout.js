@@ -38,7 +38,7 @@ export default function GestionLayout({ children }) {
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
           >
             <BarreGestion />
-            <ContenuActualisable className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6">{children}</ContenuActualisable>
+            <ContenuActualisable className="defilant min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-6">{children}</ContenuActualisable>
             <NavigationBasGestion />
           </div>
         </LayoutProvider>

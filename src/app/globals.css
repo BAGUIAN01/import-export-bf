@@ -371,3 +371,15 @@ html:has(.caisse) {
 body.selection-active .bouton-flottant {
   display: none;
 }
+
+/* Barre du bas flottante (téléphone) : le contenu défile dessous et garde de
+   la place en bas, pour que sa fin passe au-dessus de la capsule et du scanneur. */
+@media (max-width: 767.98px) {
+  body.avec-onglets-bas:not(.selection-active) .defilant {
+    padding-bottom: calc(max(12px, env(safe-area-inset-bottom)) + 104px);
+  }
+}
+/* Sélection de lignes : sa barre d'actions remplace les onglets, comme dans une application. */
+body.selection-active .onglets-bas {
+  display: none;
+}

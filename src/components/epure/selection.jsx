@@ -105,7 +105,7 @@ export function BarreSelection({ choisies, total, selection, onTout, onVider }) 
       <div
         role="toolbar"
         aria-label="Actions sur la sélection"
-        className="caisse sticky bottom-0 z-20 -mx-3 mt-2 flex items-center gap-2 border-t border-line bg-white/95 px-3 pt-2.5 font-caisse backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:shadow-[0_8px_24px_rgba(15,23,20,.12)]"
+        className="caisse sticky bottom-0 z-20 -mx-3 mt-2 max-sm:-bottom-3 flex items-center gap-2 border-t border-line bg-white/95 px-3 pt-2.5 font-caisse backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:shadow-[0_8px_24px_rgba(15,23,20,.12)]"
         style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
       >
         <div className="min-w-0 flex-1 leading-tight">
