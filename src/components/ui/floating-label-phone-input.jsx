@@ -160,7 +160,7 @@ const FloatingLabelPhoneInput = React.forwardRef(
             placeholder={pays.sample}
             aria-invalid={error ? true : undefined}
             className={cn(
-              "min-w-0 flex-1 bg-transparent pt-5 pb-2 pl-3 pr-10 text-sm text-zinc-900 outline-none",
+              "min-w-0 flex-1 bg-transparent pt-5 pb-2 pl-3 pr-10 text-base sm:text-sm text-zinc-900 outline-none",
               "placeholder:text-zinc-400 disabled:cursor-not-allowed",
               className
             )}

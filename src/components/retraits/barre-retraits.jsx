@@ -8,6 +8,7 @@ import { Check, ChevronDown, Container as IconeConteneur, CreditCard, LayoutGrid
 import { useRetraits } from "@/contexts/retraits-context";
 import { MenuProfil } from "@/components/gestion/menu-profil";
 import { RechercheGlobale } from "@/components/recherche/recherche-globale";
+import { basRetraits } from "@/components/gestion/navigation-modules";
 import { Feuille } from "@/components/caisse/feuille";
 import { devise } from "@/lib/devises";
 import { resteEnvoi } from "@/lib/retraits";
@@ -105,7 +106,8 @@ export function BarreRetraits() {
       </nav>
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-        <RechercheGlobale prefere="envoi" />
+        {/* Téléphone : le scanneur est au centre de la barre du bas sur la liste */}
+        <RechercheGlobale prefere="envoi" scanTelephone={!basRetraits(chemin)} />
         {conteneur && (
           <button
             type="button"

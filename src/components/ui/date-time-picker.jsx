@@ -182,13 +182,13 @@ function DateTimePicker({ value, onChange, label, error, disabled, id, required 
                 type="time"
                 value={timeValue}
                 onChange={handleTimeChange}
-                className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-base sm:text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="w-full h-8 text-xs"
+              className="w-full h-8 text-base sm:text-xs"
               onClick={handleNow}
             >
               Maintenant

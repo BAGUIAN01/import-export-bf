@@ -383,3 +383,23 @@ body.selection-active .bouton-flottant {
 body.selection-active .onglets-bas {
   display: none;
 }
+
+/* Zones sûres : /admin dessine sous l'encoche et la barre d'accueil
+   (viewport-fit=cover). En paysage, le contenu s'écarte de l'encoche ; sans
+   viewport-fit=cover (site public), env() vaut 0 et rien ne change. */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+@media (max-width: 767.98px) {
+  /* Sans barre du bas (fiches, étapes) : la fin du contenu passe au-dessus de la barre d'accueil */
+  body:not(.avec-onglets-bas) .defilant {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Pas de zoom au double toucher dans l'espace du personnel (le pincement reste possible) */
+.caisse,
+.defilant {
+  touch-action: manipulation;
+}

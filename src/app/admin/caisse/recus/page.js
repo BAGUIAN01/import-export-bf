@@ -94,7 +94,7 @@ export default function RecusPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain p-4 sm:p-6">
+    <div className="defilant h-full overflow-y-auto overscroll-contain p-4 sm:p-6">
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>

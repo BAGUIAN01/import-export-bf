@@ -24,7 +24,7 @@ const FloatingLabelTextarea = React.forwardRef(
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className={cn(
-              "peer w-full rounded-md border-2 bg-transparent pt-5 pb-2 px-4 text-sm",
+              "peer w-full rounded-md border-2 bg-transparent pt-5 pb-2 px-4 text-base sm:text-sm",
               "transition-all duration-300 ease-out",
               "focus-visible:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",

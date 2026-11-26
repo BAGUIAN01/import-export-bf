@@ -3,6 +3,7 @@
 import { FournisseursModule } from "@/components/gestion/layout-module";
 import { RetraitsProvider } from "@/contexts/retraits-context";
 import { BarreRetraits } from "@/components/retraits/barre-retraits";
+import { NavigationBasRetraits } from "@/components/gestion/navigation-modules";
 
 /**
  * Retraits à l'arrivée, comme une caisse : barre de 72 px avec les étapes
@@ -15,6 +16,7 @@ export default function RetraitsLayout({ children }) {
         <div className="caisse flex h-[100dvh] flex-col overflow-hidden bg-surface-page font-caisse text-[15px] text-ink antialiased" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           <BarreRetraits />
           <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+          <NavigationBasRetraits />
         </div>
       </RetraitsProvider>
     </FournisseursModule>

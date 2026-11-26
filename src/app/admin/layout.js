@@ -8,9 +8,12 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+// maximumScale 1 : Safari iOS ne zoome plus au toucher d'un champ (la page
+// restait agrandie et débordait) ; le pincement reste possible sur iPhone.
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#FFFFFF",
 };

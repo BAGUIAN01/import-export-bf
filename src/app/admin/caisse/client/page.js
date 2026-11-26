@@ -199,7 +199,7 @@ export default function CaisseClientPage() {
           )}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+        <div className="defilant min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
           {selectedClient && !enRecherche && (
             <button
               type="button"

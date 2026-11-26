@@ -28,7 +28,7 @@ const FloatingLabelInput = React.forwardRef(
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className={cn(
-              "peer h-14 w-full rounded-md border-2 bg-transparent pt-5 pb-2 text-sm",
+              "peer h-14 w-full rounded-md border-2 bg-transparent pt-5 pb-2 text-base sm:text-sm",
               isPassword ? "px-4 pr-12" : "px-4",
               "transition-all duration-300 ease-out",
               "focus-visible:outline-none",

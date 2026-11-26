@@ -8,6 +8,7 @@ import { useCaisse } from "@/contexts/caisse-context";
 import { PastilleConteneur } from "@/components/caisse/pastille-conteneur";
 import { MenuProfil } from "@/components/gestion/menu-profil";
 import { RechercheGlobale } from "@/components/recherche/recherche-globale";
+import { basCaisse } from "@/components/gestion/navigation-modules";
 import { cn } from "@/lib/utils";
 
 const ETAPES = [
@@ -132,7 +133,8 @@ export function BarreCaisse() {
       </nav>
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-        <RechercheGlobale prefere="client" />
+        {/* Téléphone : le scanneur est au centre de la barre du bas (client, reçus, conteneurs) */}
+        <RechercheGlobale prefere="client" scanTelephone={!basCaisse(chemin)} />
         <Link
           href="/admin/caisse/recus"
           aria-label="Reçus du jour"

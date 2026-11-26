@@ -55,7 +55,7 @@ export default function RetraitsDestinatairePage() {
           <Pastilles options={FILTRES.map((f) => ({ id: f.id, label: f.label, compte: envois.filter(f.test).length }))} valeur={filtre} onChange={setFiltre} libelle="Filtrer" />
         </div>
 
-        <ZoneActualisable onActualiser={charger} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+        <ZoneActualisable onActualiser={charger} className="defilant min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
           {donnees === null ? (
             <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2" aria-hidden="true">
               {[0, 1, 2, 3].map((i) => (

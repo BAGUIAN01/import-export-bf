@@ -20,6 +20,11 @@ const TEINTES = {
   "/admin/containers": "bg-brand-soft text-brand-strong",
   "/admin/dashboard": "bg-[#F3E8FF] text-[#6B21A8]",
   "/admin/parametrage": "bg-surface-muted text-ink-muted",
+  "/admin/caisse": "bg-brand-soft text-brand-strong",
+  "/admin/caisse/client": "bg-brand-soft text-brand-strong",
+  "/admin/caisse/recus": "bg-info-soft text-info",
+  "/admin/caisse/conteneurs": "bg-alerte-soft text-alerte",
+  "/admin/profile": "bg-surface-muted text-ink-muted",
   "/admin": "bg-ink text-white",
 };
 
@@ -79,7 +84,7 @@ export function OngletsBas({ onglets = [], liens = [], scanner = false }) {
     ...visibles.map((o) => {
       const actif = o.href === hrefActif;
       return (
-        <li key={o.href}>
+        <li key={o.href} className="min-w-0 flex-1">
           <Link
             href={o.href}
             aria-current={actif ? "page" : undefined}
@@ -93,7 +98,7 @@ export function OngletsBas({ onglets = [], liens = [], scanner = false }) {
     }),
     ...(autres.length
       ? [
-          <li key="plus">
+          <li key="plus" className="min-w-0 flex-1">
             <button
               type="button"
               onClick={() => setPlus(true)}
@@ -106,43 +111,45 @@ export function OngletsBas({ onglets = [], liens = [], scanner = false }) {
         ]
       : []),
   ];
-  // Le scanneur au milieu, les onglets répartis de part et d'autre
-  if (scanner) {
-    cases.splice(
-      Math.ceil(cases.length / 2),
-      0,
-      <li key="scanner" className="flex justify-center">
-        <button
-          type="button"
-          onClick={ouvrirScanneur}
-          aria-label="Scanner un code"
-          className="group flex h-[68px] flex-col items-center justify-end gap-1.5 pb-[10px] select-none"
-        >
-          <span
-            aria-hidden="true"
-            className="grid size-[60px] shrink-0 place-items-center rounded-full border-4 border-ink bg-brand text-white shadow-[0_6px_16px_rgba(14,122,85,.45)] transition-transform group-active:scale-95"
-          >
-            <ScanLine className="size-[26px]" strokeWidth={2.2} />
-          </span>
-          <span className="text-[11px] leading-none font-semibold text-white">Scanner</span>
-        </button>
-      </li>
-    );
-  }
+  const capsule = "pointer-events-auto h-[68px] rounded-[26px] bg-ink px-1 shadow-[0_14px_34px_rgba(15,23,20,.30)]";
+  const moitie = Math.ceil(cases.length / 2);
 
   return (
     <>
       <nav
         aria-label="Navigation"
-        className="onglets-bas caisse pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 font-caisse md:hidden"
-        style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
+        className="onglets-bas caisse pointer-events-none fixed inset-x-0 bottom-0 z-30 font-caisse md:hidden"
+        style={{
+          paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+          paddingLeft: "max(12px, env(safe-area-inset-left))",
+          paddingRight: "max(12px, env(safe-area-inset-right))",
+        }}
       >
-        <ul
-          className="pointer-events-auto grid h-[68px] rounded-[26px] bg-ink px-1 shadow-[0_14px_34px_rgba(15,23,20,.30)]"
-          style={{ gridTemplateColumns: `repeat(${cases.length}, minmax(0, 1fr))` }}
-        >
-          {cases}
-        </ul>
+        {scanner ? (
+          // Le scanneur toujours au centre ; les onglets répartis de part et d'autre
+          <div className={cn(capsule, "grid grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)]")}>
+            <ul className="flex min-w-0">{cases.slice(0, moitie)}</ul>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={ouvrirScanneur}
+                aria-label="Scanner un code"
+                className="group flex h-[68px] flex-col items-center justify-end gap-1.5 pb-[10px] select-none"
+              >
+                <span
+                  aria-hidden="true"
+                  className="grid size-[60px] shrink-0 place-items-center rounded-full border-4 border-ink bg-brand text-white shadow-[0_6px_16px_rgba(14,122,85,.45)] transition-transform group-active:scale-95"
+                >
+                  <ScanLine className="size-[26px]" strokeWidth={2.2} />
+                </span>
+                <span className="text-[11px] leading-none font-semibold text-white">Scanner</span>
+              </button>
+            </div>
+            <ul className="flex min-w-0">{cases.slice(moitie)}</ul>
+          </div>
+        ) : (
+          <ul className={cn(capsule, "flex")}>{cases}</ul>
+        )}
       </nav>
 
       <Feuille ouvert={plus} onFermer={() => setPlus(false)} titre="Plus">

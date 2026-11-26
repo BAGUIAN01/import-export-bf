@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import { CaisseProvider } from "@/contexts/caisse-context";
 import { BarreCaisse } from "@/components/caisse/barre-caisse";
+import { NavigationBasCaisse } from "@/components/gestion/navigation-modules";
 import { geist, geistMono } from "@/lib/polices";
 
 
@@ -34,9 +35,11 @@ export default function CaisseLayout({ children }) {
       <CaisseProvider>
         <div
           className={`caisse ${geist.variable} ${geistMono.variable} flex h-[100dvh] flex-col overflow-hidden bg-surface-page font-caisse text-[15px] text-ink antialiased`}
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
           <BarreCaisse />
           <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+          <NavigationBasCaisse />
         </div>
       </CaisseProvider>
     </SessionProvider>
