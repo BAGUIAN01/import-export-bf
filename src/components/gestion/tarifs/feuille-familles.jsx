@@ -14,9 +14,12 @@ const NOMS_TEINTES = { ambre: "Ambre", vert: "Vert", bleu: "Bleu", violet: "Viol
 /**
  * Familles du catalogue : liste, puis création ou modification (nom, dessin,
  * couleur) avec l'aperçu de la tuile telle que la caisse l'affichera.
+ * `editionInitiale` ({} : nouvelle ; une famille : la modifier) ouvre
+ * directement le formulaire (panneau des tarifs) ; la feuille se ferme alors
+ * une fois la famille enregistrée.
  */
-export function FeuilleFamilles({ familles, onFermer, onChange }) {
-  const [edition, setEdition] = useState(null); // null : liste ; {} : nouvelle ; famille : modifier
+export function FeuilleFamilles({ familles, editionInitiale, onFermer, onChange }) {
+  const [edition, setEdition] = useState(editionInitiale ?? null); // null : liste ; {} : nouvelle ; famille : modifier
 
   return (
     <Feuille
@@ -61,7 +64,8 @@ export function FeuilleFamilles({ familles, onFermer, onChange }) {
           onRetour={() => setEdition(null)}
           onEnregistre={(f) => {
             onChange(f);
-            setEdition(null);
+            if (editionInitiale) onFermer();
+            else setEdition(null);
           }}
         />
       )}
